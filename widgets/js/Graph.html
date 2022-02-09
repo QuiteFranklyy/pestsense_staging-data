@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Graph (Sensahub Dashboard Widget)</title>
+    <style>
+        @font-face {
+            font-family: "Open Sans";
+            font-style: normal;
+            font-weight: 400;
+            src: local("Open Sans"), local("OpenSans"), url(/fonts/OpenSans400.woff2) format("woff2"), url(/fonts/OpenSans400.woff) format("woff");
+            font-display: block;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            font-size: 14px;
+            overflow: hidden;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        .tooltip {
+            border: 2px solid #bbbbbb;
+            background-color: #e6e6e6;
+            color: #606060;
+        }
+
+        .triangle {
+            height: 0;
+            width: 0;
+            border-top: 10px solid #909090;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+        }
+
+    </style>
+</head>
+<body id="body">
+
+    <div id="callout" class="triangle" style="position: absolute; left: -200px; top:0; z-index: 102; opacity: 1; transition: opacity 0.15s ease-in-out 0.15s"></div>
+    <div id="tooltip" class="tooltip" style="position: absolute; left: 50%; top: 50%; z-index: 101; opacity: 0.8; text-align: center; border-radius: 3px; box-shadow: 4px 4px 6px #cccccc; padding: 5px 4px; transition: opacity 0.15s ease-in-out 0.15s">Loading...</div>
+    <div id="newToolTip" style="position: absolute; background-color: #D3D3D3; padding: 8px; border-radius: 10px; display: none; z-index: 101;"></div>
+    <div id="group">
+
+        <svg id="widget" width="200" height="200" style="position: absolute; left: 0px; top: 0px;">
+
+            <style type="text/css">
+                text {
+                    font-family: "Open Sans";
+                    font-weight: normal;
+                    font-style: normal;
+                    font-size: 11px;
+                }
+
+                .axis path, .axis line { /* X and Y axis */
+                    fill: none;
+                    stroke: #D0D0D0;
+                }
+
+                .x.axis line { /* grid lines */
+                    stroke: #D0D0D0;
+                    stroke-opacity: 0.5;
+                    shape-rendering: crispEdges;
+                }
+
+                .y.axis line { /* grid lines */
+                    stroke: #D0D0D0;
+                    stroke-opacity: 0.4;
+                    shape-rendering: crispEdges;
+                }
+
+                .x.axis text, .y.axis text {
+                    opacity: .95;
+                    stroke: none;
+                    fill: black;
+                }
+
+                .x.axis .label, .y.axis .label {
+                    opacity: 1;
+                    fill: black;
+                    font-style: normal;
+                }
+
+                .x.axis .minor, y.axis .minor {
+                    stroke: #D0D0D0;
+                    stroke-opacity: 0.3;
+                }
+
+                .brush .handle{
+                    visibility: visible;
+                    fill: white;
+                    stroke: #008b8b;
+                    opacity: 1;
+                }
+
+                .title {
+                    font-weight: normal;
+                    font-size: 14px;
+                    opacity: 0.5;
+                }
+
+                .max, .min {
+                    fill: red;
+                }
+
+                .seriesline {
+                    fill: none !important;
+                    stroke-width: 2;
+                    stroke-opacity: 1;
+                }
+
+                .contextline {
+                    fill: none !important;
+                    stroke-width: 2;
+                    stroke-opacity: 1;
+                }
+
+                .seriesarea {
+                    fill-opacity: 0.2;
+                    stroke: none !important;
+                }
+
+                .legendtext {
+                    text-anchor: end;
+                    fill: #888888;
+                }
+
+                .blue {
+                    stroke: #3a87ad;
+                    fill: #3a87ad;
+                    color: #3a87ad;
+                }
+
+                .green {
+                    stroke: #468847;
+                    fill: #468847;
+                    color: #468847;
+                }
+
+                .red {
+                    stroke: #b94a48;
+                    fill: #b94a48;
+                    color: #b94a48;
+                }   
+
+                .yellow {
+                    stroke: #c09853;
+                    fill: #c09853;
+                    color: #c09853;
+                }
+
+                .grey {
+                    stroke: #999;
+                    fill: #999;
+                    color: #999;
+                }
+            </style>
+        </svg>
+        <svg id="downIcon" style="position:absolute;top:-3px;width:20px;height:20px;right:5px;cursor:pointer;" onclick="download()">
+            <path fill="#888" d="M5,20H19V18H5M19,9H15V3H9V9H5L12,16L19,9Z" />
+        </svg>
+    </div>
+    <script src="../js/d3.4.13/d3.4.13.min.js"></script>
+    
+    <script>
+        "use strict";
+        // packaging: https://tungs.github.io/browser-roller/d3Roller.html   use Globals, then minify
+        //d3-array.bisector,.max,.min,.range,.ticks,.extent
+        //d3-axis.axisBottom,.axisLeft,.axisRight (not used now)
+        //d3-collection.map (not used now)
+        //d3-drag.drag
+        //d3-interpolate.interpolate
+        //d3-path.path
+        //d3-scale.scaleTime,.scaleLinear
+        //d3-selection.select,.selection,.selectAll
+        //d3-shape.curvelinear,.curvestepafter,.curvestep,.curvemonotonex
+        //d3-transition.transition
+        //d3-zoom.zoom
+
+        //#region --- Widget Settings ---
+        var options = {
+            settings: {
+                "category": "widget",
+                "type": window.location.pathname.split("/").slice(-1)[0].split(".")[0].replace("%20", " "),
+                "iniHeight": widget.height.baseVal.value,
+                "iniWidth": widget.width.baseVal.value,
+                "author": "Sensavation",
+                "tbTooltip": "Graph",
+                "tooltip": "",
+                "version": "190104",
+                "group": "visualisation",
+                "zIndex": "ZINDEX_DEFAULT",
+                "disabled": false,
+                "scaling": true,
+                "help": { "type": "file", "source": "help/widgets/Graph.md" }
+            },
+            clientEvents: {
+                inputEvents: {
+                    "none": {},
+                    "set x axis interval": setXAxisInterval,
+                    "reload": reload,
+                    "set all scopes": setAllScopes,
+                    "set all instances": setAllInstances,
+                    "set graph range": setGraphRange,
+                    "set threshold": setThreshold
+                }
+            },
+            serverEvents: {
+                inputEvents: {
+                    "history": {
+                        "function": fw_history,
+                        "attribs": {
+                            "color": {
+                                "default": "green",
+                                "type": "dropdown",
+                                "options": "green, red, blue, yellow, grey"
+                            },
+                            "area fill": {
+                                "type": "checkbox",
+                                "default": "false"
+                            },
+                            "fill opacity": {
+                                "type": "input",
+                                "default": 0.2,
+                                "tooltip": "set the opacity for filled area underneath the line"
+                            }
+                        }
+                    },
+                    "feed": {
+                        "function": fw_feed,
+                        "attribs": {
+                            "color": {
+                                "default": "green",
+                                "type": "dropdown",
+                                "options": "green, red, blue, yellow, grey",
+                                "tooltip": "Set the color for the line"
+                            },
+                            "area fill": {
+                                "type": "checkbox",
+                                "default": "false",
+                                "tooltip": "Fill the area underneath the line"
+                            },
+                            "fill opacity": {
+                                "type": "input",
+                                "default": 0.2,
+                                "tooltip": "set the opacity for filled area underneath the line"
+                            }
+                        }
+                    }
+                }
+            },
+            dataTypes: {
+                "feed": ["number"],
+                "Set Interval": ["string"],
+                "history": ["array"],
+                "setStart": ["string"],
+                "setEnd": ["string"],
+                "reload": ["string"]
+            },
+            attribs: {
+                "y-axis": {
+                    "default": "value",
+                    "type": "input",
+                    "group": "Chart Details",
+                    "tooltip": "Axis Label"
+                },
+                "line type": {
+                    "type": "dropdown",
+                    "options": "Linear, StepAfter, Step, MonotoneX",
+                    "default": "Linear",
+                    "group": "Chart Details",
+                    "tooltip": "Type of line displayed on the graph"
+                },
+                "compression": {
+                    "type": "checkbox",
+                    "default": "false",
+                    "group": "Chart Details",
+                    "tooltip": "Compress the data points, also compresses downloaded data"
+                },
+                "history timespan": {
+                    "default": 12,
+                    "type": "input",
+                    "group": "Chart Details",
+                    "tooltip": "History hours range to display"
+                },
+                "title": {
+                    "default": "Chart Title",
+                    "type": "input",
+                    "group": "Chart Details"
+                },
+                "enable legend": {
+                    "type": "checkbox",
+                    "default": "true",
+                    "group": "Chart Details",
+                    "tooltip": "Display legend on the graph"
+                },
+                "only accept data from my events": {
+                    "type": "checkbox",
+                    "default": "false",
+                    "group": "Chart Details",
+                    "tooltip": "Only accept data from my own server input events"
+                },
+                "enable zoom": {
+                    "type": "checkbox",
+                    "default": "false",
+                    "group": "Chart Details",
+                    "tooltip": "Display slider to adjust x axis zoom of graph"
+                },
+                "disable feed": {
+                    "type": "checkbox",
+                    "default": "false",
+                    "group": "Chart Details",
+                    "tooltip": "Block incoming values to the graph"
+                },
+                "Custom Domain": {
+                    "type": "text",
+                    "default": "<b>Custom Domain</b>",
+                    "group": "Y Axis",
+                    "tooltip": "Please set both values"
+                },
+                "domain max": {
+                    "type": "input",
+                    "default": "",
+                    "group": "Y Axis",
+                    "tooltip": "Custom max y-value"
+                },
+                "domain min": {
+                    "type": "input",
+                    "default": "",
+                    "group": "Y Axis",
+                    "tooltip": "Custom min y-value"
+                },
+                 
+            }
+        };
+        //#endregion
+
+        //#region --- Declarations ---
+        var zoomRect, gX, gY, oldDomain, historyHrs, xAxis, xAxis2, yAxis, x, x2, y, y2, width, height, height2, context, clipPath, title, yLabel, bground, ttTimeout, legend, zoomer, startDate, endDate;
+        var loaded = false;
+        var historySub = false;
+        var dsToLoad = 0;
+        var minVal = Number.MAX_VALUE;
+        var maxVal = -Number.MAX_VALUE;
+        var POINTS_GAP = 5;          // default spacing between points
+        var MAXPOINTS = 10000;        //how many data points to keep in the display buffer for panning
+        var yTitle = "";
+        var chartTitle = "";
+        var margin = { top: 20, right: 2, bottom: 60, left: 50 };
+        var margin2 = { top: 270, right: 2, bottom: 30, left: 0};
+        var delayed_scope, delayed_instance;
+
+        var useCustomDates = false;
+        var customStartDate;
+        var customEndDate;
+
+        //Holds the maximum and minumum value of the chart across all bound series
+        var maxHeightVal = null;
+        var minHeightVal = null;
+
+        var graphDisabled = false;
+
+        var chart = d3.select("#widget").append("g");
+        var mouseG;
+        var mousePerLine;
+        var newToolTip;
+
+        var zoom;
+        var brush;
+        var contextLine;
+
+        var isZooming = false;
+
+        var callout = document.getElementById("callout");
+        var tooltip = document.getElementById("tooltip");
+
+        var mouseTimer;
+        var showTooltip = false;
+        var seriesIndex;
+        var curve;
+        var focus;
+        var bisectDate = d3.bisector(function (d) { return d.x; }).left;
+        var receivedChannels = [];
+        var transition = false;
+        // Setup data array
+        var series = [];
+        var serie = function (name, scope, color, fill, fillOpacity) {
+            this.FQN = name;
+            this.scope = scope;
+            this.color = color;
+            this.fill = fill;
+            this.name = "";
+            this.data = [];
+            this.lineElement = null;
+            this.areaElement = null;
+            this.d3Line = null;
+            this.d3Area = null;
+            this.fillOpacity = fillOpacity;
+        };
+
+        // dynamic reload using latest feed data
+        var received_feed = false;
+        var latest_feed;
+        var setAxes = false;
+        var thresholdValues = [];
+        var IgnoreFireOnLoad = true;
+        
+        // chart background
+        bground = chart.append("rect").attr("fill", "white").attr("class","zoom");
+
+        // setup Axis
+        x = d3.scaleTime();
+        x2 = d3.scaleTime();
+        y = d3.scaleLinear().nice();
+        y2 = d3.scaleLinear().range([height2, 0]);
+        
+        // height for smaller context graph
+        height2 = 40;
+
+        xAxis = d3.axisBottom();
+        // set of axes for smaller context graph
+        xAxis2 = d3.axisBottom(x2);
+        yAxis = d3.axisLeft();
+
+        // Area where smaller context graph and associated attributes will be
+        context = d3.select("#widget").append("g")
+            .attr("class", "context");
+
+        mouseG = d3.select("#widget").append("g")
+            .attr("class", "mouse-over-effects");
+
+        mouseG.append("path")
+            .attr("class", "mouse-line")
+            .style("stroke", "#5C0600")
+            .attr("clip-path", "url(#clip)")
+            .style("stroke-dasharray", ("3, 3"))
+            .style("stroke-width", "2px")
+            .style("z-index", 101)
+            .style("opacity", 0);
+
+        newToolTip = d3.select("#newToolTip");
+
+        gX = chart.append("g").attr("class", "x axis");
+        gY = chart.append("g").attr("class", "y axis");
+
+        // ensure the chart that is outside the axis does not get drawn
+        clipPath = chart.append("clipPath").attr("id", "clip").append("rect");
+
+        // setup axis titles from host after charts have been initialized
+        title = chart.append("text").attr("class", "title").attr("text-anchor", "middle");
+
+        yLabel = chart.select(".y.axis").append("text").attr("class", "label").attr("text-anchor", "middle");
+
+        // Initialize widget framework API - DO NOT ADJUST OR DELETE
+        var fw = new parent.widgetAPI(window.name);  // widget framework object
+        fw.ready();
+
+        //#endregion
+
+        //#region --- Widget specific functions ---
+
+        /**
+         * Downloads all of the data from each subscribed feed and exports it to a CSV on the users computer.
+         */
+        function download() {
+            var saveData = "";
+            for (var i = 0; i < series.length; i++) {
+                if (series[i].FQN !== "") {                                                             // Header
+                    var saveData = saveData + "time," + series[i].FQN + "\r\n";
+                    for (var rec = series[i].data.length - 1; rec >= 0; rec--) {
+                    // for (var rec = 0; rec < series[i].data.length; rec++) {
+                        var d = new Date(series[i].data[rec].x);
+                        var dformat = [d.getFullYear(), d.getMonth() + 1,
+                        d.getDate()].join('/') + ' ' +
+                            [d.getHours(),
+                            d.getMinutes(),
+                            d.getSeconds()].join(':');
+                        saveData = saveData + dformat + "," + series[i].data[rec].y + "\r\n";
+                    }
+                    saveData = saveData + "\r\n";
+                }
+            }
+
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/csv;charset=utf-8,%EF%BB%BF' + encodeURIComponent(saveData));
+            element.setAttribute('download', "data.csv");
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();                        // Invoke file save
+            document.body.removeChild(element);
+        }
+
+        /**
+         * Loads up the chart using custom the start and end dates if available
+         * @param {object} start start object
+         * @param {object} end end object
+         */
+        function loadChart(start, end) {
+            minHeightVal = null;
+            maxHeightVal = null;
+
+            // check if using custom start/end dates
+            if (useCustomDates) {
+                start = customStartDate;
+                end = customEndDate;
+            }
+            if (graphDisabled) {        // if graph is disabled, don't load the chart
+                return;
+            }
+
+            dsToLoad = 0;
+            minVal = Number.MAX_VALUE;
+            maxVal = -Number.MAX_VALUE;
+
+            if (fw.state !== "DESIGN") showTT(true);
+
+            // Remove previous circles to prevent duplicates when loading new series
+            mouseG.selectAll(".mouse-per-line").remove();
+
+            for (var i = 0; i < series.length; i++) {
+                if (series[i].FQN !== "") {                                                             // only load up series if it has a name
+                    dsToLoad = dsToLoad + 1;
+
+                    fw.func("history", series[i].FQN, series[i].scope, new Date(start).toISOString(), new Date(end).toISOString());         // request data from server
+                    loaded = false;
+                    
+                    if (series[i].lineElement) {
+                        series[i].lineElement.remove();                                                 // If reloading the chart with a new channel, remove old lines
+                        series[i].data = [];
+                    }
+
+                    series[i].name = series[i].FQN.split("/")[2].trim();
+                    series[i].d3Line = d3.line().curve(curve);
+
+                    series[i].lineElement = chart.append("path")
+                        .attr("clip-path", "url(#clip)")
+                        .attr("id", "seriesLine" + i)
+                        .attr("class", "seriesline " + series[i].color)
+                        .data([series[i].data]);
+
+                    mousePerLine = mouseG
+                        .append("g")
+                        .attr("class", "mouse-per-line");
+
+                    mousePerLine
+                        .append("circle")
+                        .attr("r", 4)
+                        .attr("class", series[i].color)
+                        .style("fill", "none")
+                        .style("z-index", 101)
+                        .style("stroke-width", "2px")
+                        .style("opacity", "0");
+
+                    mousePerLine.data(series[i].data);
+
+                    if (series[i].fill) {  // if area fill
+                        if (series[i].areaElement)
+                            series[i].areaElement.remove();
+                        series[i].d3Area = d3.area().curve(curve);
+                        series[i].areaElement = chart.append("path")
+                            .attr("clip-path", "url(#clip)")
+                            .attr("id", "seriesArea" + i)
+                            .attr("style", "fill-opacity: " + series[i].fillOpacity)
+                            .attr("class", "seriesarea " + series[i].color)
+                            .data([series[i].data]);
+                    }
+                    x.domain([start, end]);                                                             // Adjust domain window
+                    x2.domain([start, end]);
+                    gX.call(xAxis.scale(x)); 
+                    context.select(".axis--x")
+                        .call(xAxis2);                                                           // Move axis
+                }
+                adjustLegend();
+            }
+            // Load first series line into smaller context graph                    
+            contextLine = d3.line();
+
+            if (fw.state === "DASHBOARD" && series[0] != undefined) {
+                // No context line already made, add new one
+                if (context.select("path").empty()) {
+                    context.append("path");
+                }
+                context.select("path")
+                    // This prevents the smaller graph from going over it's axes
+                    .attr("clip-path", "url(#clip)")
+                    .attr("id", "contextLine")
+                    .attr("class", "contextline " + series[0].color)
+                    .data([series[0].data]);  
+
+                mousePerLine = mouseG.selectAll(".mouse-per-line")
+                    .enter();
+            }       
+        }
+
+        /**
+         * shows the tooltip for the graph
+         * @param {boolean} state the state of the graph
+         */
+        function showTT(state) {
+            if (state) {
+                tooltip.style.setProperty("left", "50%");
+                tooltip.style.setProperty("top", "50%");
+                tooltip.innerText = "Loading...";
+                tooltip.style.setProperty("opacity", "0.8");                                // show loading tooltip
+                // setTimeout(fadeTT, 1000);                                                    // Remove the loading tooltip if no data comes through
+
+            } else {
+                tooltip.style.setProperty("left", "-200px");                                // remove loading tooltip
+                tooltip.style.setProperty("top", "0px");
+            }
+
+            setTimeout(function() {
+                // State has been true for over 5s, timeout
+                if (state) {
+                    tooltip.innerText = "Timedout";
+                    setTimeout(fadeTT, 1000);
+                }
+            }, 5000);
+        }
+
+        /**
+         * Set the y axis title, uses the value in the y-axis setting, or defaults to "values"
+         */
+        function setYTitle() {
+            if (typeof fw.attribs("y-axis") !== "undefined") {
+                yTitle = fw.attribs("y-axis");
+            }
+            else {
+                yTitle = "Values";
+            }
+        }
+
+        /**
+         * Fades out the custom data tooltip
+         */
+        function fadeTT() {
+            showTooltip = false;
+            tooltip.style.setProperty("opacity", "0");
+            callout.style.setProperty("opacity", "0");
+            tooltip.addEventListener("transitionend", fadeFinish, true);
+        }
+
+        /**
+         * Sends the tooltip offscreen when it has finished fading out
+         */
+        function fadeFinish() {
+            tooltip.style.setProperty("transform", "translate(0px,0px)");
+            callout.style.setProperty("transform", "translate(0px,0px)");
+            tooltip.removeEventListener("transitionend", fadeFinish, true);
+        }
+
+        /**
+         * Updates the legend to the most recent data from each stream
+         */
+        function adjustLegend() {
+            if (typeof legend === "undefined" || fw.attribs("enable legend") === "false" || typeof width === "undefined") {
+                return;
+            }
+
+            legend.selectAll("rect").remove();
+            legend.selectAll("text").remove();
+            for (var i = 0; i < series.length; i++) {
+                if (series[i].name !== "") {
+                    legend.append("rect")
+                        .attr("x", width - 15)
+                        .attr("y", i * 25 + margin.top / 2)
+                        .attr("width", 10)
+                        .attr("height", 10)
+                        .attr("class", series[i].color);
+
+                    var currVal;
+                    if (series[i].data.length !== 0) {
+                        currVal = " (" +
+                            series[i].scope.toLowerCase() +
+                            " " +
+                            series[i].data[series[i].data.length - 1].y +
+                            ")";
+                    } else {
+                        currVal = " (" + series[i].scope.toLowerCase() + ")";
+                    }
+
+                    legend.append("text")
+                        .attr("x", width - 25)
+                        .attr("y", i * 25 + 10 + margin.top / 2)
+                        .attr("height", 30)
+                        .attr("width", 100)
+                        .attr("class", "legendtext")
+                        .text(series[i].name + currVal);                   
+                }
+            }
+        }
+
+        // feed from the server (single point)
+        /**
+         * The feed from the server (single point)
+         * @param {string} channel channel for the feed
+         * @param {string} client source of the requested feed
+         * @param {object} feedVal object containing the new value
+         */
+        function feedPoint(channel, client, feedVal) {
+            if (isNaN(parseFloat(feedVal.value))) {
+                return;                                                                 // Ignore none numbers. We can't reject scope here as we may have different scope for different series
+            }
+
+            var changedXAxis = false;
+            var yAxisChange = false;
+
+            for (var i = 0; i < series.length; i++) {
+                if ((series[i].FQN.toUpperCase().trim() === channel.toUpperCase()) && (loaded || !historySub)) {           // Don't add values until history data is loaded
+                    if (+feedVal.value > maxVal) {             // auto adjust y axis based on min, max +- 20%
+                        maxVal = +feedVal.value;
+                        yAxisChange = true;
+                    }
+                    if (+feedVal.value < minVal) {
+                        minVal = +feedVal.value;
+                        yAxisChange = true;
+                    }
+                    var newVal = { "x": new Date(), "y": +feedVal.value };
+                    series[i].data.push(newVal);
+                    if (series[i].data.length >= MAXPOINTS) {
+                        series[i].data.shift();                                     //remove the oldest value if array is too large
+                    }
+
+                    if (!changedXAxis) {
+                        var currDate = Date.now();
+                        latest_feed = currDate;
+                        if (!useCustomDates) {   // If end date/time has shifted, don't shift the graph
+                            // Do not change original axis domain if still zoomed
+                            
+                            if (!isZooming) {
+                                x.domain([new Date(currDate - 3600000 * historyHrs), currDate]);  
+                            }                                               
+                            // Adjust domain window
+                            x2.domain([new Date(currDate - 3600000 * historyHrs), currDate]);
+                            gX.call(xAxis.scale(x));                                                                                // Move axis
+                            adjustLegend();
+                            changedXAxis = true;                                    // Only change X axis for the first in the series (others will be the same)
+                        }
+                    }
+                    if (yAxisChange) {
+                        adjustYDomain(i);
+                    }
+                }
+            }
+
+            y2.domain(y.domain());
+            context.select("path").data([series[0].data]);
+
+            // After each feed, reload all lines so that they line up according to time
+            for (var i = 0; i < series.length; i++) {
+                render(i, 0);
+            }
+        }
+
+        /**
+         * Adjust the y domain so that the data fits inside the graph window
+         * @param {serie} serie the series object that we want to adjust the graph y domain for
+         */
+        function adjustYDomain(serie) {
+            //TODO: This could just be a global for the channel rather than scanning the whole list
+
+
+            var d3Max = d3.max(series[serie].data, function (d) { return d.y });
+            var d3Min = d3.min(series[serie].data, function (d) { return d.y });
+
+            if (d3Max > maxHeightVal || maxHeightVal === null) {
+                maxHeightVal = d3Max;
+            }
+
+            if (d3Min < minHeightVal || minHeightVal === null) {
+                minHeightVal = d3Min;
+            }
+
+
+            if (fw.attribs("domain min") && fw.attribs("domain max")) {
+                var min = fw.attribs("domain min");
+                var max = fw.attribs("domain max");
+
+                if (!isNaN(min) && !isNaN(max)) {
+                    y.domain([min, max]);
+                    // y2.domain(y.domain());
+                    yAxis.scale(y);
+                }
+            } else {
+                // set the domain to be +- 5% of the min and max values
+                //var minSign = minVal <= 0 ? -1 : 1;                               // Reverse if negative
+                //var maxSign = maxVal <= 0 ? -1 : 1;                               // Reverse if negative
+                //y.domain([(minVal - minSign * 0.05 * (maxVal - minVal)), (maxVal + maxSign * 0.05 * (maxVal - minVal))]);  // Adjust scales (difference between min and max) for some padding
+                y.domain([(minHeightVal - 0.05 * (maxHeightVal - minHeightVal)), (maxHeightVal + 0.05 * (maxHeightVal - minHeightVal))]);  // Adjust scales (difference between min and max) for some padding
+                
+                yAxis.scale(y);
+            }
+            adjustThresholds();
+        }
+
+        /**
+         * Adjust the y2 domain to only fit the first series
+         */
+        function adjustY2Domain() {
+            // Set y domain for context graph (only applies first series)
+            y2.domain(y.domain());
+            return;
+            var y2Max = d3.max(series[0].data, function(d) {return d.y});
+            var y2Min = d3.min(series[0].data, function(d) {return d.y});
+
+            y2.domain([(y2Min - 0.05 * (y2Max - y2Min)), (y2Max + 0.05 * (y2Max - y2Min))]);
+        }       
+
+        /**
+         * Render all series with animation
+         */
+        function animateRenderAll() {
+            for (var i = 0; i < series.length; i++) {
+                render(i, 500);
+            }
+        }
+
+        /**
+         * load JSON dataset from the server
+         * @param {object} channel the channel object for the desired feed
+         * @param {object} scope the scope object for the desired scope
+         * @param {object} loadArr the array object that contains all of the data to load
+         */
+        function load(channel, scope, loadArr) {
+
+            if (loadArr.value.length > 0) {
+                if (fw.attribs("compression") === "true" /*&& loadArr.value.length > width*/) {     // Only compress if needed
+                    //TODO: Turned off compression until it can be validated for CSV download, Axis changes when showing multiple series, and compression values are correct.
+                    fw.status({
+                        message: "Large dataset requested for display, graph may slow down. To improve graph performance, reduce graph timeframe."
+                    });
+                    Log.warn("Large dataset requested for display, graph may slow down. To improve graph performance, reduce graph timeframe.");
+                    
+                    loadCompressed(channel, loadArr.value);
+                } //else {
+                var arrayShifted = false;
+                for (var i = 0; i < series.length; i++) {
+                    if ((series[i].FQN.toUpperCase().trim() === channel.toUpperCase())) {                  // Check that scope and channel match
+
+                        if (series[i].data.length > 0) {
+                            series[i].data = [];                                                                        // Clear array
+                        }
+
+                        for (var lp = 0; lp < loadArr.value.length; lp++) {
+                            series[i].data.unshift({ "x": new Date(loadArr.value[lp][0]), "y": +loadArr.value[lp][1] });            // Extract values and date in RFC3339 format
+                            //TODO: Only works if scrolling backwards, lose recent records if array is too big and not repopulated
+
+                            if (series[i].data.length >= MAXPOINTS) {
+                                series[i].data.shift();                                     //remove old values if array is too large
+                                arrayShifted = true;
+                            }
+                        }
+
+                        adjustYDomain(i);
+                    }
+                }
+                y2.domain(y.domain());
+            } else {
+                fw.status({
+                    message: "There was no history data for " + fw.widgetName + " to display"
+                });
+                Log.info("There was no history data for " + fw.widgetName + " to display");
+                // Remove channel from received channels incase we received it again with data
+                receivedChannels.splice(receivedChannels.indexOf(channel), 1);
+            }
+
+            // num_loads++;
+            // if (num_loads == series.length) {
+            if (isAllSeriesLoaded()) {
+                animateRenderAll(); // only want to animate all of the lines after all of the series have been read
+                // num_loads = 0;
+                loaded = true;
+                receivedChannels = [];
+            }
+            
+            dsToLoad = dsToLoad - 1;
+            if (dsToLoad === 0) {
+                showTT(false);
+            }
+
+            if (arrayShifted) {
+                fw.func("status", "INFO - Data retrieved was more that the graph limit (" + MAXPOINTS + "), older values removed from display.")
+            }
+        }
+
+        /**
+         * Checks that all series have their data loaded in
+         */
+        function isAllSeriesLoaded() {
+            let uniqueChannels = receivedChannels.filter((e, i) => receivedChannels.indexOf(e) === i);
+            if (uniqueChannels.length == series.length) return true;
+            
+            // Multiple series may have the same channel/scope
+            for (var i = 0; i < series.length; i++) {
+                if (!uniqueChannels.includes(series[i].FQN)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        /**
+         * Function to load the data but compresses it for more lightweight data display
+         * @param {object} channel the channel of the data
+         * @param {object} loadArr the data to be compressed and loaded
+         */
+        function loadCompressed(channel, loadArr) {
+            var secondsRange = ((endDate - startDate) / (1000));                                                                                // get our range in seconds to display
+            var secondsPerPixel = secondsRange / width;                                                                                         // determine how many seconds get placed into each pixel on the screen
+
+            for (var i = 0; i < series.length; i++) {
+                if (series[i].FQN.toUpperCase().trim() === channel.toUpperCase()) {
+                    var loadArrPos = 0;                                                                                                         // the current location in the data array
+                    var current;                                                                                                                // current holds the point of data we are examining in the array
+                    var next;                                                                                                                   // next holds the end time for our current time window
+
+                    if (series[i].data.length > 0) {
+                        series[i].data = [];                                                                        // Clear array
+                    }
+
+                    while (loadArrPos < loadArr.length - 1) {                        // get the next interval
+                        var intervalCollection = [];
+                        var intervalPos = loadArrPos;
+
+                        next = parseInt(Date.parse(loadArr[loadArrPos][0]) / 1000) - secondsPerPixel;                                           // divide by 1000 for conversion to seconds from miliseconds
+
+                        do {
+                            intervalCollection.push(loadArr[intervalPos]);                                                                      // will always put at least one entry into our interval.
+                            current = parseInt(Date.parse(loadArr[intervalPos][0]) / 1000);                                                     // recalculate the current position in the data array
+
+                            intervalPos++;
+
+                        } while ((current > next) && (intervalPos < loadArr.length));                                                           // repeat while we haven't passed the next time window or end of array
+
+                        if (intervalCollection.length === 1) {
+                            series[i].data.unshift({ "x": new Date(intervalCollection[0][0]), "y": parseFloat(intervalCollection[0][1]) });     // nothing to compress. goes straight into the series array
+                        } else if (intervalCollection.length === 2) {
+                            series[i].data.unshift({ "x": new Date(intervalCollection[0][0]), "y": parseFloat(intervalCollection[0][1]) });     // size of two means no sorting needed. place them straight into the series array
+                            series[i].data.unshift({ "x": new Date(intervalCollection[1][0]), "y": parseFloat(intervalCollection[1][1]) });
+                        } else {                            // Compression occurs here. Obtains the minimum and maximum points from the window. Then will place them in the correct chronological order.
+                            var min = intervalCollection[0];
+                            var max = intervalCollection[0];
+
+                            for (var j = 0; j < intervalCollection.length; j++) {
+                                if (intervalCollection[j][1] < min[1]) {
+                                    min = intervalCollection[j];
+                                }
+
+                                if (intervalCollection[j][1] > max[1]) {
+                                    max = intervalCollection[j];
+                                }
+                            }
+
+                            if (Date.parse(min[0]) < Date.parse(max[0])) {
+                                series[i].data.unshift({ "x": new Date(max[0]), "y": parseFloat(max[1]) });
+                                series[i].data.unshift({ "x": new Date(min[0]), "y": parseFloat(min[1]) });
+                            } else {
+                                series[i].data.unshift({ "x": new Date(min[0]), "y": parseFloat(min[1]) });
+                                series[i].data.unshift({ "x": new Date(max[0]), "y": parseFloat(max[1]) });
+                            }
+                        }
+                        loadArrPos = intervalPos;                                                                                               // the principle is the segment moves along, then we catch back up.
+                    }
+
+                    adjustYDomain(i);
+
+                    render(i, 500);                    // Only animate the line that is currently being loaded (others need to be adjusted with axis change)
+
+                    var compr = (series[i].data.length / loadArr.length);
+                    var comprLabel = compr.toString().substring(0, compr.toString().indexOf(".") + 3);
+
+                    // if we actually perform compression display
+                    if (compr < 1) {
+                        fw.status({
+                            message: "Graph compressed data with ratio: " + comprLabel + ". To improve graph performance, reduce graph timeframe."
+                        });
+                        Log.info("Graph compressed data with ratio: " + comprLabel + ". To improve graph performance, reduce graph timeframe.");
+                    }
+                }
+            }
+            y2.domain(y.domain());
+        }
+
+        // Move view window to a new end date - NOT USED
+        function adjustPan(endX) {
+            var oldStart = x.domain()[0];
+            var oldEnd = x.domain()[1];
+            d3.transition().duration(300).tween("zoom", function () {
+                var ix = d3.interpolate(0, endX.valueOf() - oldEnd.valueOf());                                  // interpolate between 0 and the delta of old domain end and new
+                return function (t) {
+                    x.domain([new Date(oldStart.valueOf() + ix(t)), new Date(oldEnd.valueOf() + ix(t))]);       // shuffle the chart to the new end point
+                };
+            });
+        }
+
+        function brushed() {
+            if (d3.event.sourceEvent && d3.event.sourceEvent.type === "zoom") return; // ignore brush-by-zoom
+            var s = d3.event.selection || x2.range();
+            x.domain(s.map(x2.invert, x2));
+            // Amend each series line with new x domain
+            for (var i = 0; i < series.length; i++) {
+                if (series[i].data.length > 0) {
+                    chart.select("#seriesLine" + i).attr("d",series[i].d3Line(series[i].data));
+                    if (series[i].fill) {
+                        chart.select("#seriesArea" + i).attr("d", series[i].d3Area(series[i].data));
+                    }
+                }
+            }
+
+            if (x.domain().toString() != x2.domain().toString()) {
+                isZooming = true;
+            } else {
+                isZooming = false;
+            }
+            // Update axis domain
+            gX.call(xAxis);
+            chart.select(".zoom").call(zoom.transform, d3.zoomIdentity
+                .scale(width / (s[1] - s[0]))
+                .translate(-s[0], 0));
+        }
+
+        function zoomed() {
+            if (d3.event.sourceEvent && d3.event.sourceEvent.type === "brush") return; // ignore zoom-by-brush
+            var t = d3.event.transform;
+            // Do not attempt to zoom if data not available
+            // This may happen if the user just clicks in the brush without
+            // dragging to select an area to zoom
+            if (isNaN(t.y)) {
+                return;
+            }
+            x.domain(t.rescaleX(x2).domain());
+            // If both axes have equal domain, we are no longer zooming or in a zoomed state
+            // Toggle isZooming to false to allow for more data to be added
+            if (x.domain().toString() != x2.domain().toString()) {
+                isZooming = true;
+            } else {
+                isZooming = false;
+            }
+
+            // Amend each series line with new x domain
+            for (var i = 0; i < series.length; i++) {
+                if (series[i].data.length > 0) {
+                    chart.select("#seriesLine" + i).attr("d",series[i].d3Line(series[i].data));
+                    if (series[i].fill) {
+                        chart.select("#seriesArea" + i).attr("d", series[i].d3Area(series[i].data));
+                    }
+                }
+            }
+            // Update axis domain
+            gX.call(xAxis);
+            context.select(".brush").call(brush.move, x.range().map(t.invertX, t));
+        }
+
+        /**
+         * Function to draw the chart lines, circles and areas.
+         * @param {number} i index of serie to be drawn.
+         * @param {number} duration time in ms for the animation.
+         */
+        function render(i, duration) {
+            if (graphDisabled) {        // if graph is disabled, don't render the lines
+                return;
+            }
+
+            // Do not attempt to insert more data if user is zoomed in
+            if (isZooming) {
+                return;
+            }
+
+            transition = true;
+
+            if (series[i].d3Area != null) {             // only render the area svg if fill is specified
+                series[i].d3Area
+                    .x(function (d) { return x(d.x); })
+                    .y0(height);
+                if (duration !== 0) {                   // duration > 0 will use animation, setting height at bottom then animating to y values
+                    series[i].d3Area.y1(height);
+                } else {
+                    series[i].d3Area.y1(function (d) { return y(d.y); });
+                }
+                series[i].areaElement
+                    .attr("d", series[i].d3Area);
+                chart.select("#seriesArea" + i).attr("d", series[i].d3Area(series[i].data));
+                
+                if (duration !== 0) {
+                    series[i].d3Area
+                        .y1(function (d) { return y(d.y); });
+                    series[i].areaElement
+                        .transition()
+                        .duration(duration)
+                        .attr("d", series[i].d3Area);
+                }
+            }
+            
+            series[i].d3Line.x(function (d) { return x(d.x); });
+            if (duration !== 0) {
+                series[i].d3Line.y(function () { return height; });
+            } else {
+                series[i].d3Line.y(function (d) { return y(d.y); });
+            }
+           
+            series[i].lineElement
+                .attr("d", series[i].d3Line);
+            chart.select("#seriesLine" + i).attr("d",series[i].d3Line(series[i].data));
+            
+            if (duration !== 0) {
+                series[i].d3Line.y(function (d) { return y(d.y); });
+                series[i].lineElement
+                    .transition()
+                    .duration(duration)
+                    .attr("d", series[i].d3Line)
+                    .on("end", function () {
+                        transition = false;
+                    });
+                
+            }
+            adjustLegend();
+
+            // Render lines for context graph
+            context.select("path").data([series[0].data]);
+
+            contextLine.x(function (d) { return x2(d.x); });
+            contextLine.y(function (d) { return y2(d.y); });
+            
+            context.select("path")
+                .attr("d", contextLine);
+
+            chart.select(".y.axis").call(yAxis);
+               
+            transition = false;
+        }
+
+        /**
+         * Get more data if we are out of data in the local array when panning
+         */
+        function checkLoadMore() {
+            if (fw.state === "DASHBOARD" && loaded) {
+                 // Do not attempt to insert more data if user is zoomed in
+                
+
+                dsToLoad = 0;
+                var dateMoved = (x.domain()[0] - x.domain()[1]) * d3.event.transform.x / width;         // Amount we have moved in milliseconds as % of width
+                var newX0 = new Date(x.domain()[0].valueOf() + dateMoved);
+                var newX1 = new Date(x.domain()[1].valueOf() + dateMoved);
+                // Do not change main x axis if still zoomed
+                if (!isZooming) {
+                    x.domain([newX0, newX1]);
+                }
+                x2.domain([newX0, newX1]);
+                if (newX0 < series[0].data[0].x) {                       // scrolling & out of data, get more data
+                    for (var i = 0; i < series.length; i++) {
+                        if (series[i].name !== "") {
+                            render(i, 0);
+                            showTT(true);
+                            fw.func("history", series[i].FQN, series[i].scope, newX0.valueOf(), series[i].data[0].x.valueOf());
+                            dsToLoad = dsToLoad + 1;
+                            loaded = false;
+                        }
+                    }
+                }
+            }
+        }
+        //#endregion
+
+        //#region --- Event functions ---
+
+        /**
+         * Sets all of the scopes
+         * @param {object} eventData eventData.value contains name of the new scope
+         */
+        function setAllScopes(eventData) {
+            delayed_scope = eventData.value;
+            delaySetAllScopes();
+        }
+
+        /**
+         * Resets zooming brush to maximum domain
+         */
+        function resetZoom() {
+            x.domain(x2.domain());
+            brush = d3.brushX()
+                .extent([[0, 0], [width - 2, height2]]);
+            context.select(".brush")
+                .call(brush)
+                .call(brush.move, x.range());
+
+            if (fw.attribs("enable zoom") === "true") {
+                brush.on("start brush end", brushed);
+            } else {
+                gX.call(xAxis);
+            }
+            isZooming = false;
+        }
+
+        /**
+         * Delays setting the scope. Continues checking if graph is loaded. When graph is loaded, sets new scope.
+         */
+        function delaySetAllScopes() {
+            if (loaded || IgnoreFireOnLoad) {
+                for (var i = 0; i < series.length; i++) {
+                    setScope(i, delayed_scope);
+                }
+                // Reset zoom
+                resetZoom();
+                loadChart(startDate, endDate);
+                y2.domain(y.domain());
+            } else {
+                var nothing = setTimeout(delaySetAllScopes, 50);
+            }
+        }
+
+        /**
+         * Sets all of the instances
+         * @param {object} eventData eventData.value contains the name of the new instance
+         */
+        function setAllInstances(eventData) {
+            delayed_instance = eventData.value;
+            delaySetAllInstances();
+        }
+
+        /**
+         * Delays setting the instance. Continues checking if graph is loaded. When graph is loaded, sets new instance.
+         */
+        function delaySetAllInstances() {
+            if (loaded || IgnoreFireOnLoad) {
+                for (var i = 0; i < series.length; i++) {
+                    setInstance(i, delayed_instance);
+                }
+                // Reset zoom
+                resetZoom();
+                loadChart(startDate, endDate);
+                y2.domain(y.domain());
+            } else {
+                var nothing2 = setTimeout(delaySetAllInstances, 50);
+            }
+        }
+
+        /**
+         * Set the scope for a channel
+         * @param {object} ch
+         * @param {object} scopeName
+         */
+        function setScope(ch, scopeName) {
+            var chInt = parseInt(ch);
+            fw.func("ChangeChannel", "SCOPE", ch.toString(), scopeName);
+            var splitFQN = series[chInt].FQN.split("/");
+            series[chInt].FQN = splitFQN[0] + "/" + splitFQN[1] + "/" + splitFQN[2] + "/" + scopeName.trim().toUpperCase();
+            series[chInt].scope = scopeName;
+            endDate = Date.now();
+            series[chInt].data = [];
+        }
+
+        /**
+         * Sets the instance for a channel
+         * @param {object} ch
+         * @param {object} scopeName
+         */
+        function setInstance(ch, instanceName) {
+            var chInt = parseInt(ch);
+            fw.func("ChangeChannel", "INSTANCE", ch.toString(), instanceName);
+            var splitFQN = series[chInt].FQN.split("/");
+            series[chInt].FQN = splitFQN[0] + "/" + splitFQN[1] + "/" + instanceName.trim().toUpperCase() + "/" + splitFQN[3];
+            endDate = Date.now();
+            series[chInt].data = [];
+        }
+
+        /**
+         * Event to reload the chart with the previously defined startDate and endDate
+         * @param {object} eventData the eventData does not matter in this function, it will always reload
+         */
+        function reload(eventData) {
+            // if feed data is being recieved, when reloading set it to the new graph view, instead of loading the old graph view and jumping forward.
+            resetZoom();
+            if (received_feed) {
+                var reload_start_date = new Date(latest_feed - 3600000 * historyHrs);
+                loadChart(reload_start_date, latest_feed);
+                return;
+            }
+            loadChart(startDate, endDate);
+        }
+
+        /**
+         * Set the range of the graph
+         * @param {object} eventData eventData.value can contain different formats: start date to now (yyyy-mm-dd), start and end date (yyyy-mm-dd,yyy-mm-dd). To include hours minutes and seconds, use yyyy-mm-dd:hh:mm:ss
+         */
+        function setGraphRange(eventData) {
+            var values = eventData.value.split(",");
+            var start = [];                                             // container for date params
+            var end = [];
+
+            switch (values.length) {
+                case 1:
+                    // we are only receiving a start Date assume midnight as no start time
+                    values[0].split('-').forEach(function (item) {
+                        start.push(parseInt(item));
+                    });
+
+                    startDate = new Date(start[0], start[1] - 1, start[2], 0, 0, 0, 0).getTime();
+                    endDate = Date.now();
+                    if (!isNaN(startDate)) {
+                        historyHrs = (endDate - startDate) / 3600000;
+                        resetZoom();
+                        loadChart(startDate, endDate);
+                    } else {
+                        fw.func("status", "WARNING - Incorrect start date specified. Format required yyyy-mm-dd", true);
+                    }
+                    break;
+                case 2:
+                    // we must be receiving a start date and end date
+                    values[0].split('-').forEach(function (item) {
+                        start.push(parseInt(item));
+                    });
+
+                    values[1].split('-').forEach(function (item) {
+                        end.push(parseInt(item));
+                    });
+
+                    startDate = new Date(start[0], start[1] - 1, start[2], 0, 0, 0, 0).getTime();
+                    endDate = new Date(end[0], end[1] - 1, end[2], 0, 0, 0, 0).getTime();
+
+                    if (!isNaN(startDate)) {
+                        if (!isNaN(endDate)) {
+                            // set these dates into global store, set widget to use custom dates
+                            customStartDate = startDate;
+                            customEndDate = endDate;
+                            useCustomDates = true;
+                            resetZoom();
+                            loadChart(startDate, endDate);
+                        } else {
+                            fw.status({
+                                message: "WARNING - Invalid End Date or End time entries (NaN). Format required yyyy-mm-dd"
+                            });
+                            Log.warn("Invalid End Date or End time entries (NaN). Format required yyyy-mm-dd");
+                        }
+                    } else {
+                        fw.status({
+                            message: "WARNING - Invalid start Date or start time entries (NaN). Format required yyyy-mm-dd"
+                        });
+                        Log.warn("Invalid start Date or start time entries (NaN). Format required yyyy-mm-dd");
+                    }
+                    break;
+                case 4:
+                    // we are getting start/end dates with relevant times
+                    values[0].value.split('-').forEach(function (item) {
+                        start.push(parseInt(item));
+                    });
+
+                    eventData[1].value.split(':').forEach(function (item) {
+                        start.push(parseInt(item));
+                    });
+
+                    var end = [];
+                    values[2].split('-').forEach(function (item) {
+                        end.push(parseInt(item));
+                    });
+
+                    values[3].split(':').forEach(function (item) {
+                        end.push(parseInt(item));
+                    });
+
+                    startDate = new Date(start[0], start[1] - 1, start[2], start[3], start[4], 0, 0).getTime();
+                    endDate = new Date(end[0], end[1] - 1, end[2], end[3], end[4], 0, 0).getTime();
+                    customStartDate = startDate;
+                    customEndDate = endDate;
+                    useCustomDates = true;
+
+                    if (!isNaN(startDate && !isNaN(endDate))) {
+                        resetZoom();
+                        loadChart(startDate, endDate);
+                    } else {
+                        fw.status({
+                            message: "INFO - Invalid Date and time entries (NaN). Format required yyyy-mm-dd"
+                        });
+                        Log.warn("Invalid Date and time entries (NaN). Format required yyyy-mm-dd");
+                    }
+                    break;
+                default:
+                    fw.status({
+                        message: "INFO - Invalid Date and time entries (" + eventData.value + "). Format required yyyy-mm-dd"
+                    });
+                    Log.warn("Invalid Date and time entries (" + eventData.value + "). Format required yyyy-mm-dd");
+                    return false;
+            }
+        }
+
+        /**
+         * Set the x axis interval
+         * @param {object} interval interval.value contains an accepted time string (eg minute, hour, 4 hour, 8 hour, 12 hour, day, week, month, year) or a number that defines the amount of hours to display.
+         */
+        function setXAxisInterval(interval) {               // Note "setInterval" will function name clash with D3
+            useCustomDates = false; // stop using custom dates
+            var newHrs = 12;
+            if (typeof interval.value === "string") {
+                switch (interval.value.trim().toUpperCase()) {
+                    case "MINUTE":
+                        newHrs = 0.0167;
+                        break;
+                    case "HOUR":
+                        newHrs = 1;
+                        break;
+                    case "4 HOUR":
+                        newHrs = 4;
+                        break;
+                    case "8 HOUR":
+                        newHrs = 8;
+                        break;
+                    case "12 HOUR":
+                        newHrs = 12;
+                        break;
+                    case "DAY":
+                        newHrs = 24;
+                        break;
+                    case "WEEK":
+                        newHrs = 168;
+                        break;
+                    case "MONTH":
+                        newHrs = 744;                           // Assume 31 days
+                        break;
+                    case "YEAR":
+                        newHrs = 8760;
+                        break;
+                    default:
+                        fw.func("status", "WARNING - Graph received incorrect interval '" + interval + "', specify DAY/WEEK/MONTH/YEAR instead", true);
+                        return;
+                        break;
+                }
+                historyHrs = newHrs;
+                startDate = Date.now() - 3600000 * historyHrs;
+                endDate = Date.now();
+                resetZoom();
+                loadChart(startDate, endDate);
+            }
+        }
+
+        /**
+         * Sets a threshold line from client input event
+         */
+        function setThreshold(eventData) {
+            // TODO need to supply index number
+            var eventValues = eventData.value.split(" ");
+            var indexValue = parseInt(eventValues[0]);
+            var threshValue = eventValues[1];
+            // Return if number is not provided
+            if (isNaN(indexValue) || isNaN(parseFloat(threshValue))) {
+                return;
+            }
+            var color = eventValues[2];
+            if (color == undefined) {
+                // Default to black if user did not specify a color
+                color = "black";
+            }
+            if (indexValue < 0 || indexValue > thresholdValues.length) {
+                // Index value is too high/low
+                return;
+            } else if (indexValue < thresholdValues.length) {
+                // Index value already exists
+                d3.select(`#thresh-line${indexValue}`)
+                    .style("stroke", color)
+                    .attr("d", function () {
+                    var data = "M" + 0 + "," + y(threshValue);
+                    data += " " + width + "," + y(threshValue);
+                    return data;
+                });
+                thresholdValues[indexValue] = threshValue;
+                return;
+            }
+            
+            // Threshold is new
+            var thresholdCount = thresholdValues.length;
+            chart
+                .append("path")
+                .attr("id", `thresh-line${thresholdCount}`)
+                // .attr("class", "green")
+                .style("stroke", color)
+                .attr("clip-path", "url(#clip)")
+                .style("stroke-dasharray", ("3, 3"))
+                .style("stroke-width", "2px")
+                .style("z-index", 101);
+                
+            d3.select(`#thresh-line${thresholdCount}`)
+                .attr("d", function () {
+                var data = "M" + 0 + "," + y(threshValue);
+                data += " " + width + "," + y(threshValue);
+                return data;
+            });
+            thresholdValues.push(threshValue);
+        }
+
+        /**
+         * Moves threshold lines when y-axis domain changes 
+         */
+        function adjustThresholds() {
+            for (var i = 0; i < thresholdValues.length; i++) {
+                d3.select(`#thresh-line${i}`)
+                    .attr("d", function () {
+                    var data = "M" + 0 + "," + y(thresholdValues[i]);
+                    data += " " + width + "," + y(thresholdValues[i]);
+                    return data;
+                });
+            }
+        }
+
+        //#endregion
+
+        //#region --- Widget API functions ---
+
+        //
+        /**
+         * API startup actions for dashboard, initialises widget. Return "OK" if startup OK else return an error string. Don't delete
+         * @param {object} mode the startup mode.
+         */
+        function fw_dashStart(mode) {
+            if (fw.disabled) {
+                graphDisabled = true;
+            }
+            if (mode === "DESIGN") {
+                showTT(false);
+            }
+            // Get input server channels
+            var serverEvents = fw.func("getEvents", "serverEvents");
+            if (serverEvents && ("inputEvents" in serverEvents)) {
+                Object.keys(serverEvents.inputEvents).forEach(function (event) {
+                    var scope = serverEvents.inputEvents[event].channel.split("/")[3];
+                    series.push(new serie(serverEvents.inputEvents[event].channel, scope,
+                        serverEvents.inputEvents[event].attribs["color"], serverEvents.inputEvents[event].attribs["area fill"] === "true", +serverEvents.inputEvents[event].attribs["fill opacity"]));
+                });
+            }
+
+            // Apply compression / limits according to device
+            if (fw.func("GETDEVICE").toUpperCase() === "PHONE") {
+                if (typeof fw.attribs("compression") !== "undefined" && fw.attribs("compression") === "true") {
+                    MAXPOINTS = 20000;
+                } else {
+                    MAXPOINTS = 4000;
+                }
+            } else {
+                if (typeof fw.attribs("compression") !== "undefined" && fw.attribs("compression") === "true") {
+                    MAXPOINTS = 20000;
+                    document.getElementById("downIcon").style.setProperty("display", "none");
+                } else {
+                    MAXPOINTS = 50000;
+                }
+            }
+
+            chart.attr("transform", "translate(" + margin.left + "," + margin.top + ")");                // Make room for axis and title
+
+            if (typeof fw.attribs("history timespan") !== "undefined") {
+                historyHrs = parseFloat(fw.attribs("history timespan"));
+                if (isNaN(historyHrs)) historyHrs = 24;
+            } else {
+                historyHrs = 24;
+            }
+
+            // choose the type of line curve
+            curve = d3.curveLinear;
+            if (typeof fw.attribs("line type") !== "undefined") {
+                switch (fw.attribs("line type").toLowerCase()) {
+                    case "stepafter":
+                        curve = d3.curveStepAfter;
+                        break;
+                    case "step":
+                        curve = d3.curveStep;
+                        break;
+                    case "monotonex":
+                        curve = d3.curveMonotoneX;
+                        break;
+                }
+            }
+
+            // if we want to disable the legend, do so (before loadchart)
+            if (fw.attribs("enable legend") === "true") {
+                legend = chart.append("g").attr("class", "legend").attr("y", 25).attr("height", 100).attr("width", 100);
+            } else {
+                legend = chart.append("g").attr("display", "none");
+            }
+
+            if (fw.attribs("enable zoom") === "true") {
+               context.attr("display", null);
+               margin.bottom = 60;
+            } else {
+               context.attr("display", "none");
+               margin.bottom = 0;
+            }
+
+            // Request history
+            startDate = Date.now() - 3600000 * historyHrs;
+            endDate = Date.now();
+
+            loadChart(startDate, endDate);
+
+            if (typeof fw.attribs("title") !== "undefined") {
+                chartTitle = fw.attribs("title");
+            }
+
+            setYTitle();
+
+            return "OK";
+        }
+
+        /**
+         * API startup actions for toolbox. Return "OK" if startup OK else return an error string
+         * @param {object} mode the startup mode.
+         */
+        function fw_toolStart(mode) {
+            tooltip.style.setProperty("display", "none");
+
+            document.getElementById("downIcon").style.setProperty("display", "none");
+            context.attr("display", "none");
+
+            chart.style("fill", "rgba(255,255,255,0.1)")
+                .attr("width", "100%").attr("height", "100%");
+
+            d3.select("#widget").select(".mouse-over-effects").attr("display", "none");
+
+            chart.append("path")                // random line to show in toolbox
+                .attr("d", "M0,40 L10,70 L20,60 L30,30 L40,35 L50,45 L60,80 L70,70 L80,85 L90,60 L100,65")
+                .attr("stroke", "red")
+                .attr("stroke-width", "2")
+                .attr("fill", "none");
+
+            chart.attr("transform", "translate(0,0)");
+
+            return "OK";
+        }
+
+        /**
+         * API startup actions when first created by dropping in design mode. Return "OK" if startup OK else return an error string
+         * @param {object} mode the startup mode.
+         */
+        function fw_newWidget(mode) {
+            return fw_dashStart();
+        }
+
+        /**
+         * Real time channel updates from the server (note - not called by framework, all data comes via fw_history)
+         * @param {string} channel the channel object for the desired feed
+         * @param {string} client source of the requested feed
+         * @param {object} value the value from the feed
+         */
+        function fw_feed(channel, client, value) {
+            // if we only want to view historical data
+            if (fw.attribs("disable feed") === "true") {
+                return;
+            }
+
+            // Check if needing to load (waiting for history packet)
+            historySub = false;
+            var keys = Object.keys(parent.widgets[fw.widgetName].events.serverEvents.inputEvents);
+
+            for (var i = 0; i < keys.length; i++) {
+                var key = keys[i];
+                var event = parent.widgets[fw.widgetName].events.serverEvents.inputEvents[key].event;
+                if (event.toLowerCase() == "history") {
+                    historySub = true;
+                    break;
+                }
+            }
+
+            // keep going as needed
+            if (loaded || !historySub) {
+                // Only accept real time data once history is loaded
+                received_feed = true;
+                feedPoint(channel, client, value);
+            }
+        }
+
+        /**
+         * Ignore INI requests at startup as we don't need the ini value, it will come from the history request
+         * @param {object} channel the channel object for the desired feed
+         * @param {object} scope the scope object for the desired scope
+         * @param {object} value the value from the ini
+         */
+        function fw_ini(channel, scope, value) {
+            return;
+        }
+
+        /**
+         * Result set in JSON of any channel history request + real time feeds
+         * @param {string} channel the channel object for the desired feed
+         * @param {string} scope the scope object for the desired scope
+         * @param {object} data the data from the history
+         */
+        function fw_history(channel, source, data) {
+            if (!receivedChannels.includes(channel)) {
+                var isLoadingFromHistory = fw.attribs("only accept data from my events");
+                // If attribute is undefined
+                if (isLoadingFromHistory == null) {
+                    isLoadingFromHistory = "false";
+                }
+                if ((isLoadingFromHistory === "true" && source == fw.widgetName) 
+                    || isLoadingFromHistory === "false") {
+                    
+                    receivedChannels.push(channel);
+                    if (Array.isArray(data.value)) {
+                        return load(channel, source, data);
+                    } else {
+                        if (data.sysmeta.source !== "server/ini") {                                        // Graph can't handle ini, wait for history
+                            fw_feed(channel, source, data);
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * API called when switching to design mode (optional, delete if not using)
+         */
+        function fw_startDesign() {
+            context.select(".axis--x").attr("display", "none");
+            return true;
+        }
+
+        /**
+         * API called to manage scaling
+         * @param {number} scaleX
+         * @param {number} scaleY
+         */
+        function fw_scale(scaleX, scaleY) {
+            width = options.settings.iniWidth * scaleX - margin.left - margin.right;
+            height = options.settings.iniHeight * scaleY - margin.top - margin.bottom;
+
+            height = options.settings.iniHeight * scaleY - margin.top - margin.bottom - height2;
+
+            fw.widgetID.width.baseVal.value = options.settings.iniWidth * scaleX;
+            fw.widgetID.height.baseVal.value = options.settings.iniHeight * scaleY - 25;
+
+            if (fw.state === "TOOLBOX") {
+                width = options.settings.iniWidth;
+                height = options.settings.iniHeight;
+            }
+
+            clipPath
+                .attr("left", 800)
+                .attr("width", width)
+                .attr("height", height);
+
+            x
+                .domain([new Date(Date.now() - 3600000 * historyHrs), new Date])       // assumes seconds
+                .range([0, width]);
+
+            // x values of smaller context graph
+            x2 
+                .domain(x.domain())
+                .range(x.range())
+
+            oldDomain = x.domain();
+
+            y.range([height, 0]);
+
+            y2.range([height2, 0]);
+
+            if (!setAxes) {
+                // Do not set y axes range multiple times. This prevents issues with resizing
+                y
+                    .domain([minVal, maxVal])
+                    .nice();
+
+                // y values of smaller context graph
+                y2
+                    .domain(y.domain())
+                    .nice();
+                setAxes = true;
+            }
+
+            zoom = d3.zoom()
+                .scaleExtent([1, Infinity])
+                .translateExtent([[0, 0], [width, height]])
+                .extent([[0, 0], [width, height]]);
+
+            // brush that shows the area being zoomed into
+            brush = d3.brushX()
+                .extent([[0, 0], [width, height2]]);
+
+            xAxis
+                .scale(x)
+                .tickSize(-height)
+                .ticks(3.1 * scaleX); // adjust number of ticks based on size of graph
+            
+            // x axis for smaller context graph
+            xAxis2
+               .scale(x2)
+               .tickSize(-height2)
+               .ticks(3.1 * scaleX);
+
+            // Prevent additional CPU usage by not binding these when slider is disabled
+            if (fw.attribs("enable zoom") === "true") {
+                zoom.on("zoom", zoomed);
+                brush.on("start brush end", brushed);
+            } else {
+                gX.call(xAxis);
+            }
+            
+            yAxis
+                .scale(y)
+                .tickSize(-width);
+
+            // Do not append this everytime this scaling function is called
+            if (context.selectAll("g").empty()) {
+                // add set of axes to the context area
+                context.append("g")
+                .attr("class", "axis axis--x");
+
+                // Add the brush to the context area
+                context.append("g")
+                    .attr("class", "brush")
+                    // -2 on translate to better fit brush handles
+                    .attr("transform", "translate(-2,0)");
+            }
+
+            // Position context area appropriately
+            context
+                .attr("transform", "translate(" + margin.left + "," + (height + height2) + ")");
+            
+            // Assign brush object to brush svg
+            context.select(".brush")
+                .call(brush)
+                .call(brush.move, x.range());
+            
+            // Position axes of context graph appropriately
+            context.select(".axis--x")
+                .attr("transform", "translate(0," + height2 + ")")
+                .call(xAxis2);
+            
+            // Add styling for brush handles
+            context.select(".brush").selectAll(".handle")
+                .attr('rx', 3)
+                .attr('ry', 3)
+                .attr('x', function(d, i) {return parseInt(d3.select(this).attr('x'))});
+
+            title
+                .attr("x", width / 2)
+                .attr("y", 0 - (margin.top / 2))
+                .text(chartTitle);
+
+            yLabel
+                .text(yTitle)
+                .attr("transform", "rotate(-90, -40, 0) translate(-" + ((height / 2) + margin.top) + ",-20)");
+
+            chart
+                .attr("class", "zoom")
+                .attr("width", width)
+                .attr("height", height)
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+                .call(zoom)
+                .on("dblclick.zoom", null);
+
+            chart.call(x);                              
+            
+            chart.selectAll(".x.axis").attr("transform", "translate(0," + height + ")");
+            chart.selectAll(".y.axis").call(yAxis);
+
+            if (fw.state === "DASHBOARD") {
+
+                mouseG
+                    .attr("width", width)
+                    .attr("height", height)
+                    .attr('fill', 'none')
+                    .attr("transform", "translate(" + margin.left + "," + (margin.top) + ")");
+
+                mouseG.append('svg:rect') // append a rect to catch mouse movements on canvas
+                .attr("width", width)
+                .attr("height", height)
+                .attr('fill', 'none');
+
+                mouseG
+                    .attr('pointer-events', 'all')
+                    .on('mouseout', function () { // on mouse out hide line, circles and text
+                        d3.select(".mouse-line")
+                            .style("opacity", "0");
+                        d3.selectAll(".mouse-per-line circle")
+                            .style("opacity", "0");
+                        d3.selectAll(".mouse-per-line text")
+                            .style("opacity", "0");
+                        d3.selectAll("#newToolTip")
+                            .style('display', 'none');
+                    })
+                    .on('mouseover', function () { // on mouse in show line, circles and text
+                        d3.select(".mouse-line")
+                            .style("opacity", "1");
+                    })
+                    .on('mousemove', function () { // update tooltip content, line, circles and text when mouse moves
+                        var mouse = d3.mouse(this);
+
+                        d3.selectAll(".mouse-per-line")
+                            .attr("transform", function (d, i) {
+                                var xDate = x.invert(mouse[0]); // use 'invert' to get date corresponding to distance from mouse position relative to svg
+                                var idx = bisectDate(series[i].data, xDate);
+                                if (idx !== 0 && idx !== series[i].data.length) {
+                                    var d0 = series[i].data[idx - 1];
+                                    var d1 = series[i].data[idx];
+                                    var dd = xDate - d0.x > d1.x - xDate ? d1 : d0;
+                                } else {
+                                    return "translate(-100,-100)";
+                                }
+                                // Keep tooltip circles within axes
+                                var circleYPos = Math.max(Math.min(y(dd.y), height), 0);
+                                d3.select(".mouse-line")
+                                    .attr("d", function () {
+                                    var data = "M" + (x(dd.x)) + "," + height;
+                                    data += " " + (x(dd.x)) + "," + 0;
+                                    return data;
+                                    });
+                                return "translate(" + (x(dd.x)) + "," + circleYPos + ")";
+                            });
+                        updateTooltipContent(mouse);
+                    });
+            }
+
+            adjustLegend();
+        }
+
+        function updateTooltipContent(mouse) {
+            var x0 = x.invert(mouse[0]);
+            var sortingObj = [];
+            var fullHTML = "";
+
+            for (var j = 0; j < series.length; j++) {        
+                var i = bisectDate(series[j].data, x0);
+                if (i !== 0 && i !== series[j].data.length) {
+                    var d0 = series[j].data[i - 1];
+                    var d1 = series[j].data[i];
+                    var dd = x0 - d0.x > d1.x - x0 ? d1 : d0;
+                    // This ensures at least one series provides the time value
+                    var dateArray = dd.x.toString().split(" ");
+                    fullHTML = "<b>" + dateArray[0] + " " + dateArray[1] + " " + dateArray[2] + " " + dateArray[3] + " " + dateArray[4] + "</b>";
+                    sortingObj.push({val: dd.y, color: series[j].color, name: series[j].name, scope: series[j].scope});
+                } 
+            }
+            // Mouse is not over any data points, do not attempt to load tooltip
+            if (fullHTML == "") {
+                return;
+            }
+
+            sortingObj.sort(function(x,y) {
+                return d3.descending(x.val, y.val);
+            });
+
+            for (var i = 0; i < sortingObj.length; i++) {
+                fullHTML += "<b><p class='"+ sortingObj[i].color + "' style='margin:0;'>" + sortingObj[i].name + " " + sortingObj[i].scope + " " + (Math.round(sortingObj[i].val * 100) / 100) + "</p></b>";
+                d3.selectAll(".mouse-per-line circle")
+                            .style("opacity", "1");
+            }
+            newToolTip.html(fullHTML);
+
+            // Ensure the tooltip box is at least 200px
+            var tooltipWidth = Math.max(200, newToolTip.node().getBoundingClientRect().width);
+
+            // Push to right when looking at edge of graph
+            if (d3.select("#widget").attr("width") - (d3.event.pageX + 20) < tooltipWidth) {
+                newToolTip.style("left",  (d3.event.pageX - 20 - tooltipWidth) + "px");
+            } else {
+                newToolTip.style("left",  (d3.event.pageX + 20) + "px");
+            }
+            if (series[0] != undefined) {
+                newToolTip
+                    .style("display", "block")
+                    .style("top", (d3.event.pageY - 20)  + "px")
+                    .style("font-size", 11.5)
+                    .style("opacity", 0.9)
+                    .selectAll()
+                    .style("color", series[0].color)
+                    .style("font-size", 10);
+            }
+        }
+
+        /**
+         * API called when widget edit starts (return false to stop editor, "NOSCALE", "NOVERT", "NOHORIZ", "NOVERT,NOHORIZ" to customise scaling)
+         */
+        function fw_startEdit() {
+            return true;
+        }
+
+        /**
+         * API called when widget edit finishes (apply edit changes here)
+         * @param {object} mode the startup mode
+         */
+        function fw_endEdit(mode) {
+            chartTitle = fw.attribs("title");
+            title.text(chartTitle);
+
+            setYTitle();
+            yLabel.text(yTitle);
+
+            if (fw.state === "DESIGN" || fw.state === "EDIT") {
+                if (fw.attribs("enable legend") === "true") {
+                    legend.attr("display", "none");
+                } else {
+                    legend = chart.append("g").attr("class", "legend").attr("y", 25).attr("height", 100).attr("width", 100);
+                }
+
+                if (fw.attribs("enable zoom") === "true") {
+                   context.attr("display", null);
+                   margin.bottom = 60;
+                   chart.selectAll(".x.axis").attr("transform", "translate(0," + height + ")");
+                } else {
+                    context.attr("display", "none");
+                    margin.bottom = 0;
+                    chart.selectAll(".x.axis").attr("transform", "translate(0," + (height + 20) + ")");
+                }
+            }
+            adjustLegend();
+        }
+
+                        //#endregion
+    </script>
+</body>
+</html>

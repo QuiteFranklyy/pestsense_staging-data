@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- [NEW_WIDGET] Replace XXXXX with widget name (filename) -->
+    <title>Heatmap Calendar</title>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/cal-heatmap/3.3.10/cal-heatmap.css" /> 
+     <style>
+        body {
+            overflow: hidden;
+            /* [NEW_WIDGET] delete for widgets that don't use text */
+            font-family: "Open Sans";
+            font-size: 16px;
+            /* [NEW_WIDGET] delete for widgets that want to have the mouse drag do select */
+            user-select: none;
+        }
+
+        /* [NEW_WIDGET] delete for widgets that don't use text */
+        @font-face {
+            font-family: "Open Sans";
+            font-style: normal;
+            font-weight: 400;
+            src: local("Open Sans"), local("OpenSans"), url("../fonts/OpenSans400.woff2") format("woff2"), url("../fonts/OpenSans400.woff") format("woff");
+            font-display: block;
+        }
+
+        /* [NEW_WIDGET] delete any unnecessary colors. Change color tag to fill if using svg. */
+        .yellow {
+            background-color: #fffaf3;
+            color: #c09853;
+        }
+
+        .white {
+            background-color: #ffffff;
+            color: #999;
+        }
+
+        .grey {
+            background-color: #f5f5f5;
+            color: #999;
+        }
+
+        .blue {
+            background-color: #d9edf7;
+            color: #3a87ad;
+        }
+
+        .red {
+            background-color: #f2dede;
+            color: #b94a48;
+        }
+
+        .green {
+            background-color: #dff0d8;
+            color: #468847;
+        }
+
+        .orange {
+            border: 2px solid #f5c8b9;
+            background-color: #ffe8d9;
+            color: #d16e2c;
+        }
+
+        .orange_strong {
+            border: 2px solid #d56113;
+            background-color: #f58133;
+            color: #ffffff;
+        }
+
+        .blue_strong {
+            border: 2px solid #001669;
+            background-color: #15317E;
+            color: white;
+        }
+
+        .black {
+            border: 2px solid #555555;
+            background-color: #343a40;
+            color: #dddddd;
+        }
+
+        .cal-heatmap-container{
+            width: 100% !important;
+        }
+
+        .q1{
+            background-color: #388b3d;
+            fill: #388b3d;
+            opacity: 0.5;
+        }
+        .q2{
+            background-color: #ffbb00;
+            fill: #ffbb00;
+            opacity: 0.5;
+
+        }
+        .q3{
+            background-color: #ff0000;
+            fill: #ff0000;
+            opacity: 0.5;
+
+        }
+        .q4{
+            background-color: #ff0000;
+            fill: #ff0000;
+            opacity: 0.5;
+
+        }
+        .q5{
+            background-color: #ff0000;
+            fill: #ff0000;
+            opacity: 0.5;
+
+        }
+        .graph-legend{
+            display: none;
+        }
+        .graph-browse-previous{
+            position: absolute;
+            top: 33%;
+            width: 33px;
+            height: 49px;
+            fill: black;
+            left: -2px;
+            z-index: 22;
+        }
+
+        .graph-browse-next {
+            position: absolute;
+            top: 33%;
+            width: 33px;
+            height: 49px;
+            right:22px;
+            z-index: 22;
+            fill:black;
+        }
+
+        .bi .bi-arrow-left{
+            fill: black;
+        }
+
+        .bi .bi-arrow-right{
+            fill: black;
+        }
+
+        rect.now{
+            stroke:none !important;
+            opacity: 1;
+        }
+
+        .graph-subdomain-group rect:hover{
+            opacity: 1;
+        }
+        .graph-subdomain-group rect:active{
+            opacity: 1;
+        }
+      
+    </style>
+</head>
+<script src="https://d3js.org/d3.v3.min.js" type="application/javascript"></script>
+ 
+ <!-- <script type="text/javascript" src="//cdn.jsdelivr.net/cal-heatmap/3.3.10/cal-heatmap.min.js"></script> -->
+<script type="text/javascript" src="js/heatmap/cal-heatmap.js"></script>
+
+<body id="body" style="overflow: hidden;">
+    <a href="#" rel="prev" id="graph-browse-previous" class="graph-browse-previous" title="Load previous day"> 
+        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="55" height="55"   class="bi bi-arrow-left" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+        </svg> -->
+        <svg
+ 
+        id="svg15911"
+        version="1.1"
+        viewBox="0 0 14.147119 14.544586"
+        height="6.544586mm"
+        width="6.147119mm">
+        
+        <g
+            transform="matrix(-1,0,0,1,14.037793,-0.58136337)"
+            id="layer1">
+            <path
+            id="path16461"
+            d="M 0.43739638,1.1094263 13.913167,7.8508123 0.42205438,14.597887"
+            style="fill:none;stroke:#c7c7c7;stroke-width:1.04938114;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+            inkscape:connector-curvature="0" />
+        </g>
+        </svg>
+
+    </a>
+    <a href="#" rel="next" id="graph-browse-next" class="graph-browse-next" title="Load next day">
+        <!-- <svg xmlns="http://www.w3.org/2000/svg" width="55" height="55"   class="bi bi-arrow-right" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+        </svg> -->
+        <svg
+ 
+        id="svg15911"
+        version="1.1"
+        viewBox="0 0 14.147119 14.544586"
+        height="6.544586mm"
+        width="6.147119mm">
+        
+        <g
+            transform="translate(-0.29067461,-0.58136337)"
+            id="layer1">
+            <path
+            id="path16461"
+            d="M 0.43739638,1.1094263 13.913167,7.8508123 0.42205438,14.597887"
+            style="fill:none;stroke:#c7c7c7;stroke-width:1.04938114;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+        </g>
+        </svg>
+
+    </a>
+    <div id="group" style="margin-left:60px; margin-right: 60px;" >
+       
+        <div id="widget" style="width: 100%; height: 100%;">
+          
+            <div id="cal-heatmap" style="width: 100%; height: 100%;"></div>
+        </div>
+     </div>
+     <script src="../js/utilities.js"></script>
+     <script src="/widgets/api/Database.js"></script>
+
+    <script>
+        "use strict";
+
+        var widget  = document.getElementById("widget");
+        //#region --- Widget Settings ---
+        var widgetType = window.location.pathname.split("/").slice(-1)[0].split(".")[0].replace("%20", " ");
+        var options = {
+            settings: {
+                "category": "widget",
+                "type": widgetType,
+                "iniHeight": parseInt(widget.style.height),
+                "iniWidth": parseInt(widget.style.width),
+                //"iniHeight": widget.height.baseVal.value,
+                //"iniWidth": widget.width.baseVal.value,
+                "author": "Sensavation",
+                "tbTooltip": "Heatmap Calendar",
+                //"tooltip": "<TEXT TO SHOW WHEN HOVERING IN A DASHBOARD>",
+                "version": "190104",
+                "group": "other",
+                "zIndex": "ZINDEX_DEFAULT",
+                "disabled": false,
+                "scaling": true,
+                "help": { "type": "file", "source": "help/widgets/" + widgetType + ".md" }
+            },
+            clientEvents: {
+                inputEvents: {
+                    "receive value": receiveValue,
+                    "getvalue": getValue,
+                    "SubscribeData":SubscribeData,
+                    "ClearData":ClearData,
+                    "SetLegend":SetLegend
+                },
+                outputEvents: [
+                    "SubDomainClicked",
+                    "PublishData",
+                    "TableData"
+                ]
+            },
+            serverEvents: {
+                inputEvents: {
+                    "feed": {
+                        "function": fw_feed
+                    },
+                    "history": {
+                        "function": fw_history
+                    }
+                },
+                outputEvents: [
+                 
+                ]
+            },
+            dataTypes: {
+                "feed": ["string", "number"],
+                "ini": ["string", "number"],
+                "retValue": ["array"],
+                "history": ["array"]
+
+            },
+            attribs: {
+                "color": {
+                    "type": "dropdown",
+                    "tooltip": "Select color theme for button",
+                    "options": "grey, green, red, yellow, blue, blue strong, orange, orange strong, white, black",
+                    "default": "red",
+                    "group": "Widget Specific"
+                },
+                "StartDate": {
+                    "type": "input",
+                    "default": "",
+                    "tooltip": "Start Date",
+                    "group": "Widget Specific"
+                },
+                "Range": {
+                    "type": "input",
+                    "default": "",
+                    "tooltip": "End Date",
+                    "group": "Widget Specific"
+                },
+                "Domain": {
+                    "type": "input",
+                    "default": "",
+                    "tooltip": "Domain name",
+                    "group": "Widget Specific"
+                },
+                "SubDomain": {
+                    "type": "input",
+                    "default": "",
+                    "tooltip": "SubDomain name",
+                    "group": "Widget Specific"
+                },
+                "HideNavigation": {
+                    "type": "checkbox",
+                    "default": "",
+                    "tooltip": "Hides the navigation arrows",
+                    "group": "Widget Specific"
+                },
+            }
+        };
+        var deserlizedData = {};
+        Date.prototype.addDays = function (days) {
+            var date = new Date(this.valueOf());
+            date.setDate(date.getDate() + days);
+            return date;
+        }
+
+        Date.prototype.addHours = function(h) {
+            var date = new Date(this.valueOf());
+            date.setTime(this.getTime() + (h*60*60*1000));
+            return date;
+        }
+
+        Date.prototype.substractDays = function (days) {
+            var date = new Date(this.valueOf());
+            date.setDate(date.getDate() - days);
+            return date;
+        }
+        //#region --- Declarations ---
+        var bindingData = {};
+        var DeviceData = {};
+        var domain = "day";
+        var subDomain= "hour";
+        var startDate = new Date().getTime();
+        startDate = new Date(parseInt(startDate));
+        var deviceName = "6666 0101";
+        var MapRange;
+        var loaded = 0; // Holds the ammount of data that needs to be loaded. 
+        var loading = 0; //Holds the expected data to load;
+        var LoadingDeviceData = false;
+        var widgetStartDate =new Date().addDays(-150);
+        var legend = [10, 20];
+
+        InitWidget();
+        var DataSourceName;
+        var DataSourceDetails;
+        var TakenData = {};
+        var MotionData = {};
+        var DevicesData = {};
+
+       
+        //Initializes the widget
+        function InitWidget(activeData)
+        {
+            bindingData = activeData;
+            var range; 
+            var cellsize;
+            var cellPadding;
+            var domainGutter;
+            if(MapRange === undefined)
+            {
+                switch(domain)
+                {
+                    case "month":
+                    range = 12;
+                    startDate = new Date(new Date().getFullYear(), 0, 1);
+                    cellsize = 16;
+                    cellPadding = 6;
+                    domainGutter = 18;
+                    break;
+                    case "day":
+                        range = 10;
+                        cellsize = 16;
+                        cellPadding = 6;
+                        domainGutter = 18;
+                    break;
+                }
+            }
+            else
+            {
+                range = MapRange;
+                cellsize = 16;
+                cellPadding = 6;
+                domainGutter = 18;
+            }
+            var calendar = new CalHeatMap().init({
+                data: activeData,		// Fill the graph with datas from that json file
+                start:  widgetStartDate, 	// Start the calendar on 15th January, 2000
+                id : "graph_b",
+                domain : domain,					// Group data by days
+                subDomain : subDomain,		// Split each day by hours
+                cellSize: cellsize,
+                cellPadding: cellPadding,
+                domainGutter: domainGutter,
+                range: range,
+                // weekStartOnMonday: 0,
+                previousSelector: "#graph-browse-previous",
+	            nextSelector: "#graph-browse-next",	
+          	   // range : range,					// Just display 3 months
+            //    scale: legend ,	// Custom threshold for the scale,
+                legend: legend,
+                onClick: function(date, nb) {
+                    SubDomainClicked(date,nb);
+                }
+            });
+          //  calendar.jumpTo(new Date(2000, 4));
+
+
+            // var getElem = document.getElementsByClassName("r4 q4");
+            // getElem[0].style.setProperty("display","None");
+            // var getEl2 = document.getElementsByClassName("r5 q5");
+            // getEl2[0].style.setProperty("display","None");
+
+	    }
+             
+        //Forwards an output event when selecting a square in the subdomain category.
+        function SubDomainClicked(currentDate, data)
+        {
+            var myWebWorked = new Worker("js/LoadData.js", { type: "module" });
+            var collection = new SensaCollection(["Id", "date time","device name","location name", "location details","motion count","bait taken","timestamp"], "Id");
+            myWebWorked.onmessage = WorkerResult;
+
+            myWebWorked.postMessage({data:currentDate, Collection:collection, domain:domain, DeviceData:DeviceData, DevicesData:DevicesData, bindingData:bindingData, TakenData:TakenData, MotionData:MotionData});
+            //Worker.LoadData(currentDate,data);
+//            LoadData(currentDate,data);
+        }
+
+        function WorkerResult(e)
+        {
+            var currentData = e.data;
+            fw.fireEvent("PublishData",currentData);
+        // fw.fireEvent("TableData", collection); //Fires an event outputs a json with the the data from the heatmap calendar
+            fw.fireEvent("SubDomainClicked", { Date: currentData.currentDate, Data: currentData.data }); //Fires an event outputs a json with the the data from the heatmap calendar
+        }
+        //#endregion
+        
+        //#region --- Widget specific functions ---
+        function widgetEvent(eventName, value) {
+            fw.fireEvent(eventName, value);
+        }
+        //#endregion
+
+        //#region --- Event functions ---
+        // function to receive data from a local channel/scope
+        function receiveValue(eventData) {
+             
+            widget.innerHTML = "<div id=\"cal-heatmap\" style=\"width: 100%; height: 100%;\"></div>";
+
+            widgetStartDate = eventData.value.startDate;
+            TakenData = eventData.value.TakenData;
+            MotionData = eventData.value.MotionData;
+            DevicesData = eventData.value.DevicesData;
+            DeviceData = eventData.value.DeviceData;
+            bindingData = {};
+            InitWidget(eventData.value.data);
+        }
+
+        function ClearData(){
+            loaded =0;
+            MotionData ={};
+            TakenData = {};
+            DevicesData = {};
+            DeviceData = {};
+            bindingData = {};
+            DevicesData = {};
+
+            var getWidget = document.getElementById("widget");
+            getWidget.innerHTML = "<div id=\"cal-heatmap\" style=\"width: 100%; height: 100%;\"></div>";
+            InitWidget([]);
+        }
+
+        function SetLegend(eventData) {
+            const settings = eventData.value.getFirst();
+            const heatMapSettings = JSON.parse(settings.Value);
+            if (subDomain === "hour") {
+                legend = [heatMapSettings.CHMHourGreenThreshold,
+                heatMapSettings.CHMHourAmberThreshold];
+            } else {
+                legend = [heatMapSettings.CHMDayGreenThreshold,
+                heatMapSettings.CHMDayAmberThreshold];
+            }
+        }
+
+        function SubscribeData(eventData)
+        {
+              
+            // if(eventData.value === undefined || eventData.value !== typeof(Object))
+            // {
+            //     return;
+            // }
+            loaded = 0;
+            loading = 0;
+            bindingData = {};
+
+            DevicesData = {};
+            startDate = eventData.value.startDate;
+            var end = eventData.value.endDate;
+            widgetStartDate = new Date().addDays(-150);
+            if(eventData.value.locationName !== "" && eventData.value.locationName !== undefined)
+            {
+                DataSourceName = eventData.value.locationName;
+            }
+            else
+            {
+                DataSourceName = "--";
+            }
+
+            if(eventData.value.description !== "" &&  eventData.value.description !== undefined)
+            {
+                DataSourceDetails = eventData.value.description;
+            }
+            else
+            {
+                DataSourceDetails = "--";
+
+            }
+            MotionData ={};
+            TakenData = {};
+            DevicesData = {};
+            DeviceData = {};
+            
+            eventData.value.data.forEach(x=>{
+                DevicesData[x.Device.toUpperCase()] ={
+                    LocationName:x.LocationName,
+                    Description:x.Description
+                }
+                loading += 2; // Add two for each device channel that has to be loaded.
+                fw.func("history", "PESTCO/RODENTS/" + x.Device.toUpperCase() + "/BAITTAKEN", "BAITTAKEN", startDate, end);         // request data from server
+                fw.func("history", "PESTCO/RODENTS/" + x.Device.toUpperCase() + "/CYCLETOTAL", "CYCLETOTAL", startDate, end);         // request data from server
+
+            });
+          
+        }
+
+        // getValue is a request for value
+        function getValue(eventData) {
+            // ... perform some kind of response to the data request
+        }
+
+        // sends the value held across local channel or to the server
+        function sendValue() {
+            // ...
+        }
+
+        // Set action on the event's data
+        function set(eventData) {
+            setVal(eventData);
+        }
+
+        // Adjust widget based on feed
+        function setVal(data) {
+            //....
+        }
+        //#endregion
+
+        //#region --- Widget API functions ---
+
+        // API startup actions for dashboard, initialises widget. Return "OK" if startup OK else return an error string. Don't delete
+        function fw_dashStart(mode) {
+             if ("Color" in fw.attribs && fw.attribs.Color === "red") {
+                // do stuff
+            }
+            domain = fw.attribs("Domain");
+            subDomain = fw.attribs("SubDomain");
+              
+            if(mode === "DASHBOARD")
+            {
+                 var startingDate = fw.attribs("StartDate");
+                 var startingRage = parseInt(fw.attribs("Range"));
+                if(startingDate !== undefined && startingDate !== "" && !isNaN(startingRage))
+                {
+                    MapRange =  parseInt(fw.attribs("Range"));
+                    startDate = new Date(parseInt(fw.attribs("StartDate")));
+                    widgetStartDate = new Date(parseInt(fw.attribs("StartDate")));
+                }
+
+                if(startingDate === undefined ||  startingDate === "" && !isNaN(startingRage))
+                {
+                    MapRange =  parseInt(fw.attribs("Range"));
+                    startDate = new Date(new Date().getFullYear(), 0, 1);
+                    widgetStartDate = new Date().addDays(-150);
+                }
+                var navigationOptions = fw.attribs("HideNavigation");
+
+                  
+                if(navigationOptions !== "false")
+                {
+                    MapRange = 10;
+                    var left = document.getElementById("graph-browse-previous").style.setProperty("display", "none");
+                    var right = document.getElementById("graph-browse-next").style.setProperty("display", "none");
+                }
+
+                widget.innerHTML = "<div id=\"cal-heatmap\" style=\"width: 100%; height: 100%;\"></div>";
+                InitWidget([]);
+            }
+
+            return "OK";
+        }
+
+        // API startup actions for toolbox. Return "OK" if startup OK else return an error string
+        function fw_toolStart(mode) {
+            return "OK";
+        }
+
+        // API startup actions when first created by dropping in design mode. Return "OK" if startup OK else return an error string
+        function fw_newWidget(mode) {
+            return fw_dashStart();
+        }
+
+        // API called when switching to design mode (optional, delete if not using)
+        function fw_startDesign() {
+            return true;
+        }
+
+        // API called to manage scaling
+        function fw_scale(scaleX, scaleY) {
+            fw.widgetID.style.setProperty("width", "100%");
+            fw.widgetID.style.setProperty("height", "100%");
+            return true;
+        }
+
+        // API called when widget edit starts (return false to stop editor, "NOSCALE", "NOVERT", "NOHORIZ", "NOVERT,NOHORIZ" to customise scaling)
+        function fw_startEdit() {
+            return true;
+        }
+
+        // API called when widget edit finishes (apply edit changes here)
+        function fw_endEdit(mode) {
+            fw_dashStart();
+            return true;
+        }
+
+        // API called for incoming channel events
+        function fw_feed(channel, client, data) {
+             
+            var numeric = getInt(data.value, null);
+            setVal(numeric);
+            return true;
+        }
+        var tsReturned = true;
+        function fw_history(channel, scope, data) {
+            var deviceName = channel.split("/");
+            if(!tsReturned)
+            {
+                setTimeout(function(){
+                    console.log("Waiting to load data in thread")
+                    fw_history(channel, scope,data);
+                },5);
+                return;
+            }
+            if (deviceName[3] === "BAITTAKEN") {
+                tsReturned = false;
+                AddBaitTaken(data.value, deviceName[2]);
+            }
+            
+            else if (deviceName[3] === "CYCLETOTAL") {
+                tsReturned = false;
+                AddCounter(data.value, deviceName[2]);
+            }
+            
+        }
+       
+        function AddBaitTaken(data, device)
+        {
+            var tsWebWorker = new Worker("js/LoadHeatmapTs.js", { type: "module" });
+            var collection = new SensaCollection(["Id", "date time","device name","location name", "location details","motion count","bait taken","timestamp"], "Id");
+            tsWebWorker.onmessage = TsWorkedFinished;
+            tsWebWorker.postMessage({type:1,TakenData:TakenData, MotionData:MotionData,bindingData:bindingData,DeviceData:DeviceData, data:data, device:device});
+
+        }
+
+        function AddCounter(data, device)
+        {
+            var tsWebWorker = new Worker("js/LoadHeatmapTs.js", { type: "module" });
+            var collection = new SensaCollection(["Id", "date time","device name","location name", "location details","motion count","bait taken","timestamp"], "Id");
+            tsWebWorker.onmessage = TsWorkedFinished;
+            tsWebWorker.postMessage({type:2,TakenData:TakenData, MotionData:MotionData,bindingData:bindingData,DeviceData:DeviceData, data:data, device:device});
+
+        }
+
+
+        function TsWorkedFinished(e)
+        {
+            loaded++;
+            var currentData = e.data;
+            if(currentData.Type === 1)
+            {
+                TakenData = currentData.TakenData;
+            }
+            else if(currentData.Type === 2)
+            {
+                MotionData = currentData.MotionData;
+            }
+            
+           // Object.assign(DeviceData, currentData.DeviceData);
+
+            // const 
+            // map1 = bindingData,
+            // map2 = currentData.bindingData;
+            // bindingData = MapResult(map1,map2);
+            DeviceData = currentData.DeviceData;
+            bindingData = currentData.bindingData;
+
+            if(loaded === loading)
+            {
+                widget.innerHTML = "<div id=\"cal-heatmap\" style=\"width: 100%; height: 100%;\"></div>";
+
+                InitWidget(bindingData);
+                var transformDate = formatDate(new Date(), "MM/dd/yy 00:00");
+                var startdate = new Date(Date.parse(transformDate));
+                SubDomainClicked(startdate.addDays(-9),0);
+            }
+            tsReturned = true;
+             //LoadData(startdate.addDays(-6),0);
+        }
+
+        function MapResult(map1, map2)
+        {
+            const merged = Object.entries(map2).reduce((acc, [key, value]) => 
+            // if key is already in map1, add the values, otherwise, create new pair
+            ({ ...acc, [key]: (acc[key] || 0) + value })
+            , { ...map1 });
+
+            return merged;
+        }
+     
+        // If end users put in non integer values, default to a specified value instead (helper function, delete if not using), rounded up
+        function getInt(value, defaultVal) {
+            var intVal = Math.round(value);
+            return isNaN(intVal) ? defaultVal : intVal;
+        }
+
+        // Initialize widget framework API - DO NOT ADJUST OR DELETE
+        var fw = new parent.widgetAPI(window.name);                                  // widget framework object
+        fw.ready(); // fw.ready tells the framework that the widget has successfully loaded. Do not put in other FW_<name> functions.
+                        //#endregion
+    </script>
+</body>
+</html>

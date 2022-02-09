@@ -1,0 +1,556 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Generic Widget</title>
+    <link rel="preload" href="../fonts/OpenSans400.woff2" as="font" crossorigin="anonymous">
+    <style id="cssProperties">
+        /* Customize the label (the container) */
+        .container {
+            display: block;
+            position: relative;
+            padding-left: 2px;
+            /* padding: 15px; */
+            cursor: pointer;
+            /* font-size: 22px; */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+            /* Hide the browser's default checkbox */
+            .container input {
+                position: absolute;
+                opacity: 0;
+                cursor: pointer;
+                height: 0;
+                width: 0;
+            }
+
+
+
+
+        body {
+            font-family: sans-serif;
+            font-size: 16px;
+            user-select: none;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+
+/* 
+        @font-face {
+            font-family: "Open Sans";
+            font-style: normal;
+            font-weight: 400;
+            src: local("Open Sans"), local("OpenSans"), url(../fonts/OpenSans400.woff2) format("woff2"), url(../fonts/OpenSans400.woff) format("woff");
+            font-display: block;
+        } */
+
+        .flex {
+            display: -webkit-box; /* OLD - iOS 6-, Safari 3.1-6, BB7 */
+            display: -ms-flexbox; /* TWEENER - IE 10 */
+            display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+            display: flex; /* NEW, Spec - Firefox, Chrome, Opera */
+            width: 100%;
+        }
+
+        .activeText {
+            color: #4d98c2ff;
+             word-break: break-all;
+        }
+    </style>
+</head>
+<body id="body">
+    <div id="group">
+
+        <div id="widget" style="position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; z-index: 100; overflow:hidden;">
+
+        </div>
+    </div>
+
+    <!-- <script src="api/DataTypes.js"></script> -->
+    <script src="api/Database.js"></script>
+    <script src="api/Script.js"></script>
+    <script src="api/Utils.js"></script>
+    <script src="api/ClientEvents.js"></script>
+    <script src="api/Client.js"></script>
+
+    <script>
+        "use strict";
+
+        var options = {
+            settings: {
+                "category": "widget",
+                "type": window.location.pathname.split("/").slice(-1)[0].split(".")[0].replace("%20", " "),
+                "iniHeight": parseInt(widget.style.height),
+                "iniWidth": parseInt(widget.style.width),
+                "author": "Sensavation",
+                "tbTooltip": "Creates a generic widget, allowing to pass in a template and custom controller to handle its behaviour.",
+                "tooltip": "",
+                "version": "190104",
+                "group": "forms",
+                "zIndex": "ZINDEX_DEFAULT",
+                "disabled": false,
+                "scaling": true,
+                "help": "card"
+            },
+            clientEvents: {
+                inputEvents: {
+                    "clear content": clearContent,
+                    "set css": addStyles,
+                    "set html": addHtml,
+                    "handle generic": handleGeneric,
+                    "set action": setAction
+                },
+                outputEvents: [
+                    "EditCard",
+                    "UploadFile"
+                ]
+            },
+            serverEvents: {
+                inputEvents: {
+                    "feed": {
+                        "function": fw_feed
+                    }
+                },
+                outputEvents: []
+            },
+            dataTypes: {
+                "feed": ["sensacollection"],
+                "retValue": ["array"]
+            },
+            attribs: {
+                "background": {
+                    "default": "gray",
+                    "type": "input",
+                    "group": "defaultColor",
+                    "tooltip": "sets the default color of a widget makes it easy to distinguish in designer"
+                }
+            }
+        };
+        //#endregion
+
+
+        var cardSelected;
+
+
+        /**
+        * Handles a generic action, routes it back to the controller action handler for functional implementation
+        *
+        * @param id - id of the specific card to be updated.
+        */
+        function GenericClicked(action) {
+
+            fw.func("PUBLISHCLIENT", "GenericActionMessage", action);
+        }
+
+        /**
+        * Routes an action result
+        *
+        * @param data - Generic Command to be routed.
+        */
+        function handleGeneric(data) {
+            fw.func("PUBLISHCLIENT", "HandleGenericMessage", data);
+        }
+
+        /**
+        * Handles any internal action for a specifc element such as hide/display/set class/ set styles operations over elements in the template
+        *
+        * @param packet - id of the specific card to be internal structure command.
+        * Command model - {Id,Component,Value,Action}
+        */
+        function setAction(packet) {
+            var target;
+
+            target = document.getElementById(packet.value.Compoent);
+
+
+
+
+            switch (packet.value.Action) {
+                case "display":
+                    if (target === null || target === undefined) {
+                        return;
+                    }
+                    target.style.setProperty("display", "");
+                     
+                    fw.func("SETPROPERTY", fw.widgetName, "z-index", "130");
+                    break;
+                case "Hide":
+                    if (target === null || target === undefined) {
+                        return;
+                    }
+                    target.style.setProperty("display", "none");
+                    break;
+                case "HideIndex":
+                    fw.func("SETPROPERTY", fw.widgetName, "z-index", "-1");
+                    break;
+                case "setVisible":
+                    // THIS SETS THE DISPLAY
+                    if (target === null || target === undefined) {
+                        return;
+                    }
+                    target.style.setProperty("display", packet.value.Value);
+                    break;
+                case "setVisibility":
+                    // THIS SETS THE ACTUAL VISIBILITY
+                    if (target === null || target === undefined) {
+                        return;
+                    }
+                    target.style.setProperty("visibility", packet.value.Value);
+                    break;
+                case "setProp":
+                    var getElm = document.getElementById(packet.value.Id);
+                    if (getElm !== null) {
+                        getElm.innerHTML = packet.value.Value;
+                    }
+                    break;
+                case "setVal":
+
+                    var getElm = document.getElementById("PageName");
+                    if (getElm !== null) {
+                        getElm.innerHTML = packet.value.Value;
+                    }
+                    break;
+                case "setElementClass":
+                    var ids = packet.value.Id.split("|");
+                    var getElm = document.getElementById(ids[0]);
+                    if (getElm !== null) {
+                        var values = packet.value.Value;
+                        getElm.querySelector("[data-info='" + ids[1] + "']").setAttribute("class", values);
+                    }
+                    break;
+                case "SetActiveDeactivate":
+                    var ids = packet.value.Id.split("|");
+                    var getElm = document.getElementById(ids[0]);
+                    if (getElm !== null) {
+                        var values = packet.value.Value.split("|");
+                        getElm.querySelector("[data-info='" + ids[1] + "']").setAttribute("class", values[0]);
+                        getElm.querySelector("[data-info='" + ids[2] + "']").setAttribute("class", values[1]);
+                    }
+                    break;
+                case "ElementToggled":
+
+                    var selectElement = document.getElementById(packet.value.component);
+                    if (selectElement !== null) {
+                        var val = packet.value.Value.split(",");
+                        var status = selectElement.checked;
+                        var getLabel = document.getElementById(val[0]);
+
+                        if (status === true) {
+                            getLabel.setAttribute("class", val[1]);
+                            getLabel.innerHTML = val[3];
+                        }
+                        else {
+                            getLabel.setAttribute("class", val[2]);
+                            getLabel.innerHTML = val[4];
+                        }
+                    }
+                case "SetToggle":
+                    var currentElement = document.getElementById("MaintnanceModeRow");
+                    switch (packet.value.Value) {
+                        case "1":
+                            SetToggleActive(currentElement, "ON");
+                            break;
+                        case "0":
+                            SetToggleInactive(currentElement, "OFF");
+                            break;
+                    }
+                    break;
+                case "Change Generic Action":
+                    //    target.onclick = GenericClicked(packet.value.Value);
+                    switch (packet.value.Value) {
+                        case "Status":
+                            target.onclick = EnableStatus;
+                            break;
+                        case "Advisory":
+                            target.onclick = EnableAdvisories;
+                            break;
+                        case "StatusRodent":
+
+                            //Todo change status to point to rodent.
+                            target.onclick = EnableStatus;
+
+                            break;
+                        case "RodentGrid":
+                            //   target.querySelector("[data-info='active1Name']").innerHTML = "None";
+                            target.onclick = RodentGrid;
+                            break;
+                        case "Landing Page":
+                            //   target.querySelector("[data-info='active1Name']").innerHTML = "None";
+                            target.onclick = LandingPage;
+                            break;
+                        case "Reports Status":
+                            //   target.querySelector("[data-info='active1Name']").innerHTML = "None";
+                            target.onclick = ReportStatus;
+                            break;
+                    }
+                    break;
+                case "EnableStatus":
+                    EnableStatus();
+                    break;
+                default:
+                    // default to just set style with given element id
+                    target.style.setProperty(packet.value.Action, packet.value.Value);
+                    break;
+            }
+        }
+        //Temporary Methods
+
+        function LandingPage() {
+            fw.func("JUMPSCREEN", "Levels");
+        }
+        function ReportStatus() {
+            fw.func("JUMPSCREEN", "Levels");
+        }
+
+
+        function RodentGrid() {
+            fw.func("JUMPSCREEN", "Device Level");
+        }
+
+        function EnableStatus() {
+
+            var packet = {
+                "value":
+                {
+                    "Action": "SetActiveDeactivate",
+                    "Compoent": "Statuses",
+                    "Value": "dot|dot active",
+                    "Id": "Statuses|Active3|Active1",
+                }
+            };
+            setAction(packet);
+            fw.func("PUBLISHCLIENT", "changeVisibleCounter", 1);
+            fw.func("PUBLISHCLIENT", "view-pointer-changed", 1);
+        }
+
+        function EnableAdvisories() {
+            var packet = {
+                "value":
+                {
+                    "Action": "SetActiveDeactivate",
+                    "Compoent": "Statuses",
+                    "Value": "dot|dot active",
+                    "Id": "Statuses|Active1|Active3",
+                }
+            };
+            setAction(packet);
+            fw.func("PUBLISHCLIENT", "changeVisibleCounter", 2);
+            fw.func("PUBLISHCLIENT", "view-pointer-changed", 2);
+        }
+        //End of temporary
+        function CahngeMaitnanceMode(eventData) {
+             
+
+            var toggle = eventData.querySelector('[data-value="maitnanceSelect"]');
+            var currentClass = toggle.classList[0]
+            if (currentClass === "inactiveToggle") {
+                SetToggleActive(eventData, "ON");
+            }
+            else {
+                SetToggleInactive(eventData, "OFF");
+            }
+        }
+        function ChangeActiveMode(eventData) {
+             if (eventData.value === "All") {
+                handleGeneric(`FilterFor|All`);
+             }
+             else {
+                handleGeneric(`FilterFor|Active`);
+             }
+         }
+
+        function ToggleFloorPlan(eventData) {
+            var toggle = eventData.querySelector('[data-value="floorPlanSelect"]');
+            var currentClass = toggle.classList[0];
+            let floorMapUploadBtn = document.getElementById('floorMapUploadBtn');
+            if (currentClass === "inactiveToggle") {
+                eventData.querySelector('[data-value="floorPlanCheckbox"]').checked = true;
+                toggle.innerHTML = "ON";
+                toggle.setAttribute("class", "activeToggle");
+                floorMapUploadBtn.style.visibility = 'visible';
+                fw.func("HIDEWIDGET", "PickSlider#0");
+                fw.func("HIDEWIDGET", "Label#40");
+                fw.func("HIDEWIDGET", "Graph#0");
+                fw.func("HIDEWIDGET", "Graph#2");
+                fw.func("HIDEWIDGET", "Graph#3");
+                fw.func("HIDEWIDGET", "Graph#1");
+                fw.func("HIDEWIDGET", "Graph#4");
+                fw.func("HIDEWIDGET", "Graph#5");
+                fw.func("SHOWWIDGET", "DeviceLevelFoorMap");
+                fw.func("SHOWWIDGET", "SaveFloorMap");
+                // fw.func("PUBLISHCLIENT", "ResizeDeviceLevelFoorMap", { width: 700, height: 450 });
+            }
+            else {
+                eventData.querySelector('[data-value="floorPlanCheckbox"]').checked = false;
+                toggle.innerHTML = "OFF";
+                toggle.setAttribute("class", "inactiveToggle");
+                floorMapUploadBtn.style.visibility = 'hidden';
+                fw.func("SHOWWIDGET", "PickSlider#0");
+                fw.func("SHOWWIDGET", "Label#40");
+                fw.func("SHOWWIDGET", "Graph#0");
+                fw.func("SHOWWIDGET", "Graph#2");
+                fw.func("SHOWWIDGET", "Graph#3");
+                fw.func("SHOWWIDGET", "Graph#1");
+                fw.func("SHOWWIDGET", "Graph#4");
+                fw.func("SHOWWIDGET", "Graph#5");
+                fw.func("HIDEWIDGET", "DeviceLevelFoorMap");
+                fw.func("HIDEWIDGET", "SaveFloorMap");
+            }
+        }
+
+        function UploadFloorPlan(element) {
+            fw.fireEvent("UploadFile", "true");
+        }
+
+        function toggleSearchBar(eventData) {
+            console.log(eventData);
+            // eventData.getElementsByClassName("bi-funnel-fill")[0].style.setProperty("display","");
+
+            let filledFunnel = eventData.getElementsByClassName("bi-funnel-fill")[0];
+            let funnel =  eventData.getElementsByClassName("bi-funnel")[0];
+            let searchBar = document.getElementById("filterSearchInputContainer");
+            let filterContainer = document.getElementById("filterContainer");
+            let pageName = document.getElementById('PageName');
+
+            filledFunnel.style.display = (window.getComputedStyle(filledFunnel).display === "none") ? "" : "none";
+            funnel.style.display = (window.getComputedStyle(funnel).display === "none") ? "" : "none";
+            searchBar.style.display = (window.getComputedStyle(searchBar).display === "none") ? "" : "none";
+            filterContainer.style.display = (window.getComputedStyle(filterContainer).display === "none") ? "" : "none";
+            pageName.style.display = (window.getComputedStyle(pageName).display === "none") ? "" : "none";
+
+            fw.func("ADJUSTSIZE", "HEIGHT", (window.getComputedStyle(searchBar).display === "none") ? 75 : 145);
+            handleGeneric(`AdjustSize|${(window.getComputedStyle(searchBar).display === "none") ? '-45px' : '45px'}`)
+            document.getElementById("navContainer").style.setProperty("height", (window.getComputedStyle(searchBar).display === "none" ? "68%" : "30%"));
+        }
+
+        function handleSearchInput() {
+            let searchData = document.getElementById("filterSearchInput").value;
+            handleGeneric(`SearchFor|${searchData}`);
+        }
+
+        function handleClearSearch() {
+            document.getElementById("filterSearchInput").value = "";
+            handleGeneric(`SearchFor|`);
+        }
+
+
+        function SetToggleActive(element, value) {
+
+            var toggle = document.getElementById("MaintnanceModeRow").querySelector('[data-value="maitnanceSelect"]');
+            element.querySelector('[data-value="maintnanceCheckbox"]').checked = true;
+            toggle.innerHTML = value;
+            toggle.setAttribute("class", "activeToggle");
+            fw.fireEvent("EditCard", "true");
+        }
+
+        function SetToggleInactive(element, value) {
+            var toggle = document.getElementById("MaintnanceModeRow").querySelector('[data-value="maitnanceSelect"]');
+
+            element.querySelector('[data-value="maintnanceCheckbox"]').checked = false;
+            toggle.innerHTML = value;
+            toggle.setAttribute("class", "inactiveToggle");
+            fw.fireEvent("EditCard", "false");
+        }
+        /**
+        * Assigns an incoming html template over the generic widget as main view structure
+        *
+        * @param packet - incoming html template object over Scripting widget
+        */
+        function addHtml(packet) {
+            document.getElementById("widget").innerHTML = "";
+            
+            document.getElementById("widget").append(packet.value);
+        }
+
+        /**
+        * Assigns an incoming html template over the generic widget as main view structure with additional css styles
+        *
+        * @param packet - incoming html template object over Scripting widget
+        */
+        function addStyles(packet) {
+            var cssProperties = document.getElementById("cssProperties");
+            var oldContent = cssProperties.innerHTML;
+            cssProperties.innerHTML = oldContent + packet.value.data;
+        }
+
+        /**
+        * Disposes the content of the Generic widget
+        */
+        function clearContent() {
+            document.getElementById("container").innerHTML = "";
+        }
+
+        // API actions for dashboard mode
+        function fw_dashStart(mode) {
+             
+            if (mode !== "DASHBOARD") {
+                
+                if (typeof fw.attribs("background") !== "undefined") {
+                    document.getElementsByTagName("html")[0].style.setProperty("background-color",  fw.attribs("background"));
+                } else {
+                    document.getElementsByTagName("html")[0].style.setProperty("background-color", "grey");
+                }
+
+            }
+
+            return "OK";
+        }
+
+        // API startup actions for toolbox. Return "OK" if startup OK else return an error string
+        function fw_toolStart(mode) {
+            return "OK";
+        }
+
+        // API startup actions when first created by dropping in design mode. Return "OK" if startup OK else return an error string
+        function fw_newWidget(mode) {
+            return fw_dashStart();
+        }
+
+        // API called when switching to design mode (optional, delete if not using)
+        function fw_startDesign() {
+            return true;
+        }
+
+        // API called to manage scaling
+        function fw_scale(scaleX, scaleY) {
+            // fw.widgetID.style.setProperty("width", (options.settings.iniWidth * scaleX) + "px");
+            // fw.widgetID.style.setProperty("height", (options.settings.iniHeight * scaleY) + "px");
+
+            return true;
+        }
+
+        // API called when widget edit starts (return false to stop editor, "NOSCALE", "NOVERT", "NOHORIZ", "NOVERT,NOHORIZ" to customise scaling)
+        function fw_startEdit() {
+            return true;
+        }
+
+        // API called when widget edit finishes (apply edit changes here)
+        function fw_endEdit(mode) {
+            return true;
+        }
+
+         
+
+        // API called for incoming channel events
+        function fw_feed(channel, scope, data) {
+
+            receive_value(data);
+        }
+
+
+        // Initialize widget framework API - DO NOT ADJUST OR DELETE
+        var fw = new parent.widgetAPI(window.name);  // widget framework object
+        fw.ready();
+
+                 
+
+    </script>
+
+
+
+</body>
+</html>

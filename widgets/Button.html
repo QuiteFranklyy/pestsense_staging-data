@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Button Widget (Sensahub Dashboard Widget)</title>
+    <link rel="preload" href="../fonts/OpenSans400.woff2" as="font" crossorigin="anonymous">
+    <style>
+        body {
+            font-family: "Open Sans";
+            font-size: 16px;
+            overflow: hidden;
+        }
+
+        @font-face {
+            font-family: "Open Sans";
+            font-style: normal;
+            font-weight: 400;
+            src: local("Open Sans"), local("OpenSans"), url(../fonts/OpenSans400.woff2) format("woff2"), url(../fonts/OpenSans400.woff) format("woff");
+            font-display: block;
+        }
+
+        *:focus {
+            outline: none;
+        }
+
+        .noSelect {
+            user-select: none;
+        }
+
+        .btn {
+            font-family: "Open Sans";
+            text-align: center;
+            border-radius: 3px;
+        }
+
+            .btn:hover {
+                cursor: pointer;
+            }
+
+        .yellow {
+            border: 2px solid #fbeed5;
+            background-color: #fcf8e3;
+            color: #c09853;
+        }
+
+        .yellowTxt {
+            color: #c09853 !important;
+        }
+
+        .yellowBdr {
+            border: 2px solid #fbeed5 !important;
+        }
+
+        .yellow:hover {
+            border: 2px solid #f3e6cd;
+            background-color: #f4f0dd;
+            color: #a8904d;
+        }
+
+        .white {
+            border: 2px solid #e3e3e3;
+            background-color: #ffffff;
+            color: #999;
+        }
+
+        .whiteTxt {
+            color: #ffffff !important;
+        }
+
+        .whiteBdr {
+            border: 2px solid #ffffff !important;
+        }
+
+        .white:hover {
+            border: 2px solid #dbdbdb;
+            background-color: #f5f5f5;
+            color: #878787;
+        }
+
+        .grey {
+            border: 2px solid #e3e3e3;
+            background-color: #f5f5f5;
+            color: #999;
+        }
+
+        .greyBdr {
+            border: 2px solid #e3e3e3 !important;
+        }
+
+        .greyTxt {
+            color: #777777 !important;
+        }
+
+        .grey:hover {
+            border: 2px solid #d0d0d0;
+            background-color: #e5e5e5;
+            color: #888;
+        }
+
+        .blue {
+            border: 2px solid #bce8f1;
+            background-color: #d1e5ef;
+            color: #3a87ad;
+        }
+
+        .blueTxt {
+            color: #3a87ad !important;
+        }
+
+        .blueBdr {
+            border: 2px solid #bce8f1 !important;
+        }
+
+        .blue:hover {
+            border: 2px solid #b4e0ea;
+            background-color: #d9edf7;
+            color: #327fa5;
+        }
+
+        .blue_strong {
+            border: 2px solid #001669;
+            background-color: #15317E;
+            color: white;
+        }
+
+        .blue_strongTxt {
+            color: #001669 !important;
+        }
+
+        .blue_strongBdr {
+            border: 2px solid #001669 !important;
+        }
+
+        .blue_strong:hover {
+            border: 2px solid #2e3258;
+            background-color: #35519E;
+            color: white;
+        }
+
+        .red {
+            border: 2px solid #eed3d7;
+            background-color: #f2dede;
+            color: #b94a48;
+        }
+
+        .redTxt {
+            color: #b94a48 !important;
+        }
+
+        .redBdr {
+            border: 2px solid #eed3d7 !important;
+        }
+
+        .red:hover {
+            border: 2px solid #e6cdcf;
+            background-color: #eed6d6;
+            color: #b14240;
+        }
+
+        .green {
+            border: 2px solid #cfe0c8;
+            background-color: #dff0d8;
+            color: #468847;
+        }
+
+        .greenTxt {
+            color: #468847 !important;
+        }
+
+        .greenBdr {
+            border: 2px solid #cfe0c8 !important;
+        }
+
+        .green:hover {
+            border: 2px solid #cee2be;
+            background-color: #cfe0c8;
+            color: #3e803f;
+        }
+
+        .orange {
+            border: 2px solid #f5c8b9;
+            background-color: #ffe8d9;
+            color: #d16e2c;
+        }
+
+        .orangeTxt {
+            color: #d16e2c !important;
+        }
+
+        .orangeBdr {
+            border: 2px solid #f5c8b9 !important;
+        }
+
+        .orange:hover {
+            border: 2px solid #f5d8c9;
+            background-color: #ffd8c9;
+            color: #c15e1c;
+        }
+
+        .orange_strong {
+            border: 2px solid #e57123;
+            background-color: #f58133;
+            color: #eeeeee;
+        }
+
+        .orange_strongTxt {
+            color: #e57123;
+        }
+
+        .orange_strongBdr {
+            border: 2px solid #e57123 !important;
+        }
+
+        .orange_strong:hover {
+            border: 2px solid #d56113;
+            background-color: #e57123;
+            color: #ffffff;
+        }
+
+        .black {
+            border: 2px solid #777777;
+            background-color: #5f5f5f;
+            color: #dddddd;
+        }
+
+        .blackTxt {
+            color: #555;
+        }
+
+        .blackBdr {
+            border: 2px solid #777777 !important;
+        }
+
+        .black:hover {
+            border: 2px solid #999999;
+            background-color: #545a60;
+            color: #ffffff;
+        }
+
+        .btnShadow {
+            box-shadow: 3px 3px 4px #cccccc;
+        }
+
+            .btnShadow:active {
+                transform: translateY(1px) translateX(1px);
+                box-shadow: 1px 1px 1px #bbbbbb;
+            }
+
+        .btnNoShadow {
+            box-shadow: none;
+        }
+
+        .btnNoShadow:active {
+            transform: translateY(1px) translateX(1px);
+        }
+    </style>
+</head>
+<body id="body">
+    <div id="group">
+        <div id="widget" class="noSelect red btn" style="width: 100px; height: 46px; position: absolute; left: 0px; top: 0px; z-index: 0">
+            <div id="butText" onclick="fw_clicked">Press</div>
+        </div>
+    </div>
+    
+    <script src="api/Client.js"></script>
+    <script>
+        "use strict";
+
+        //#region --- Widget Settings ---
+        var options = {
+            settings: {
+                "category": "widget",
+                "type": window.location.pathname.split("/").slice(-1)[0].split(".")[0].replace("%20", " "),
+                "iniHeight": parseInt(widget.style.height),
+                "iniWidth": parseInt(widget.style.width),
+                "author": "Sensavation",
+                "tbTooltip": "Activate client or server events",
+                "tooltip": "",
+                "version": "190104",
+                "group": "actuation",
+                "zIndex": "ZINDEX_DEFAULT",
+                "scaling": true,
+                "disabled": false,
+                "help": { "type": "file", "source": "help/widgets/Button.md" }
+            },
+            clientEvents: {
+                inputEvents: {
+                    "change scope": changeScope,
+                    "set style property": setStyleProperty,
+                    "set color": setColor,
+                    "set text": setText,
+                    "visible": setVisible
+                },
+                outputEvents: [
+                    "pressed"
+                ]
+            },
+            serverEvents: {
+                outputEvents: [
+                    "pressed"
+                ]
+            },
+            dataTypes: {
+                retValue: ["array"]
+            },
+            attribs: {
+                "action": {
+                    "type": "dropdown",
+                    "tooltip": "Select type of switch action",
+                    "options": "static",
+                    "default": "static",
+                    "group": "Widget Specific"
+                },
+                "value on": {
+                    "type": "input",
+                    "tooltip": "Value to send when pressed",
+                    "default": "1",
+                    "group": "Widget Specific"
+                },
+                "jump to screen": {
+                    "type": "input",
+                    "default": "",
+                    "tooltip": "Name of screen to jump to on click",
+                    "group": "Widget Specific"
+                },
+                "color": {
+                    "type": "dropdown",
+                    "tooltip": "Select color theme for button",
+                    "options": "grey, green, red, yellow, blue, blue strong, orange, orange strong, white, black, transparent",
+                    "default": "red",
+                    "group": "General"
+                },
+                "outline color": {
+                    "type": "dropdown",
+                    "tooltip": "Select color for the outline",
+                    "options": "default, grey, green, red, yellow, blue, blue strong, orange, orange strong, white, black",
+                    "default": "default",
+                    "group": "General"
+                },
+                "text color": {
+                    "type": "dropdown",
+                    "tooltip": "Select color for the text",
+                    "options": "default, grey, green, red, yellow, blue, blue strong, orange, orange strong, white, black",
+                    "default": "default",
+                    "group": "General"
+                },
+                "3D shadow": {
+                    "type": "checkbox",
+                    "tooltip": "Select to give a 3D effect",
+                    "default": "false",
+                    "group": "General"
+                },
+                "button name": {
+                    "type": "data",
+                    "default": "Press",
+                    "group": "Widget Specific"
+                },
+                "tab index": {
+                    "type": "input",
+                    "tooltip": "Keyboard TAB order when moving between form fields.",
+                    "default": "",
+                    "group": "Widget Specific"
+                }
+            }
+        };
+        //#endregion
+
+        //#region //// --- Declarations ---
+        var butText = document.getElementById("butText");
+        var firstFocus = true;          // Required as tab index will fire when first focused
+        //#endregion
+
+        //#region //// --- Widget specific functions ---
+        function handleBlur() {
+            firstFocus = true;
+            widget.style.removeProperty("border");
+        }
+        // for tab index the framework will get focus on the iframe, so we need to move focus to our input element when pressing TAB
+        window.addEventListener("focus", function (event) {
+            if (firstFocus) {
+                firstFocus = false;
+                widget.style.border = "solid black 2px";
+
+                if (fw.state === "DASHBOARD") {
+                    window.addEventListener("keyup", (e) => {
+                        if (e.code == "Enter") {
+                            fw_clicked({which: 1});
+                        } else if (e.code == "Escape") {
+                            handleBlur();
+                            window.blur();
+                        }
+                    });
+                }
+            }
+        });
+
+        window.onblur = handleBlur;
+        //#endregion
+
+        //#region //// --- Event functions ---
+        function setVisible(eventData) {
+
+            if (typeof eventData.value !== "boolean") {
+                throw new TypeError("Invalid Input, please pass in true or false as an argument!");
+            }
+            var widget = document.getElementById("widget");
+            if (eventData.value === false) {
+                fw.widgetID.style.setProperty("display", "none");
+                fw.widgetID.disabled = true;
+            }
+            else {
+                fw.widgetID.style.setProperty("display", "inline");
+                fw.widgetID.disabled = false;
+            }
+        }
+
+        /**
+         * @param strColor
+        * Check if the inputed hash string is a proper color literal.
+        **/
+        function isColor(strColor) {
+
+            return /^#[0-9A-F]{6}$/i.test(strColor);
+        }
+
+        /**
+        * @param eventData
+        * Sets the color property of the button
+        **/
+        function setColor(eventData) {
+
+            if (typeof eventData.value !== 'string') {
+                throw new TypeError(eventData.value + ' is not a valid hex colour. Expected a string in the format of #fffff');
+            }
+            var validateColor = isColor(eventData.value);
+            if (validateColor === false) {
+                throw new TypeError(eventData.value + ' is not a valid hex colour. Expected a string in the format of #fffff');
+            }
+            //   var btn = document.getElementById("widget");
+            // btn.setAttribute("style", "background-color:" + eventData.value);
+            var btn = document.getElementById("widget");
+            btn.setAttribute("class", "noSelect btn");
+            btn.style.setProperty("background-color", eventData.value);
+            //   fw_scale(3, 3);
+        }
+
+        /**
+         * @param eventData
+         * Sets the text of the button
+         */
+        function setText(eventData) {
+            if (typeof eventData.value !== 'string') {
+                throw new TypeError(`Expected a string, received ${typeof eventData.value}`);
+            }
+            butText.innerHTML = eventData.value;
+        }
+
+        /**
+         * @param eventData
+         * Sets css property of the button
+         **/
+        function setStyleProperty(eventData) {
+
+            if (typeof eventData.value === undefined) {
+                throw new TypeError(color.value + ' is not a valid css rule. Expected a css rule in a json format { prop: value }');
+            }
+
+            //   var btn = document.getElementById("widget");
+            // btn.setAttribute("style", "background-color:" + eventData.value);
+            var btn = document.getElementById("widget");
+            btn.setAttribute("class", "noSelect btn");
+            btn.style.setProperty(eventData.value.Property, eventData.value.PropertyValue);
+            //   fw_scale(3, 3);
+        }
+
+        /**
+        * @param eventData
+        * change the scope for output events
+        **/
+        function changeScope(eventData) {
+            fw.func("ChangeChannel", "SCOPE", "0", eventData.value);
+        }
+
+        /**
+         * Sends wrapper for function call to fireEvent in the widget API
+         * @param value
+         */
+        function sendValue(value) {
+            // set timeout is used to delay the event firing, to ensure that the dirty flag is set before the event fires
+            setTimeout(function () {
+                fw.fireEvent("pressed", value);
+            }, 0);
+        }
+
+        document.addEventListener("keydown", escFunc, true);
+        /**
+         * listener function for esc/del in the button title
+         * @param event
+         */
+        function escFunc(event) {
+            if (event.keyCode === 46 && document.activeElement === butText) {
+                butText.blur();
+                parent.keyDown(event);
+            }
+        }
+        //#endregion
+
+        //#region //// --- Widget API functions ---
+        // Widget specific startup actions for dashboard. Return "OK" if startup OK else return an error string. Don't delete
+        function fw_dashStart(mode) {
+            if (fw.state !== "DASHBOARD") {
+                butText.onclick = function (e) {
+                    e.preventDefault();
+                    this.focus();
+                }
+            }
+
+            if (typeof fw.attribs("3D shadow") !== "undefined" && fw.attribs("3D shadow") === "true") {
+                if (fw.attribs("outline color") === "default") {
+                    fw.widgetID.className = fw.attribs("color").split(' ').join('_') + " noSelect btn btnShadow";
+                } else {
+                    // add outline color
+                    fw.widgetID.className = fw.attribs("color").split(' ').join('_') + " noSelect btn btnShadow " + fw.attribs("outline color").split(' ').join('_') + "Bdr";
+                }
+            } else {
+                if (fw.attribs("outline color") === "default") {
+                    fw.widgetID.className = fw.attribs("color").split(' ').join('_') + " noSelect btn btnNoShadow";
+                } else {
+                    // add outline color
+                    fw.widgetID.className = fw.attribs("color").split(' ').join('_') + " noSelect btn btnNoShadow " + fw.attribs("outline color").split(' ').join('_') + "Bdr";
+                }
+            }
+
+            // change text color
+            if (fw.attribs("text color") !== "default") {
+                fw.widgetID.className = fw.widgetID.className + " " + fw.attribs("text color").split(' ').join('_') + "Txt";
+            }
+
+            if (typeof fw.attribs("button name") !== "undefined") {
+                butText.textContent = fw.attribs("button name");
+            }
+
+            if (fw.state === "DASHBOARD") {
+                fw.widgetID.style.setProperty("cursor", "pointer");
+            }
+
+            return "OK";
+        }
+
+        // Widget specific startup actions for toolbox. Return "OK" if startup OK else return an error string
+        function fw_toolStart(mode) {
+            return "OK"
+        }
+
+        // called when editing started
+        function fw_startEdit() {
+            butText.addEventListener("keydown", function(e) {
+                if(["Space","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].indexOf(e.code) > -1) {
+                    e.stopPropagation();
+                }
+            });
+            butText.setAttribute("contentEditable", "true");
+            butText.focus();
+        }
+
+        // called when editing finishes
+        function fw_endEdit(param0) {
+            fw.func("SETATTRIB", "button name", butText.innerText);                                                               // Save any edited text
+            if (fw.attribs("tab index") !== "" && isNaN(fw.attribs("tab index"))) {
+                alert("WARNING - Tab index setting isn't a number and will be ignored in tab ordering.")
+            }
+            fw_dashStart();
+        }
+
+        // called when switching to design mode
+        function fw_startDesign() {
+            fw.widgetID.className = fw.widgetID.className.replace(" noSelect", "");
+            butText.setAttribute("contentEditable", "true");
+        }
+
+        // manage scaling
+        function fw_scale(scaleX, scaleY) {
+            if (fw.state !== "TOOLBOX" && fw.attribs("3D shadow") !== "false") {
+                fw.widgetID.style.setProperty("width", (options.settings.iniWidth * scaleX - 10) + "px");                       // Allow space for shadow
+                fw.widgetID.style.setProperty("height", (options.settings.iniHeight * scaleY - 10) + "px");
+                fw.widgetID.style.setProperty("line-height", options.settings.iniHeight * scaleY - 10 + "px");
+            }
+            else {
+                fw.widgetID.style.setProperty("width", (options.settings.iniWidth * scaleX - 4) + "px");
+                fw.widgetID.style.setProperty("height", (options.settings.iniHeight * scaleY - 4) + "px");
+                fw.widgetID.style.setProperty("line-height", (options.settings.iniHeight * scaleY - 4) + "px");
+            }
+        }
+
+        // Response function to a click on the button widget
+        function fw_clicked(event) {
+            // check if button is disabled.
+            if (fw.disabled) {
+                return;
+            }
+            if (!event) {
+                event = window.event;                                                                                       // IE (event not passed if called from eventlistener)
+            }
+            if (!event) {
+                event = evt;                                                                                                // Firefox (evt is the global)
+            }
+            if (event.which === 1) {                                                                                        // left Button pressed
+                switch (fw.attribs("action").trim()) {
+                    case "momentary":
+                        //TODO: Toggle code not done
+                        break;
+                    case "toggle":
+                        //TODO: Toggle code not done
+                        break;
+                    case "static":
+                            // check if jumpscreen is required
+                        var jumpscreen_name = fw.attribs("jump to screen");
+                        if (jumpscreen_name !== "" && fw.state === "DASHBOARD"){
+                            Client.jumpToScreen(jumpscreen_name);
+                        }
+                        if (typeof fw.attribs("value on") !== "undefined") {
+                            sendValue(fw.attribs("value on"));
+                        } else {
+                            fw.status({
+                                message: "WARNING - Button press not submitted due to no Value On data specified in settings to send."
+                            });
+                            Log.warn("Button press not submitted due to no Value On data specified in settings to send.")
+                        }
+                        break;
+                    default:
+                        fw.status({
+                            message: "WARNING - Button press not submitted due to no Action type specified in settings."
+                        });
+                        Log.warn("WARNING - Button press not submitted due to no Action type specified in settings.");
+                }
+            }
+        }
+
+        // Initialize widget framework API - DO NOT ADJUST OR DELETE
+        var fw = new parent.widgetAPI(window.name);  // widget framework object
+        fw.ready();
+
+                    //#endregion
+    </script>
+</body>
+</html>

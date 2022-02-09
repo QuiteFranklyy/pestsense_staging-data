@@ -1,0 +1,3680 @@
+{
+  "device": "DESKTOP",
+  "widgets": {
+    "Scripting#1": {
+      "t": "Scripting",
+      "lX": 375,
+      "lY": 120,
+      "sX": 1,
+      "sY": 1,
+      "s": "Configurations",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "NOSCALE",
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "vis": false,
+      "dis": false,
+      "a": {
+        "code editor": "//# sourceURL=config-script.js\n\n/**\n* Initialise script state (run once at startup)\n* @param {payload} Event data received (payload.channel, payload.data.value, payload.data.usrmeta).\n*/\nScript.on(\"load\", function(payload) {\n    try {\n    \t//var reqdata = {\"usrmeta\":\"getFileList\",\"sysmeta\":{\"source\":\"widgets/settings\"},\"value\":\"SYSTEM\"};\n        //request via ini management channel\n        var value = \"SYSTEM\";\n        var sysmeta = {\n            source: \"widget/settings\"\n        };\n        var usrmeta = \"getFileList\";\n        \n\t  \tSystem.publishToChannel(\"$sys/inimgmt/request/data\", \"string\", value, usrmeta); \n    } catch (ex) {\n        console.log('Script initialisation error: ' + ex);\n    }\n    return payload;\n});\n\n/**\n * Response to message from server channel\n * @param {payload} Event data received (payload.channel, payload.data.value, payload.data.usrmeta).\n */\nScript.on(\"server\", function(payload) {\n    try {\n      switch (payload.usrmeta.toUpperCase()) {\n        case \"GETFILELIST\":\n \t\t\tScript.sendToWidget(\"ConfName\", \"receive clear\", payload.label, payload.value, payload.sysmeta, payload.usrmeta);\n          \tbreak;\n        case \"CS\":\n            fw.func(\"loadCM\", \"<b>C# Code Editor</b>\");\n \t\t\tScript.sendToWidget(\"FileEditor\", \"receive value\", payload.label, payload.value, payload.sysmeta, payload.usrmeta);\n          \tfw.func(\"status\", \"Editing configuration\");\n          \tbreak;\n        case \"JS\":\n            fw.func(\"loadCM\", \"<b>Javascript Code Editor</b>\");\n \t\t\tScript.sendToWidget(\"FileEditor\", \"receive value\", payload.label, payload.value, payload.sysmeta, payload.usrmeta);\n          \tSystem.status(\"Editing configuration\");\n          \tbreak;\n        case \"INI\":\n            fw.func(\"loadCM\", \"<b>INI Configuration Editor</b>\");\n              //need to do this because scripting.html and IniEditor are out of sync with standards\n \t\t\tScript.sendToWidget(\"FileEditor\", \"receive value\", payload.label, payload.value, payload.sysmeta, payload.usrmeta);\n          \tSystem.status(\"Editing configuration\");\n          \tbreak;\n      }\n    } catch (ex) {\n       console.log('Script server channel error: ' + ex);\n    }\n    return payload;\n});\n\n/**\n * Response to message on client channel\n * @param {payload} Event data received (payload.channel, payload.data.value, payload.data.usrmeta).\n */\nScript.on(\"client\", function(payload) {\n    try {\n      \tvar reqdata;\n      \tswitch (payload.sysmeta.source) {\n      \t\t// Request server for list for the settings dropdown from type selected\n      \t\tcase \"widget/ConfType\":\n    \t\t\t//reqdata = {\"usrmeta\":\"getFileList\",\"sysmeta\":{\"source\":\"widgets/settings\"},\"value\":payload.value};\n\t  \t\t\tvar usrmeta = \"getFileList\";\n                var value = payload.value;\n                System.publishToChannel(\"$sys/inimgmt/request/data\", \"string\", value, usrmeta);\n        \t\tbreak;\n  \t\t\t// Request server for list for the settings dropdown from type selected\n            case \"widget/reload\":\n          \tcase \"widget/open\":\n    \t\t\t//reqdata = {\"usrmeta\":\"getFile\",\"sysmeta\":{\"source\":\"widgets/settings\"},\"value\":payload.value};\n\t  \t\t\tvar usrmeta = \"getFile\";\n                var value = payload.value;\n                System.publishToChannel(\"$sys/inimgmt/request/data\",\"string\", value, usrmeta);\n            \tbreak;           \n  \t\t\t// Request server for list for the settings dropdown from type selected\n          \tcase \"widget/save\":\n    \t\t\t////This is now handled by the client events.\n                //reqdata = {\"usrmeta\":\"saveFile\",\"sysmeta\":{\"source\":\"widgets/settings\"},\"value\":payload.value};\n\t  \t\t\t//System.publishToChannel(\"$sys/inimgmt/request/data\", reqdata);\n                break;\n        \tcase \"widget/restart\":\n\t\t\t\tif (confirm(\"WARNING - Please confirm you want to restart the server. This will logout all users and reset the server.\")) {\n          \t\t\tSystem.status(\"Resetting server, refresh the browser in 20 seconds to reconnect...\");\n    \t\t\t\treqdata = {\"usrmeta\":\"restart\",\"sysmeta\":{\"source\":\"widgets/settings\"},\"value\":\"restart\"};\n\t  \t\t\t\tvar value = \"restart\";\n                    var usrmeta = \"restart\";\n                    System.publishToChannel(\"$sys/inimgmt/request/data\", \"string\", value, usrmeta);\n        \t\t} else {\n          \t\t\tSystem.status(\"Server reset cancelled.\");\n                }\n          \t\tbreak;\n      \t\t}\n      \treturn payload;\n    } catch (ex) {\n       \tconsole.log('Script client channel error: ' + ex);\n    }\n});",
+        "script type": "javascript"
+      },
+      "ev": {
+        "clientEvents": {
+          "inputEvents": {
+            "send to script": {
+              "channel": "send to script/receive value",
+              "event": "receive value"
+            }
+          }
+        },
+        "serverEvents": {
+          "inputEvents": {
+            "Server Response": {
+              "channel": "$SYS/INIMGMT/RESPONSE/DATA",
+              "event": "feed"
+            },
+            "New Event #2": {
+              "channel": "$DB/ADMIN/MANAGE/Hello",
+              "event": "feed"
+            }
+          }
+        }
+      }
+    },
+    "Container#0": {
+      "t": "Container",
+      "lX": 8,
+      "lY": 260,
+      "sX": 3.48,
+      "sY": 1.2,
+      "s": "Configurations",
+      "ps": {
+        "enabled": "false",
+        "x": "0.74%",
+        "y": "21.19%",
+        "width": "32.01%",
+        "height": "9.78%",
+        "scalingType": "OK"
+      },
+      "ver": "190104c190502",
+      "z": "110",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "title": "Restart Server"
+      },
+      "ev": {}
+    },
+    "ConfType": {
+      "t": "Dropdown",
+      "lX": 36,
+      "lY": 76,
+      "sX": 2,
+      "sY": 1,
+      "s": "Configurations",
+      "ps": {
+        "enabled": "false",
+        "x": "1.52%",
+        "y": "6.11%",
+        "width": "8.44%",
+        "height": "3.24%",
+        "scalingType": "NOVERT"
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "pr": "0",
+      "a": {
+        "default options": "System, CS Plugins, CS Plugins Ini, JS Plugins, JS Plugins Ini",
+        "default value": "System"
+      },
+      "ev": {
+        "clientEvents": {
+          "inputEvents": {
+            "get value": {
+              "channel": "getvalues/getvalue",
+              "event": "getvalue"
+            }
+          },
+          "outputEvents": {
+            "Send To Script": {
+              "channel": "send to script/receive value",
+              "event": "selected",
+              "trigger": "selected"
+            }
+          }
+        }
+      }
+    },
+    "ConfName": {
+      "t": "Dropdown",
+      "lX": 35,
+      "lY": 140,
+      "sX": 2.96,
+      "sY": 1,
+      "s": "Configurations",
+      "ps": {
+        "enabled": "false",
+        "x": "3.31%",
+        "y": "11.35%",
+        "width": "27.23%",
+        "height": "3.55%",
+        "scalingType": "NOVERT"
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "pr": "1",
+      "a": {
+        "default options": ""
+      },
+      "ev": {
+        "clientEvents": {
+          "inputEvents": {
+            "get value": {
+              "channel": "getvalues/getvalue",
+              "event": "getvalue"
+            }
+          },
+          "outputEvents": {}
+        },
+        "serverEvents": {
+          "inputEvents": {
+            "GET FILE LIST": {
+              "channel": "$SYS/INIMGMT/RESPONSE/DATA",
+              "event": "feed"
+            }
+          }
+        }
+      }
+    },
+    "FileEditor": {
+      "t": "IniEditor",
+      "lX": 350,
+      "lY": 10,
+      "sX": 1,
+      "sY": 1,
+      "s": "Configurations",
+      "ps": {
+        "enabled": "false",
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": "",
+        "scalingType": "NOSCALE"
+      },
+      "ver": "190104c190502",
+      "vis": false,
+      "dis": false,
+      "pr": "2",
+      "a": {},
+      "ev": {
+        "clientEvents": {
+          "inputEvents": {
+            "get value": {
+              "channel": "getvalues/getvalue",
+              "event": "getvalue"
+            },
+            "save button pressed": {
+              "channel": "file editor/save",
+              "event": "save"
+            },
+            "close button pressed": {
+              "channel": "file editor/close",
+              "event": "close"
+            }
+          }
+        },
+        "serverEvents": {
+          "outputEvents": {
+            "save to server": {
+              "channel": "$SYS/INIMGMT/REQUEST/DATA",
+              "event": "save",
+              "trigger": "save"
+            }
+          }
+        }
+      }
+    },
+    "Container#7": {
+      "t": "Container",
+      "lX": 8,
+      "lY": 12,
+      "sX": 3.48,
+      "sY": 2.52,
+      "s": "Configurations",
+      "ps": {
+        "enabled": "false",
+        "x": "0.74%",
+        "y": "0.98%",
+        "width": "32.01%",
+        "height": "20.54%",
+        "scalingType": "OK"
+      },
+      "ver": "190104c190502",
+      "z": "110",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "title": "Sensahub Configuration Editor"
+      },
+      "ev": {}
+    },
+    "Label#4": {
+      "t": "Label",
+      "lX": 40,
+      "lY": 56,
+      "sX": 1.44,
+      "sY": 1,
+      "s": "Configurations",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "OK",
+        "width": "13.35%",
+        "height": "2.02%",
+        "x": "8.8%",
+        "y": "54.61%"
+      },
+      "ver": "200124c190915",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"3\">Configuration Type</font>"
+      },
+      "ev": {}
+    },
+    "Label#5": {
+      "t": "Label",
+      "lX": 40,
+      "lY": 120,
+      "sX": 2.04,
+      "sY": 1,
+      "s": "Configurations",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "OK",
+        "width": "18.91%",
+        "height": "2.02%",
+        "x": "11.12%",
+        "y": "59.55%"
+      },
+      "ver": "200124c190915",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"3\">Configuration Name</font>"
+      },
+      "ev": {}
+    },
+    "open": {
+      "t": "Button",
+      "lX": 40,
+      "lY": 208,
+      "sX": 0.76,
+      "sY": 1,
+      "s": "Configurations",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "OK",
+        "width": "7.04%",
+        "height": "3.72%",
+        "x": "3.99%",
+        "y": "31.88%"
+      },
+      "ver": "190104c190915",
+      "dis": false,
+      "a": {
+        "color": "orange strong",
+        "button name": "Open",
+        "value on": "[#0]|[#1]"
+      },
+      "ev": {
+        "clientEvents": {
+          "outputEvents": {
+            "Get Values": {
+              "channel": "getvalues/getvalues(2)",
+              "event": "pressed",
+              "trigger": "pressed"
+            },
+            "Send To Script": {
+              "channel": "send to script/receive value",
+              "event": "pressed",
+              "trigger": "pressed"
+            }
+          }
+        }
+      }
+    },
+    "close": {
+      "t": "Button",
+      "lX": 116,
+      "lY": 208,
+      "sX": 0.76,
+      "sY": 1,
+      "s": "Configurations",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "OK",
+        "width": "7.04%",
+        "height": "3.72%",
+        "x": "10.66%",
+        "y": "16.83%"
+      },
+      "ver": "190104c190915",
+      "dis": false,
+      "a": {
+        "color": "orange strong",
+        "button name": "Close",
+        "value on": ""
+      },
+      "ev": {
+        "clientEvents": {
+          "outputEvents": {
+            "Send To Script": {
+              "channel": "send to script/receive value",
+              "event": "pressed",
+              "trigger": "pressed"
+            },
+            "close": {
+              "channel": "file editor/close",
+              "event": "pressed",
+              "trigger": "pressed"
+            }
+          }
+        }
+      }
+    },
+    "save": {
+      "t": "Button",
+      "lX": 188,
+      "lY": 208,
+      "sX": 0.72,
+      "sY": 1,
+      "s": "Configurations",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "OK",
+        "width": "6.67%",
+        "height": "3.72%",
+        "x": "21.13%",
+        "y": "17.48%"
+      },
+      "ver": "190104c190915",
+      "dis": false,
+      "a": {
+        "color": "orange strong",
+        "button name": "Save",
+        "value on": "[#0]|[#1]|[#2]"
+      },
+      "ev": {
+        "clientEvents": {
+          "outputEvents": {
+            "get values": {
+              "channel": "getvalues/getvalues(3)",
+              "event": "pressed",
+              "trigger": "pressed"
+            },
+            "save file": {
+              "channel": "file editor/save",
+              "event": "pressed",
+              "trigger": "pressed"
+            }
+          }
+        }
+      }
+    },
+    "reload": {
+      "t": "Button",
+      "lX": 264,
+      "lY": 208,
+      "sX": 0.72,
+      "sY": 1,
+      "s": "Configurations",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "OK",
+        "width": "6.67%",
+        "height": "3.72%",
+        "x": "25.3%",
+        "y": "16.83%"
+      },
+      "ver": "190104c190915",
+      "dis": false,
+      "a": {
+        "color": "orange strong",
+        "button name": "Reload",
+        "value on": "[#0]|[#1]"
+      },
+      "ev": {
+        "clientEvents": {
+          "outputEvents": {
+            "get values": {
+              "channel": "getvalues/getvalues(2)",
+              "event": "pressed",
+              "trigger": "pressed"
+            },
+            "send to script": {
+              "channel": "send to script/receive value",
+              "event": "pressed",
+              "trigger": "pressed"
+            }
+          }
+        }
+      }
+    },
+    "restart": {
+      "t": "Button",
+      "lX": 44,
+      "lY": 312,
+      "sX": 0.88,
+      "sY": 1,
+      "s": "Configurations",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "OK",
+        "width": "8.16%",
+        "height": "3.72%",
+        "x": "3.89%",
+        "y": "25.08%"
+      },
+      "ver": "190104c190915",
+      "dis": false,
+      "a": {
+        "color": "orange strong",
+        "button name": "Restart"
+      },
+      "ev": {
+        "clientEvents": {
+          "outputEvents": {
+            "restart": {
+              "channel": "send to script/receive value",
+              "event": "pressed",
+              "trigger": "pressed"
+            }
+          }
+        }
+      }
+    },
+    "Scripting#3": {
+      "t": "Scripting",
+      "lX": 580,
+      "lY": 15,
+      "sX": 1,
+      "sY": 1,
+      "s": "Server Console",
+      "ps": {
+        "enabled": "false",
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": "",
+        "scalingType": "NOSCALE"
+      },
+      "ver": "190104c190502",
+      "z": "140",
+      "vis": false,
+      "dis": false,
+      "a": {
+        "code editor": "//# sourceURL=console-script.js\n/**\n* Initialise script state (run once at startup)\n* @param {payload} Event data received (payload.channel, payload.data.value, payload.data.usrmeta).\n*/\nScript.on(\"load\", function(payload) {\n  //var reqdata = {\"usrmeta\":\"\",\"sysmeta\":{\"source\":\"widgets/settings\"},\"value\":\"\"};\n  //var value = \"\"\n  System.publishToChannel(\"$sys/console/logs/request\", \"string\", \"\");\n  return payload;\n});\n\n// Process keystrokes for console input\nScript.on(\"keypress\", function(keycode) {\n  \tvar reqdata = {\"usrmeta\":\"\",\"sysmeta\":{\"source\":\"widgets/settings\"},\"value\":keycode.toString()};\n\tvar value = keycode.toString();\n    System.publishToChannel(\"$sys/console/logs/key\", \"number\", value);  \n});\n\n\n/**\n * Response to message from server channel\n * @param {payload} Event data received (payload.channel, payload.data.value, payload.data.usrmeta).\n */\nScript.on(\"Server\", function(payload) {\n  \tvar value = {};\n    var label = \"sensacollection\";\n    value.headers = [\"Time\", \"Module\", \"Type\", \"Message\"];\n    \n    value.data = {};\n    value.pk = \"Time\";\n    \n  \tvar jsTime = new Date(payload.value.time);\n    //var time = jsTime.toLocaleTimeString().replace(\" AM\",\"\").replace(\" PM\",\"\") + \".\" + jsTime.getMilliseconds();\n    var time = jsTime.toLocaleTimeString([], {\"hour12\": false}) + \".\" + jsTime.getMilliseconds();\n\n    value.data[time] = [];\n    value.data[time][0] = jsTime.toLocaleTimeString([], {\"hour12\": false}) + \".\" + jsTime.getMilliseconds();\n    value.data[time][1] = payload.value.module;\n    value.data[time][2] = payload.value.type;\n    value.data[time][3] = payload.value.message;\n  \t\n    var color = \"grey\";\n  \tswitch (payload.value.type.toUpperCase()) {\n \t  case \"INFORMATION\":\n  \t\tcolor = \"#347C2C\";\n        break;\n      case \"WARNING\":\n  \t\t  \t\tcolor = \"#D4A017\";\n        break;\n      case \"ERROR\":\n  \t\t  \t\tcolor = \"#8C001A\";\n        break;\n      case \"CRITICAL\":\n  \t\tcolor = \"red\";\n        break;\n    }\n    \n\tScript.sendToWidget(\"console\", \"set text color\", \"string\", color);\n  \tScript.sendToWidget(\"console\", \"receive value\", label, value);\n    return payload;\n});\n\n/**\n * Response to message on client channel\n * @param {payload} Event data received (payload.channel, payload.data.value, payload.data.usrmeta).\n */\nScript.on(\"client\", function(payload) {\n    return payload;\n});",
+        "script type": "javascript"
+      },
+      "ev": {
+        "serverEvents": {
+          "inputEvents": {
+            "New Event #0": {
+              "channel": "$SYS/CONSOLE/LOGS/MSG",
+              "event": "feed"
+            },
+            "New Event #1": {
+              "channel": "$SYS/CONSOLE/LOGS/REQUEST",
+              "event": "feed"
+            }
+          }
+        }
+      }
+    },
+    "Label#0": {
+      "t": "Label",
+      "lX": 16,
+      "lY": 92,
+      "sX": 4.76,
+      "sY": 1,
+      "s": "Server Console",
+      "ps": {
+        "enabled": "false",
+        "x": "1.11%",
+        "y": "7.46%",
+        "width": "35.18%",
+        "height": "2.03%",
+        "scalingType": "OK"
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#3a87ad\">Use keyboard keys&nbsp;for server console commands. Press 'H' for help.</font>"
+      },
+      "ev": {}
+    },
+    "Scripting#0": {
+      "t": "Scripting",
+      "lX": 20,
+      "lY": 405,
+      "sX": 1,
+      "sY": 1,
+      "s": "Manage Sensors",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "NOSCALE",
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "vis": false,
+      "dis": false,
+      "a": {
+        "code editor": "//# sourceURL=general-script.js\n/**\n* Initialise script state (run once at startup)\n* @param {payload} Event data received (payload.channel, payload.data.value, payload.data.usrmeta).\n*/\nScript.on(\"load\", function(payload) {\n    return payload;\n});\n\nScript.on(\"server\", function(payload) {\n    var channelSplit = payload.sysmeta.channel.split(\"/\");\n    switch (channelSplit[channelSplit.length -1].toUpperCase()) {\n            case \"SENSORTOKEN\":\n            Script.sendToWidget(\"display\", \"receive value\", \"string\", payload.value);\n            break;\n    }\n    return payload;\n});\n\nScript.on(\"client\", function (payload) {\n    switch (payload.sysmeta.source.toUpperCase()) {\n        case \"WIDGET/GENERATE\":\n            var arr = payload.value.split(\"/\");\n            System.generateSensorToken(arr[0], arr[1]);\n            break;\n    }\n    //return payload;\n});",
+        "script type": "javascript"
+      },
+      "ev": {
+        "clientEvents": {
+          "inputEvents": {
+            "Generate": {
+              "channel": "scripting/receive value",
+              "event": "receive value"
+            }
+          }
+        },
+        "serverEvents": {
+          "inputEvents": {
+            "Server stuff": {
+              "channel": "$SYS/SECURITY/TOKEN/SENSORTOKEN",
+              "event": "feed"
+            }
+          }
+        }
+      }
+    },
+    "console": {
+      "t": "Table",
+      "lX": 14,
+      "lY": 164,
+      "sX": 13.88,
+      "sY": 9.03,
+      "s": "Server Console",
+      "ps": {
+        "enabled": "true",
+        "scalingType": "OK",
+        "width": "98%",
+        "height": "74.94%",
+        "x": "1%",
+        "y": "13.61%"
+      },
+      "ver": "190104c190915",
+      "dis": false,
+      "a": {
+        "display header": "true",
+        "title": "Console",
+        "text color": "#000000",
+        "columns": "Time ,Module, Type, Message",
+        "colWidths": ""
+      },
+      "ev": {
+        "clientEvents": {
+          "inputEvents": {
+            "Receive From Script": {
+              "channel": "console/receive value",
+              "event": "receive value"
+            }
+          }
+        }
+      }
+    },
+    "Container#11": {
+      "t": "Container",
+      "lX": 10,
+      "lY": 50,
+      "sX": 3.08,
+      "sY": 3.16,
+      "s": "Manage Sensors",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "OK",
+        "width": "28.33%",
+        "height": "35.87%",
+        "x": "1.1%",
+        "y": "3.4%"
+      },
+      "ver": "190104c190915",
+      "z": "110",
+      "dis": false,
+      "a": {
+        "title": "Generate Sensor Token"
+      },
+      "ev": {}
+    },
+    "generate": {
+      "t": "Button",
+      "lX": 24,
+      "lY": 228,
+      "sX": 2.68,
+      "sY": 1,
+      "s": "Manage Sensors",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "OK",
+        "width": "24.66%",
+        "height": "3.73%",
+        "x": "4.14%",
+        "y": "18.31%"
+      },
+      "ver": "190104c190915",
+      "dis": false,
+      "a": {
+        "button name": "Generate",
+        "value on": "[#0]/[#1]"
+      },
+      "ev": {
+        "clientEvents": {
+          "outputEvents": {
+            "Send Press To Script": {
+              "channel": "scripting/receive value",
+              "event": "pressed",
+              "trigger": "pressed"
+            },
+            "New Event #1": {
+              "channel": "generate/getvalue(2)",
+              "event": "pressed",
+              "trigger": "pressed"
+            }
+          }
+        }
+      }
+    },
+    "display": {
+      "t": "Input",
+      "lX": 25,
+      "lY": 305,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Manage Sensors",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "NOVERT",
+        "width": "25.02%",
+        "height": "4.54%",
+        "x": "2.21%",
+        "y": "14.34%"
+      },
+      "ver": "190104c190915",
+      "dis": false,
+      "a": {
+        "disable editing": "true"
+      },
+      "ev": {
+        "clientEvents": {
+          "inputEvents": {
+            "recv from script": {
+              "channel": "scripting/receive value",
+              "event": "receive value"
+            }
+          }
+        }
+      }
+    },
+    "Input#25": {
+      "t": "Input",
+      "lX": 20,
+      "lY": 172,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Manage Sensors",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "NOVERT",
+        "width": "25.02%",
+        "height": "3.24%",
+        "x": "1.93%",
+        "y": "14.02%"
+      },
+      "ver": "190104c190915",
+      "dis": false,
+      "pr": "1",
+      "a": {},
+      "ev": {
+        "clientEvents": {
+          "inputEvents": {
+            "New Event #0": {
+              "channel": "generate/getvalue",
+              "event": "getvalue"
+            }
+          }
+        }
+      }
+    },
+    "Input#26": {
+      "t": "Input",
+      "lX": 20,
+      "lY": 108,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Manage Sensors",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "NOVERT",
+        "width": "25.02%",
+        "height": "3.24%",
+        "x": "1.84%",
+        "y": "8.43%"
+      },
+      "ver": "190104c190915",
+      "dis": false,
+      "pr": "0",
+      "a": {},
+      "ev": {
+        "clientEvents": {
+          "inputEvents": {
+            "New Event #0": {
+              "channel": "generate/getvalue",
+              "event": "getvalue"
+            }
+          }
+        }
+      }
+    },
+    "Label#1": {
+      "t": "Label",
+      "lX": 24,
+      "lY": 84,
+      "sX": 1,
+      "sY": 1,
+      "s": "Manage Sensors",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "OK",
+        "width": "",
+        "height": "",
+        "x": "",
+        "y": ""
+      },
+      "ver": "200124c190915",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<b>Category</b>"
+      },
+      "ev": {}
+    },
+    "Label#37": {
+      "t": "Label",
+      "lX": 24,
+      "lY": 152,
+      "sX": 1,
+      "sY": 1,
+      "s": "Manage Sensors",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "OK",
+        "width": "",
+        "height": "",
+        "x": "",
+        "y": ""
+      },
+      "ver": "200124c190915",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<b>Class</b>"
+      },
+      "ev": {}
+    },
+    "Label#3": {
+      "t": "Label",
+      "lX": 30,
+      "lY": 280,
+      "sX": 1,
+      "sY": 1,
+      "s": "Manage Sensors",
+      "ps": {
+        "enabled": "false",
+        "scalingType": "OK",
+        "width": "9.2%",
+        "height": "2.84%",
+        "x": "2.58%",
+        "y": "25.61%"
+      },
+      "ver": "200124c190915",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<b>Token</b>"
+      },
+      "ev": {}
+    },
+    "Container#1": {
+      "t": "Container",
+      "lX": 20,
+      "lY": 10,
+      "sX": 10.65,
+      "sY": 12.3,
+      "s": "Accounts",
+      "ps": {
+        "enabled": false,
+        "scalingType": "OK",
+        "width": "97.98%",
+        "height": "139.61%",
+        "x": "1.84%",
+        "y": "0.81%"
+      },
+      "ver": "190104c190915",
+      "z": "110",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "title": ""
+      },
+      "ev": {}
+    },
+    "Button#0": {
+      "t": "Button",
+      "lX": 35,
+      "lY": 25,
+      "sX": 1,
+      "sY": 1,
+      "s": "Accounts",
+      "ps": {
+        "enabled": false,
+        "scalingType": "OK",
+        "width": "",
+        "height": "",
+        "x": "",
+        "y": ""
+      },
+      "ver": "190104c190915",
+      "dis": false,
+      "a": {
+        "color": "white",
+        "button name": "Save"
+      },
+      "ev": {}
+    },
+    "Button#1": {
+      "t": "Button",
+      "lX": 135,
+      "lY": 25,
+      "sX": 1,
+      "sY": 1,
+      "s": "Accounts",
+      "ps": {
+        "enabled": false,
+        "scalingType": "OK",
+        "width": "9.2%",
+        "height": "3.71%",
+        "x": "12.42%",
+        "y": "2.02%"
+      },
+      "ver": "190104c190915",
+      "dis": false,
+      "a": {
+        "button name": "Delete"
+      },
+      "ev": {}
+    },
+    "Label#74": {
+      "t": "Label",
+      "lX": 40,
+      "lY": 80,
+      "sX": 2.45,
+      "sY": 1.2,
+      "s": "Accounts",
+      "ps": {
+        "enabled": false,
+        "scalingType": "OK",
+        "width": "22.54%",
+        "height": "2.42%",
+        "x": "3.86%",
+        "y": "6.37%"
+      },
+      "ver": "200124c190915",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<div><font size=\"5\"><b>Sensavation</b></font></div>"
+      },
+      "ev": {}
+    },
+    "Label#75": {
+      "t": "Label",
+      "lX": 40,
+      "lY": 115,
+      "sX": 2.15,
+      "sY": 1.4,
+      "s": "Accounts",
+      "ps": {
+        "enabled": false,
+        "scalingType": "OK",
+        "width": "19.78%",
+        "height": "2.82%",
+        "x": "3.86%",
+        "y": "9.27%"
+      },
+      "ver": "200124c190915",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"4\">ASSOCIATED USERS</font><br>"
+      },
+      "ev": {}
+    },
+    "Table#0": {
+      "t": "Table",
+      "lX": 45,
+      "lY": 145,
+      "sX": 9.95,
+      "sY": 7,
+      "s": "Accounts",
+      "ps": {
+        "enabled": false,
+        "scalingType": "OK",
+        "width": "91.54%",
+        "height": "79.46%",
+        "x": "3.68%",
+        "y": "11.85%"
+      },
+      "ver": "190104c190915",
+      "dis": false,
+      "a": {
+        "text color": "#000000",
+        "selectable": "true",
+        "title": "Users",
+        "display header": "true",
+        "enable sorting": "false"
+      },
+      "ev": {
+        "clientEvents": {
+          "inputEvents": {}
+        },
+        "serverEvents": {
+          "inputEvents": {}
+        }
+      }
+    },
+    "UserTableScript": {
+      "t": "Scripting",
+      "lX": 290,
+      "lY": 20,
+      "sX": 1,
+      "sY": 1,
+      "s": "Accounts",
+      "ps": {
+        "enabled": false,
+        "scalingType": "NOSCALE",
+        "width": "",
+        "height": "",
+        "x": "",
+        "y": ""
+      },
+      "ver": "200124c190915",
+      "vis": false,
+      "dis": false,
+      "a": {
+        "script type": "javascript",
+        "code editor": "//# sourceURL=UserTableScript.js\n/**\n * Description: Manages the user table in settings. \n * Create Author/Date: Daniel Gormly\n * Modified Author/Date Date: 02/05\n * Version: 0.1\n */\n\n/**\n * Initialise script state (run once at startup)\n */\nScript.on('load', function() {\n    Directory.getAllUsers([\"username\", \"password\", \"first\", \"last\"]);\n});\n\n/**\n * Response to message from server channel\n */\nScript.on('server', function(eventData) {\n    console.log(\"--------------------> Received data.\");\n});\n\n/**\n * Response to message on client channel\n */\nScript.on('client', function(eventData) {\n\n});"
+      },
+      "ev": {
+        "serverEvents": {
+          "inputEvents": {
+            "New Event #0": {
+              "channel": "$DB/ADMIN/MANAGE/RESPONSE",
+              "event": "feed"
+            }
+          }
+        }
+      }
+    },
+    "Container#13": {
+      "t": "Container",
+      "lX": 8,
+      "lY": 8,
+      "sX": 10.87,
+      "sY": 9.45,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "z": "110",
+      "dis": false,
+      "a": {
+        "title": "",
+        "color": "grey"
+      },
+      "ev": {}
+    },
+    "Label#6": {
+      "t": "Label",
+      "lX": 36,
+      "lY": 16,
+      "sX": 0.48,
+      "sY": 2.08,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"7\" color=\"#ffffff\" style=\"\">+</font>"
+      },
+      "ev": {}
+    },
+    "Button#10": {
+      "t": "Button",
+      "lX": 20,
+      "lY": 24,
+      "sX": 1,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "button name": "Save",
+        "color": "white"
+      },
+      "ev": {}
+    },
+    "Button#13": {
+      "t": "Button",
+      "lX": 124,
+      "lY": 24,
+      "sX": 1,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "button name": "Deactivate",
+        "color": "white"
+      },
+      "ev": {}
+    },
+    "Button#15": {
+      "t": "Button",
+      "lX": 228,
+      "lY": 24,
+      "sX": 1,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "white",
+        "button name": "Delete"
+      },
+      "ev": {}
+    },
+    "Input#0": {
+      "t": "Input",
+      "lX": 250,
+      "lY": 200,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "10.47%",
+        "y": "16.64%",
+        "width": "11.48%",
+        "height": "3.33%",
+        "scalingType": "NOVERT"
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "invalid message": "Please enter First Name"
+      },
+      "ev": {}
+    },
+    "Label#7": {
+      "t": "Label",
+      "lX": 40,
+      "lY": 164,
+      "sX": 4.12,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"4\">GENERAL INFORMATION</font>"
+      },
+      "ev": {}
+    },
+    "Label#8": {
+      "t": "Label",
+      "lX": 56,
+      "lY": 216,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "First Name"
+      },
+      "ev": {}
+    },
+    "Label#9": {
+      "t": "Label",
+      "lX": 24,
+      "lY": 108,
+      "sX": 1.04,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"2\"><b>User</b></font>"
+      },
+      "ev": {}
+    },
+    "Label#10": {
+      "t": "Label",
+      "lX": 24,
+      "lY": 80,
+      "sX": 4.12,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"4\"><b>John Citizen</b></font>"
+      },
+      "ev": {}
+    },
+    "Container#2": {
+      "t": "Container",
+      "lX": 544,
+      "lY": 152,
+      "sX": 5.2,
+      "sY": 1.76,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "z": "110",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "title": ""
+      },
+      "ev": {}
+    },
+    "Container#3": {
+      "t": "Container",
+      "lX": 24,
+      "lY": 152,
+      "sX": 5.2,
+      "sY": 3.6,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "z": "110",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "title": ""
+      },
+      "ev": {}
+    },
+    "Label#11": {
+      "t": "Label",
+      "lX": 56,
+      "lY": 264,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Last Name"
+      },
+      "ev": {}
+    },
+    "Input#1": {
+      "t": "Input",
+      "lX": 248,
+      "lY": 256,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey"
+      },
+      "ev": {}
+    },
+    "Label#12": {
+      "t": "Label",
+      "lX": 56,
+      "lY": 320,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Email"
+      },
+      "ev": {}
+    },
+    "Input#2": {
+      "t": "Input",
+      "lX": 252,
+      "lY": 308,
+      "sX": 2.68,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey"
+      },
+      "ev": {}
+    },
+    "Input#3": {
+      "t": "Input",
+      "lX": 252,
+      "lY": 360,
+      "sX": 2.68,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "type": "date"
+      },
+      "ev": {}
+    },
+    "Label#13": {
+      "t": "Label",
+      "lX": 56,
+      "lY": 424,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Mobile"
+      },
+      "ev": {}
+    },
+    "Label#14": {
+      "t": "Label",
+      "lX": 56,
+      "lY": 372,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Date of Birth"
+      },
+      "ev": {}
+    },
+    "Label#15": {
+      "t": "Label",
+      "lX": 40,
+      "lY": 232,
+      "sX": 4.85,
+      "sY": 1.1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#16": {
+      "t": "Label",
+      "lX": 44,
+      "lY": 340,
+      "sX": 4.77,
+      "sY": 1.05,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#17": {
+      "t": "Label",
+      "lX": 44,
+      "lY": 288,
+      "sX": 4.77,
+      "sY": 1.05,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#18": {
+      "t": "Label",
+      "lX": 44,
+      "lY": 392,
+      "sX": 4.77,
+      "sY": 1.05,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#19": {
+      "t": "Label",
+      "lX": 556,
+      "lY": 164,
+      "sX": 4.12,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"4\">ACCESS LEVEL</font>"
+      },
+      "ev": {}
+    },
+    "Container#4": {
+      "t": "Container",
+      "lX": 544,
+      "lY": 328,
+      "sX": 5.2,
+      "sY": 1.8,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "z": "110",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "title": ""
+      },
+      "ev": {}
+    },
+    "Label#76": {
+      "t": "Label",
+      "lX": 560,
+      "lY": 340,
+      "sX": 4.12,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"4\">RELATIONSHIP &amp; LICENSING</font>"
+      },
+      "ev": {}
+    },
+    "Label#77": {
+      "t": "Label",
+      "lX": 44,
+      "lY": 448,
+      "sX": 4.77,
+      "sY": 1.05,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Input#4": {
+      "t": "Input",
+      "lX": 252,
+      "lY": 416,
+      "sX": 2.68,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "type": "email"
+      },
+      "ev": {}
+    },
+    "Input#5": {
+      "t": "Input",
+      "lX": 664,
+      "lY": 208,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "type": "checkbox"
+      },
+      "ev": {}
+    },
+    "Label#78": {
+      "t": "Label",
+      "lX": 560,
+      "lY": 232,
+      "sX": 4.85,
+      "sY": 1.1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#79": {
+      "t": "Label",
+      "lX": 576,
+      "lY": 216,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Business Administration"
+      },
+      "ev": {}
+    },
+    "Label#80": {
+      "t": "Label",
+      "lX": 576,
+      "lY": 264,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Account Administration"
+      },
+      "ev": {}
+    },
+    "Input#6": {
+      "t": "Input",
+      "lX": 664,
+      "lY": 260,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "type": "checkbox"
+      },
+      "ev": {}
+    },
+    "Label#81": {
+      "t": "Label",
+      "lX": 556,
+      "lY": 284,
+      "sX": 4.85,
+      "sY": 1.1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Table#2": {
+      "t": "Table",
+      "lX": 40,
+      "lY": 620,
+      "sX": 9.88,
+      "sY": 2.84,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "columns": "Device ID,Device Name, Type, Serial No, Status, Date Added",
+        "display header": "true",
+        "title": "Devices"
+      },
+      "ev": {}
+    },
+    "Label#82": {
+      "t": "Label",
+      "lX": 4,
+      "lY": 116,
+      "sX": 10.72,
+      "sY": 1.18,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\" size=\"4\"><b style=\"\">_______________________________________________________________________________________________________________________________________________________________________</b></font>"
+      },
+      "ev": {}
+    },
+    "Label#83": {
+      "t": "Label",
+      "lX": 952,
+      "lY": 88,
+      "sX": 1.2,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#3a87ad\" size=\"2\"><b>James Whitmore</b></font>"
+      },
+      "ev": {}
+    },
+    "Label#84": {
+      "t": "Label",
+      "lX": 952,
+      "lY": 104,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"1\">Owner</font>"
+      },
+      "ev": {}
+    },
+    "Label#85": {
+      "t": "Label",
+      "lX": 836,
+      "lY": 104,
+      "sX": 0.76,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"1\">Status</font>"
+      },
+      "ev": {}
+    },
+    "Label#30": {
+      "t": "Label",
+      "lX": 836,
+      "lY": 88,
+      "sX": 1.08,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<b>Active</b>"
+      },
+      "ev": {}
+    },
+    "Label#31": {
+      "t": "Label",
+      "lX": 560,
+      "lY": 396,
+      "sX": 4.85,
+      "sY": 1.1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#32": {
+      "t": "Label",
+      "lX": 572,
+      "lY": 380,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Account"
+      },
+      "ev": {}
+    },
+    "Label#33": {
+      "t": "Label",
+      "lX": 560,
+      "lY": 448,
+      "sX": 4.85,
+      "sY": 1.1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#34": {
+      "t": "Label",
+      "lX": 572,
+      "lY": 428,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Licence Type"
+      },
+      "ev": {}
+    },
+    "Dropdown#3": {
+      "t": "Dropdown",
+      "lX": 776,
+      "lY": 364,
+      "sX": 2.64,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "default options": "Acme Inc, Brisbane City Council"
+      },
+      "ev": {}
+    },
+    "Dropdown#4": {
+      "t": "Dropdown",
+      "lX": 776,
+      "lY": 416,
+      "sX": 2.64,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "default options": "Read Only, Full"
+      },
+      "ev": {}
+    },
+    "Button#18": {
+      "t": "Button",
+      "lX": 196,
+      "lY": 568,
+      "sX": 1.44,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "button name": "Disassociate",
+        "color": "white"
+      },
+      "ev": {}
+    },
+    "Button#19": {
+      "t": "Button",
+      "lX": 40,
+      "lY": 568,
+      "sX": 1.56,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "white",
+        "button name": "Associate"
+      },
+      "ev": {}
+    },
+    "Container#6": {
+      "t": "Container",
+      "lX": 24,
+      "lY": 516,
+      "sX": 10.32,
+      "sY": 4.12,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "z": "110",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "title": ""
+      },
+      "ev": {}
+    },
+    "Label#36": {
+      "t": "Label",
+      "lX": 44,
+      "lY": 532,
+      "sX": 9.88,
+      "sY": 1.28,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"4\">ASSOCIATED DEVICES</font>"
+      },
+      "ev": {}
+    },
+    "Input#7": {
+      "t": "Input",
+      "lX": 48,
+      "lY": 652,
+      "sX": 0.48,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "type": "checkbox"
+      },
+      "ev": {}
+    },
+    "Input#8": {
+      "t": "Input",
+      "lX": 48,
+      "lY": 688,
+      "sX": 0.48,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "type": "checkbox"
+      },
+      "ev": {}
+    },
+    "Input#9": {
+      "t": "Input",
+      "lX": 48,
+      "lY": 720,
+      "sX": 0.48,
+      "sY": 1,
+      "s": "Form Sample",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "type": "checkbox"
+      },
+      "ev": {}
+    },
+    "Container#8": {
+      "t": "Container",
+      "lX": 16,
+      "lY": 8,
+      "sX": 10.72,
+      "sY": 14.88,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "z": "110",
+      "dis": false,
+      "a": {
+        "title": "",
+        "color": "grey"
+      },
+      "ev": {}
+    },
+    "Label#38": {
+      "t": "Label",
+      "lX": 36,
+      "lY": 16,
+      "sX": 0.48,
+      "sY": 2.08,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"7\" color=\"#ffffff\" style=\"\">+</font>"
+      },
+      "ev": {}
+    },
+    "Button#20": {
+      "t": "Button",
+      "lX": 20,
+      "lY": 24,
+      "sX": 1,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "button name": "Save",
+        "color": "white"
+      },
+      "ev": {}
+    },
+    "Button#21": {
+      "t": "Button",
+      "lX": 124,
+      "lY": 24,
+      "sX": 1,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "button name": "Deactivate",
+        "color": "white"
+      },
+      "ev": {}
+    },
+    "Button#24": {
+      "t": "Button",
+      "lX": 228,
+      "lY": 24,
+      "sX": 1,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "white",
+        "button name": "Delete"
+      },
+      "ev": {}
+    },
+    "Input#10": {
+      "t": "Input",
+      "lX": 248,
+      "lY": 200,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey"
+      },
+      "ev": {}
+    },
+    "Label#39": {
+      "t": "Label",
+      "lX": 40,
+      "lY": 164,
+      "sX": 4.12,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"4\">GENERAL INFORMATION</font>"
+      },
+      "ev": {}
+    },
+    "Label#40": {
+      "t": "Label",
+      "lX": 56,
+      "lY": 216,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Account Name"
+      },
+      "ev": {}
+    },
+    "Label#41": {
+      "t": "Label",
+      "lX": 24,
+      "lY": 108,
+      "sX": 1.04,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"2\"><b>Account</b></font>"
+      },
+      "ev": {}
+    },
+    "Label#42": {
+      "t": "Label",
+      "lX": 24,
+      "lY": 80,
+      "sX": 4.12,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"4\"><b>ACME Inc</b></font>"
+      },
+      "ev": {}
+    },
+    "Container#9": {
+      "t": "Container",
+      "lX": 544,
+      "lY": 152,
+      "sX": 5.2,
+      "sY": 3.96,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "z": "110",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "title": ""
+      },
+      "ev": {}
+    },
+    "Container#10": {
+      "t": "Container",
+      "lX": 24,
+      "lY": 152,
+      "sX": 5.2,
+      "sY": 3.96,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "z": "110",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "title": ""
+      },
+      "ev": {}
+    },
+    "Label#43": {
+      "t": "Label",
+      "lX": 56,
+      "lY": 264,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Account ID"
+      },
+      "ev": {}
+    },
+    "Input#11": {
+      "t": "Input",
+      "lX": 248,
+      "lY": 256,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey"
+      },
+      "ev": {}
+    },
+    "Label#44": {
+      "t": "Label",
+      "lX": 56,
+      "lY": 320,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Account Type"
+      },
+      "ev": {}
+    },
+    "Label#45": {
+      "t": "Label",
+      "lX": 56,
+      "lY": 424,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Email"
+      },
+      "ev": {}
+    },
+    "Label#46": {
+      "t": "Label",
+      "lX": 56,
+      "lY": 372,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Primary Contact"
+      },
+      "ev": {}
+    },
+    "Label#47": {
+      "t": "Label",
+      "lX": 40,
+      "lY": 232,
+      "sX": 4.85,
+      "sY": 1.1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#48": {
+      "t": "Label",
+      "lX": 44,
+      "lY": 340,
+      "sX": 4.77,
+      "sY": 1.05,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#49": {
+      "t": "Label",
+      "lX": 44,
+      "lY": 288,
+      "sX": 4.77,
+      "sY": 1.05,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#50": {
+      "t": "Label",
+      "lX": 44,
+      "lY": 392,
+      "sX": 4.77,
+      "sY": 1.05,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#51": {
+      "t": "Label",
+      "lX": 556,
+      "lY": 164,
+      "sX": 4.12,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"4\">ADDRESSES</font>"
+      },
+      "ev": {}
+    },
+    "Label#53": {
+      "t": "Label",
+      "lX": 44,
+      "lY": 448,
+      "sX": 4.77,
+      "sY": 1.05,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Input#14": {
+      "t": "Input",
+      "lX": 252,
+      "lY": 416,
+      "sX": 2.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "type": "email"
+      },
+      "ev": {}
+    },
+    "Label#54": {
+      "t": "Label",
+      "lX": 560,
+      "lY": 232,
+      "sX": 4.85,
+      "sY": 1.1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#55": {
+      "t": "Label",
+      "lX": 576,
+      "lY": 216,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Address Line 1"
+      },
+      "ev": {}
+    },
+    "Label#56": {
+      "t": "Label",
+      "lX": 576,
+      "lY": 264,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Address Line 2"
+      },
+      "ev": {}
+    },
+    "Label#57": {
+      "t": "Label",
+      "lX": 556,
+      "lY": 284,
+      "sX": 4.85,
+      "sY": 1.1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Table#5": {
+      "t": "Table",
+      "lX": 36,
+      "lY": 668,
+      "sX": 10.14,
+      "sY": 3.16,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "columns": "Device ID, Device Name, Type, Serial Number, Status, Last Updated",
+        "display header": "true",
+        "title": "Devices",
+        "colWidths": "177,278,90,183,106,178"
+      },
+      "ev": {}
+    },
+    "Label#58": {
+      "t": "Label",
+      "lX": 28,
+      "lY": 116,
+      "sX": 10.28,
+      "sY": 1.18,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\" size=\"4\"><b style=\"\">_______________________________________________________________________________________________________________________________________________________________________</b></font>"
+      },
+      "ev": {}
+    },
+    "Label#59": {
+      "t": "Label",
+      "lX": 952,
+      "lY": 88,
+      "sX": 1.2,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#3a87ad\" size=\"2\"><b>Warren Bailey</b></font>"
+      },
+      "ev": {}
+    },
+    "Label#60": {
+      "t": "Label",
+      "lX": 952,
+      "lY": 104,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"1\">Owner</font>"
+      },
+      "ev": {}
+    },
+    "Label#61": {
+      "t": "Label",
+      "lX": 836,
+      "lY": 104,
+      "sX": 0.76,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"1\">Status</font>"
+      },
+      "ev": {}
+    },
+    "Label#62": {
+      "t": "Label",
+      "lX": 836,
+      "lY": 88,
+      "sX": 1.08,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<b>Active</b>"
+      },
+      "ev": {}
+    },
+    "Label#63": {
+      "t": "Label",
+      "lX": 560,
+      "lY": 392,
+      "sX": 4.85,
+      "sY": 1.1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#64": {
+      "t": "Label",
+      "lX": 576,
+      "lY": 372,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "State"
+      },
+      "ev": {}
+    },
+    "Label#65": {
+      "t": "Label",
+      "lX": 560,
+      "lY": 448,
+      "sX": 4.85,
+      "sY": 1.1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#66": {
+      "t": "Label",
+      "lX": 572,
+      "lY": 428,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Zip/Post Code"
+      },
+      "ev": {}
+    },
+    "Button#25": {
+      "t": "Button",
+      "lX": 144,
+      "lY": 612,
+      "sX": 1.04,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "button name": "Remove",
+        "color": "white"
+      },
+      "ev": {}
+    },
+    "Button#26": {
+      "t": "Button",
+      "lX": 40,
+      "lY": 612,
+      "sX": 1,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "white",
+        "button name": "New"
+      },
+      "ev": {}
+    },
+    "Container#12": {
+      "t": "Container",
+      "lX": 24,
+      "lY": 552,
+      "sX": 10.4,
+      "sY": 4.6,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "z": "110",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "title": ""
+      },
+      "ev": {}
+    },
+    "Label#67": {
+      "t": "Label",
+      "lX": 40,
+      "lY": 576,
+      "sX": 9.88,
+      "sY": 1.28,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"4\">ASSOCIATED DEVICES</font>"
+      },
+      "ev": {}
+    },
+    "Input#17": {
+      "t": "Input",
+      "lX": 40,
+      "lY": 812,
+      "sX": 0.48,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "type": "checkbox"
+      },
+      "ev": {}
+    },
+    "Input#18": {
+      "t": "Input",
+      "lX": 40,
+      "lY": 736,
+      "sX": 0.48,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "type": "checkbox"
+      },
+      "ev": {}
+    },
+    "Input#19": {
+      "t": "Input",
+      "lX": 40,
+      "lY": 776,
+      "sX": 0.48,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "type": "checkbox"
+      },
+      "ev": {}
+    },
+    "Dropdown#7": {
+      "t": "Dropdown",
+      "lX": 252,
+      "lY": 312,
+      "sX": 2.56,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "default options": "Customer, Reseller"
+      },
+      "ev": {}
+    },
+    "Input#12": {
+      "t": "Input",
+      "lX": 252,
+      "lY": 364,
+      "sX": 2.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "type": "email"
+      },
+      "ev": {}
+    },
+    "Input#13": {
+      "t": "Input",
+      "lX": 772,
+      "lY": 200,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey"
+      },
+      "ev": {}
+    },
+    "Input#15": {
+      "t": "Input",
+      "lX": 772,
+      "lY": 252,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey"
+      },
+      "ev": {}
+    },
+    "Label#52": {
+      "t": "Label",
+      "lX": 560,
+      "lY": 340,
+      "sX": 4.85,
+      "sY": 1.1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#68": {
+      "t": "Label",
+      "lX": 576,
+      "lY": 320,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "City/Suburb"
+      },
+      "ev": {}
+    },
+    "Input#16": {
+      "t": "Input",
+      "lX": 772,
+      "lY": 308,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey"
+      },
+      "ev": {}
+    },
+    "Input#20": {
+      "t": "Input",
+      "lX": 772,
+      "lY": 364,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey"
+      },
+      "ev": {}
+    },
+    "Input#21": {
+      "t": "Input",
+      "lX": 772,
+      "lY": 416,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey"
+      },
+      "ev": {}
+    },
+    "Label#69": {
+      "t": "Label",
+      "lX": 44,
+      "lY": 504,
+      "sX": 4.77,
+      "sY": 1.05,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Input#22": {
+      "t": "Input",
+      "lX": 252,
+      "lY": 472,
+      "sX": 2.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "type": "email"
+      },
+      "ev": {}
+    },
+    "Label#70": {
+      "t": "Label",
+      "lX": 572,
+      "lY": 484,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Country"
+      },
+      "ev": {}
+    },
+    "Input#23": {
+      "t": "Input",
+      "lX": 772,
+      "lY": 472,
+      "sX": 2.72,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey"
+      },
+      "ev": {}
+    },
+    "Label#71": {
+      "t": "Label",
+      "lX": 560,
+      "lY": 504,
+      "sX": 4.85,
+      "sY": 1.1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font color=\"#acacac\">________________________________________________________________________________</font>"
+      },
+      "ev": {}
+    },
+    "Label#72": {
+      "t": "Label",
+      "lX": 60,
+      "lY": 484,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": ""
+      },
+      "ev": {}
+    },
+    "Label#73": {
+      "t": "Label",
+      "lX": 60,
+      "lY": 484,
+      "sX": 1.68,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "Parent Account"
+      },
+      "ev": {}
+    },
+    "Container#5": {
+      "t": "Container",
+      "lX": 28,
+      "lY": 1024,
+      "sX": 10.4,
+      "sY": 3.2,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "z": "110",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "title": ""
+      },
+      "ev": {}
+    },
+    "Label#35": {
+      "t": "Label",
+      "lX": 44,
+      "lY": 1024,
+      "sX": 9.88,
+      "sY": 1.28,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "font size": "14",
+        "label text": "<font size=\"4\">ASSOCIATED USERS</font>"
+      },
+      "ev": {}
+    },
+    "Table#3": {
+      "t": "Table",
+      "lX": 40,
+      "lY": 1112,
+      "sX": 10.14,
+      "sY": 3.4,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "columns": "First Name, Last Name, Email, Mobile, Status, Last Time Logged In",
+        "display header": "true",
+        "title": "Users",
+        "colWidths": "191,151,208,132,87,235"
+      },
+      "ev": {}
+    },
+    "Button#11": {
+      "t": "Button",
+      "lX": 40,
+      "lY": 1060,
+      "sX": 1,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "white",
+        "button name": "New"
+      },
+      "ev": {}
+    },
+    "Button#12": {
+      "t": "Button",
+      "lX": 136,
+      "lY": 1060,
+      "sX": 1.04,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "button name": "Remove",
+        "color": "white"
+      },
+      "ev": {}
+    },
+    "Input#24": {
+      "t": "Input",
+      "lX": 40,
+      "lY": 848,
+      "sX": 0.48,
+      "sY": 1,
+      "s": "Account",
+      "ps": {
+        "enabled": false,
+        "x": "",
+        "y": "",
+        "width": "",
+        "height": ""
+      },
+      "ver": "190104c190502",
+      "dis": false,
+      "a": {
+        "color": "grey",
+        "type": "checkbox"
+      },
+      "ev": {}
+    }
+  },
+  "screens": {
+    "Configurations": {
+      "index": 0,
+      "icon": "settings",
+      "meta": ""
+    },
+    "Server Console": {
+      "index": 1,
+      "icon": "computer",
+      "meta": ""
+    },
+    "Manage Sensors": {
+      "index": 2,
+      "icon": "wifi_tethering",
+      "meta": ""
+    },
+    "Accounts": {
+      "index": 3,
+      "icon": "widgets",
+      "meta": ""
+    },
+    "Form Sample": {
+      "index": 4,
+      "icon": "widgets",
+      "meta": ""
+    },
+    "Account": {
+      "index": 5,
+      "icon": "widgets",
+      "meta": ""
+    }
+  },
+  "meta": ""
+}

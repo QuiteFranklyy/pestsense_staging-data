@@ -1,0 +1,881 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Map Builder Widget</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style id="cssProperties">
+
+
+
+        body {
+            font-family: "Open Sans";
+            font-size: 16px;
+            user-select: none;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+
+
+
+        @font-face {
+            font-family: "Open Sans";
+            font-style: normal;
+            font-weight: 400;
+            src: local("Open Sans"), local("OpenSans"), url("../fonts/OpenSans400.woff") format("woff");
+        }
+
+        @font-face {
+            font-family: "Open Sans";
+            font-style: normal;
+            font-weight: 700;
+            src: local("Open Sans"), local("OpenSans"), url("../fonts/OpenSans700.woff") format("woff");
+        }
+
+
+        .map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .componentGrid {
+            display: flex;
+            width: 100%;
+            position: absolute;
+            top: 85%;
+            background: #f2f2f2;
+        }
+
+        .row {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .col-2 {
+            width: 20%;
+            height: 100%;
+        }
+
+        .col-8 {
+            width: 80%;
+            height: 100%;
+        }
+
+        #outer-dropzone {
+            height: 85%;
+            position: relative;
+            z-index: 3;
+        }
+
+        .dropzone {
+            transition: background-color 0.3s;
+            width: 100%;
+            border: dashed 4px transparent;
+        }
+
+        .drop-active {
+            border-color: #aaa;
+            position: relative;
+            z-index: 3;
+        }
+
+        .drop-target {
+            border-color: #fff;
+            border-style: solid;
+            position: relative;
+            z-index: 3;
+        }
+
+        .drag-drop {
+            /* height: 50px;
+            width: 50px; */
+            padding: 1%;
+            /* margin: 2%; */
+            touch-action: none;
+            -webkit-transform: translate(0px, 0px);
+            transform: translate(0px, 0px);
+            transition: background-color 0.3s;
+            position: relative;
+            z-index: 3;
+        }
+
+        .draggble {
+            position: relative;
+            z-index: 3;
+            fill: red;
+            color: white;
+        }
+
+        .drag-drop.can-drop {
+            color: #000;
+            background-color: #4e4;
+            position: relative;
+            z-index: 3;
+        }
+
+        .svgIcon:hover {
+            color: red;
+            fill: red;
+        }
+
+        .svgIcon {
+            width: 40px;
+            height: 40px;
+        }
+
+
+        @media screen and (max-width:1200px) {
+            .svgIcon {
+                width: 35px;
+                height: 35px;
+            }
+        }
+
+        @media screen and (max-width:900px) {
+            .svgIcon {
+                width: 30px;
+                height: 30px;
+            }
+        }
+
+        @media screen and (max-width:700px) {
+            .svgIcon {
+                width: 25px;
+                height: 25px;
+            }
+        }
+
+        @media screen and (max-width:500px) {
+            .svgIcon {
+                width: 5px;
+                height: 5px;
+            }
+        }
+
+        .labelStyle {
+            text-align: center;
+            display: list-item;
+            color: black;
+            padding: 0;
+            margin: 0;
+        }
+        .ResizableIcon{
+            width: 25px;
+            height: 25px;
+        }
+    </style>
+</head>
+
+
+<body id="body">
+
+    <div id="iconTemplate" style="display:none;" onclick="EnableDrag(this)" class="drag-drop">
+
+    </div>
+    <div id="group">
+        <div id="widget" style="position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; z-index: 100; overflow:hidden;">
+
+                <div class="row" id="mapArea">
+
+                    <div class="map" id="map">
+                        <div id="ImageHolder" style="position:absolute; width:100%;height:85%;z-index:2;">
+
+                        </div>
+                        <div id="outer-dropzone" onclick="ElementDropped(this)" class="dropzone">
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row" id="menuArea">
+                    <div class="componentGrid" id="componentGrid">
+    
+                    </div>
+                </div>
+            
+        </div>
+    </div>
+    <script src="api/Log.js" asp-append-version="true"></script>
+    <!-- <script src="api/DataTypes.js" asp-append-version="true"></script> -->
+    <script src="api/Database.js" asp-append-version="true"></script>
+    <script src="api/Script.js" asp-append-version="true"></script>
+    <script src="api/Utils.js" asp-append-version="true"></script>
+    <script src="api/ClientEvents.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+
+
+    <script>"use strict";
+
+        var options = {
+            settings: {
+                "category": "widget",
+                "type": window.location.pathname.split("/").slice(-1)[0].split(".")[0].replace("%20", " "),
+                "iniHeight": parseInt(widget.style.height),
+                "iniWidth": parseInt(widget.style.width),
+                "author": "Sensavation",
+                "tbTooltip": "Creates a map builder allowing to associate different devices on a custom background.",
+                "tooltip": "",
+                "version": "190104",
+                "group": "forms",
+                "zIndex": "ZINDEX_DEFAULT",
+                "disabled": false,
+                "scaling": true,
+                "help": "card"
+            },
+            clientEvents: {
+                inputEvents: {
+                    "clear content": clearContent,
+                    "set image": eventImage,
+                    "toggle navigation": navigationChanged,
+                    "set icons": setIconSource,
+                    "set mode": setMode,
+                    "set data source": setDataSource,
+                    "resize": resize
+                },
+                outputEvents: [
+                    "map source updated",
+                    "sensor updated"
+                ]
+            },
+            serverEvents: {
+                inputEvents: {
+                    "feed": {
+                        "function": fw_feed
+                    }
+                },
+                outputEvents: []
+            },
+            dataTypes: {
+                "feed": ["string"],
+                "retValue": ["array"],
+                "set image": ["string"]
+            },
+            attribs: {
+
+            }
+        };
+        //#endregion
+
+        //#region Properties
+        var iconTemplate = document.getElementById("iconTemplate");
+        var imageHolder = document.getElementById("ImageHolder");
+        var imageFullName;
+        var imageLoc;
+        var img = new Image();
+        img.classList.add("img");
+        var cardSelected;
+        var walls = [];
+        var furniture = [];
+        var props = [];
+        var ActiveAddElement;
+        var addedElements = 0;
+        //x and y for the item moved on the screen
+        var posX;
+        var posY;
+
+        //x and y of the mouse on the screen.
+        var defX;
+        var defY;
+
+        var draggableGrid = document.getElementById("componentGrid");
+
+        var _DragEnabled = true;
+        var activeColor = "green";
+        var deactiveColor = "Black";
+
+        var iconCounters = 1;
+        const DEFAULT_TEXT_LABEL = "DEFAULT_TEXT_LABEL";
+        //#endregion
+
+        //#region Events
+
+        /**
+        * Loads the list of icons to the coresponding datasources
+        * @param eventData holds a value between 1-3 { id: type, source: [svgIcon.svg, svgIcon.svg ... svgIcon.svg] }
+        */
+        function setIconSource(eventData) {
+            if (!isNaN(eventData.value.type)) {
+                switch (eventData.value.type) {
+                    case 1:
+                        walls = eventData.value.source;
+                        break;
+                    case 2:
+                        furniture = eventData.value.source;
+                        break;
+                    case 3:
+                        props = eventData.value.source;
+                        break;
+                }
+            }
+            else {
+                // handle exception
+            }
+        }
+
+        function setMode(eventData) {
+            if (eventData.value === "true") {
+                _DragEnabled = false;
+                // document.getElementById("mapArea").setAttribute("class", "row col-12");
+                document.getElementById("outer-dropzone").style.setProperty("height", "100%");
+                document.getElementById("ImageHolder").style.setProperty("height", "100%");
+                document.getElementById("menuArea").style.setProperty("display", "none");
+            }
+            else {
+                _DragEnabled = true;
+                // document.getElementById("mapArea").setAttribute("class", "row");
+                document.getElementById("outer-dropzone").style.setProperty("height", "85%");
+                document.getElementById("ImageHolder").style.setProperty("height", "85%");
+                document.getElementById("menuArea").style.setProperty("display", "");
+            }
+        }
+
+        /**
+        * Changes the visible drag and drop items within the map builder
+        * @param eventData holds a value between 1-3 {1: props, 2: walls, 3: sensor devices }
+        */
+        function navigationChanged(eventData) {
+
+            if (!isNaN(eventData.value)) {
+                switch (eventData.value) {
+
+                    case 1:
+                        populateIcons(walls);
+
+                        break;
+                    case 2:
+                        populateIcons(furniture);
+
+                        break;
+                    case 3:
+                        populateIcons(props);
+                        break;
+                }
+            }
+            else {
+                // handle exception
+            }
+        }
+
+        /**
+        * Renders svg icons inside the draggable grid.
+        * @param source holds the new set of icon locations to be rendered on the screen.
+        */
+        function populateIcons(source) {
+            draggableGrid.innerHTML = "";
+            // Recreate this as it would have been removed
+            addLabelIcon();
+
+            for (var item in source) {
+                var svg = source[item];
+                // iconCounters[svg.replace(".html", "")] = 0;
+                var icon = httpGet('mapicons/' + svg);
+                var template = iconTemplate.cloneNode(true);
+                template.innerHTML = icon;
+                template.setAttribute("style", "");
+                draggableGrid.appendChild(template);
+            }
+
+            if (source.length > 0) {
+                // icons were in fact added
+                // create an input field to manually override the next icon number
+                draggableGrid.appendChild(getInputIcon("numberInput", "number", "40px", () => iconCounters = +document.getElementById("numberInput").value, 1));
+            }
+        }
+
+        /**
+         * Adds label to be added to map
+         */
+        function addLabelIcon() {
+            var labelIcon = `<div data-label="${DEFAULT_TEXT_LABEL}" style="width:100%; height:100%; ">
+                                <div style="position: relative; text-align:center;">
+                                    <div class="colorContainer" style="display:block; background-color: red; width: 50px; height: 50px;">
+                                        <div class="textContainer" position: absolute; style="top: 2px; width: 100%; text-align:center; color: white; font-weight:600;"></div>
+                                    </div>
+                                </div>
+                            </div>`;
+            var template = iconTemplate.cloneNode(true);
+            template.innerHTML = labelIcon;
+            template.setAttribute("style", "");
+            draggableGrid.appendChild(template);
+
+            draggableGrid.appendChild(getInputIcon("labelInput", "", "", "", ""));
+        }
+
+        function getInputIcon(iconId, type, width, onChangeCallback, defaultValue) {
+            var inputIcon = document.createElement("input");
+            inputIcon.id = iconId;
+            inputIcon.name = iconId;
+            inputIcon.type = type;
+            inputIcon.value = defaultValue;
+            inputIcon.onchange = onChangeCallback;
+            inputIcon.setAttribute("style", `height: 30px; width: ${width}; font-size: 15px`);
+            
+            var tempDiv = document.createElement("div");
+            tempDiv.setAttribute("style", "display: flex; flex-direction: column; justify-content: center;");
+            tempDiv.appendChild(inputIcon);
+
+            return tempDiv;
+        }
+
+        // Load image from events (client or server)
+        function eventImage(file) {
+            if (file.value.src) {
+                // File was obtained from a script
+                if (parent.isDataURL(file.value.src)) {
+                    var type = file.value.match(/[a-z]+\/[a-z]+/i);
+                    type = (type.length === 1) ? type[0] : undefined;
+                    if (type === undefined) {
+                        throw new TypeError("EventImage - Could not find file type for data url '" + file.value + "'.")
+                    }
+                    switch (type.split("/")[0].toUpperCase()) {
+                        case "IMAGE":
+                            setImage(file.value, "DATAURL");
+                            break;
+                    }
+
+                } else {
+                    var split = file.value.src.split("/");
+                    var fileName = split[split.length - 1];
+                    setLocation(split.splice(0, split.length - 1).join("/") + "/");
+                    setImage(fileName);
+                }
+            } else {
+                // File was obtained through client events
+                // TODO properly set location
+                // setLocation("userfiles/");
+                // setImage(file.value.name);
+            }
+            
+        }
+
+        function setLocation(location) {
+            imageLoc = location;
+            if (fw.state !== "TOOLBOX") {
+                fw.func("SETATTRIB", "location", location);
+            }
+        }
+
+        function setImage(imageName, mode) {
+
+            img.style.setProperty("display", "unset");
+
+            var dataUrl;
+            if (mode && mode.toUpperCase() === "DATAURL") {
+                dataUrl = imageName
+            }
+
+            if (imageName === "") {
+                // Use default image
+                imageFullName = "../images/blank.png";
+            }
+            else {
+                // sometimes we get sent just the filename without extension
+                if (imageName.length < 4) {
+                    imageName = imageName + ".jpg";             // can't have extension so add it
+                }
+                var ext = imageName.substring(imageName.length - 4).toUpperCase();
+                if (ext !== ".JPG" && ext !== ".PNG" && ext !== ".BMP" && ext !== "JFIF" && ext !== "JPEG" && ext !== ".JPE" && ext !== ".GIF") {
+                    imageName = imageName + ".jpg";
+                }
+                imageFullName = imageLoc + imageName;
+            }
+
+
+            img.src = imageFullName;
+            img.style.setProperty("width","100%");
+            img.style.setProperty("height","100%");
+            imageHolder.appendChild(img);
+
+
+        }
+
+
+        //#endregion
+
+
+        //#region Functions
+        function EnableDrag(event) {
+
+            if (!_DragEnabled) {
+                return;
+            }
+
+            ActiveAddElement = event.cloneNode(true);
+            // Remove border from all icon elements
+            let iconElements = componentGrid.getElementsByTagName("img");
+            componentGrid.getElementsByClassName("colorContainer")[0].style.setProperty("border", "");
+            
+            for (var i = 0; i < iconElements.length; i++) { 
+                iconElements[i].style.setProperty("border", "");
+            }
+            // Get corresponding icon-type element
+            let dataSetLabel = ActiveAddElement.childNodes[0].dataset.label;
+            let selectedToolbarElement = componentGrid.querySelectorAll(`[data-label=${dataSetLabel}]`)[0];
+            if (dataSetLabel === DEFAULT_TEXT_LABEL) {
+                selectedToolbarElement.getElementsByClassName("colorContainer")[0].style.setProperty("border", "solid black 2px");
+            } else {
+                selectedToolbarElement.getElementsByTagName("img")[0].style.setProperty("border", "solid black 2px");
+            }
+        }
+
+        function ElementDropped(event)
+        {
+            var item;
+            var id;
+            var map = document.getElementById("outer-dropzone");
+            // if (event.relatedTarget.getAttribute("id") !== null) {
+            //     item = items[event.relatedTarget.getAttribute("id")];
+            //     id = event.relatedTarget.firstChild.getAttribute("id");
+            // }
+            var cArguments = event.onclick.arguments;
+            var rect = map.getBoundingClientRect();
+            var x = cArguments[0].pageX - rect.left; //x position within the element.
+            var y = cArguments[0].pageY - rect.top;  //y position within the element.
+            var addingElement = ActiveAddElement.cloneNode(true);
+                        
+            var addingElementObj;
+            if (addingElement.childNodes[0].dataset.label === DEFAULT_TEXT_LABEL) {
+                addingElementObj = addingElement.getElementsByClassName("colorContainer")[0];
+                addingElement.getElementsByClassName("textContainer")[0].innerHTML = document.getElementById("labelInput").value;
+                addingElementObj.style.setProperty("width", "");
+                addingElementObj.style.setProperty("position", "absolute");
+            } else {
+                addingElement.getElementsByClassName("textContainer")[0].innerHTML = iconCounters++;
+                document.getElementById("numberInput").value = iconCounters;
+                addingElement.style.setProperty("display","none");
+                addingElementObj = addingElement.getElementsByTagName("img")[0];
+                addingElementObj.style.setProperty("width", "30px");
+            }
+
+            addingElementObj.style.setProperty("height", "30px");
+            addingElement.setAttribute("id",addedElements)
+            addingElement.setAttribute("class", "draggble");
+            addingElement.setAttribute("class","draggble ResizableIcon");
+            map.append(addingElement);
+
+            var xC = (x / map.clientWidth) * 100;
+            var yC = (y / map.clientHeight) * 100;
+            if (item !== undefined) {
+                items[addingElement.getAttribute("id")].x = xC;
+                items[addingElement.getAttribute("id")].y = yC;
+            }
+            else {
+                addingElement.setAttribute("id", Script.generateGUID());
+                items[addingElement.getAttribute("id")] = {
+                    x: xC,
+                    y: yC,
+                    id: id,
+                    UID: addingElement.getAttribute("id")
+                };
+            }
+            var styles = "top:" + yC + "%;left:" + xC + "%;position:absolute;";
+            //ActiveAddElement.querySelector("[data-info='Status']")
+            addingElement.setAttribute("style", styles);
+
+            fw.fireEvent("map source updated", items);
+            // template.querySelector("[data-info='Status']")
+           
+            addedElements++;
+        }
+
+        var items = [];
+        const position = { x: 0, y: 0 }
+        const startingPos = { x: 0, y: 0 }
+
+        function RemoveItemFromSource(id) {
+            var local = [];
+            for (var item in items) {
+                if (item !== id) {
+                    local.push(items[item]);
+                }
+
+            }
+            items = local;
+        }
+
+        interact(".dropzone")
+            .dropzone({
+                ondrop: function (event) {
+
+                    var item;
+                    var id;
+                    var map = document.getElementById("outer-dropzone");
+                    if (event.relatedTarget.getAttribute("id") !== null) {
+                        item = items[event.relatedTarget.getAttribute("id")];
+                        id = event.relatedTarget.firstChild.getAttribute("id");
+                    }
+
+
+
+                    var rect = map.getBoundingClientRect();
+                    var x = posX - rect.left; //x position within the element.
+                    var y = posY - rect.top;  //y position within the element.
+                    map.append(event.relatedTarget);
+
+
+                    var xC = ((defX - 2.5) / map.clientWidth) * 100;
+                    var yC = ((defY - 16) / map.clientHeight) * 100;
+                    if (item !== undefined) {
+                        items[event.relatedTarget.getAttribute("id")].x = xC;
+                        items[event.relatedTarget.getAttribute("id")].y = yC;
+                    }
+                    else {
+                        event.relatedTarget.setAttribute("id", Script.generateGUID());
+                        items[event.relatedTarget.getAttribute("id")] = {
+                            x: xC,
+                            y: yC,
+                            id: id,
+                            UID: event.relatedTarget.getAttribute("id")
+                        };
+                    }
+                    var styles = "top:" + yC + "%;left:" + xC + "%;position:absolute;";
+                    event.relatedTarget.querySelector("[data-info='Status']")
+                    event.relatedTarget.setAttribute("style", styles);
+
+                    fw.fireEvent("map source updated", items);
+
+                },
+
+                ondropactivate: function (event) {
+                    // add active dropzone feedback
+                    event.target.classList.add('drop-active')
+                },
+                ondragenter: function (event) {
+                    var draggableElement = event.relatedTarget
+                    var dropzoneElement = event.target
+
+                    // feedback the possibility of a drop
+                    dropzoneElement.classList.add('drop-target')
+                    draggableElement.classList.add('can-drop')
+
+                    // draggableElement.textContent = 'Dragged in'
+                },
+                ondragleave: function (event) {
+                    // remove the drop feedback style
+                    event.target.classList.remove('drop-target')
+                    event.relatedTarget.classList.remove('can-drop')
+                    //event.relatedTarget.textContent = 'Dragged out'
+                },
+
+                ondropdeactivate: function (event) {
+                    // remove active dropzone feedback
+                    event.target.classList.remove('drop-active')
+                    event.target.classList.remove('drop-target')
+                }
+            })
+            .on('dropactivate', function (event) {
+                event.target.classList.add('drop-activated')
+            })
+
+        interact('.draggble').draggable({
+            listeners: {
+                start(event) {
+
+
+                    var x0a = event.target.style["left"];
+                    var y0a = event.target.style["top"];
+                    if (x0a !== "" && y0a !== "") {
+
+                        position.x = defX;
+                        position.y = defY;
+                        event.target.setAttribute("style", "position:absolute;left:" + defX + "px;top:" + defY + "px;");
+                    }
+                    else {
+                        event.target.setAttribute("style", "position:absolute;left:" + defX + "px;top:" + defY + "px;");
+
+                    }
+                },
+                move(event) {
+
+                    position.x += defX;
+                    position.y += defY;
+                    posX = event.clientX;
+                    posY = event.clientY;
+
+                    var xC = ((defX - 2.5) / imageHolder.clientWidth) * 100;
+                    var yC = ((defY - 16) / imageHolder.clientHeight) * 100;
+                    event.target.setAttribute("style", "position:absolute;left:" + xC + "%;top:" + yC + "%;");
+                },
+            }
+        })
+        window.addEventListener('mousemove', e => {
+
+            defX = e.x - 26;
+            defY = e.y - 15;
+
+        });
+
+        //#enrregion
+
+        function DisableDrag() {
+            _DragEnabled = false;
+        }
+
+        /**
+         *  @param eventData = SensaCollection including list of objects to be placed on the map.
+         */
+        function setDataSource(eventData) {
+            var map = document.getElementById("outer-dropzone");
+            items = [];
+            var dataSource = eventData.value;
+            for (var item in dataSource) {
+                var current = dataSource[item];
+
+                var icon = httpGet('/userfiles/mapicons/' + current.id + ".svg");
+                icon += "<p class='labelStyle'>" + current.Device + "</p>";
+                var template = iconTemplate.cloneNode(true);
+
+                template.innerHTML = icon;
+                template.setAttribute("style", "");
+
+                //if (template.getAttribute("id") !== null) {
+                //    bindingItem = items[event.relatedTarget.getAttribute("id")];
+                //    id = event.relatedTarget.firstChild.getAttribute("id");
+                //}
+
+                map.append(template);
+
+                template.setAttribute("id", current.UUID);
+                items[current.UUID] = {
+                    id: current.id,
+                    x: current.x,
+                    y: current.y,
+                    UUID: current.UUID,
+                    Device: current.Device,
+                    Reference: template
+                };
+
+                var styles = "top:" + current.y + "%;left:" + current.x + "%;position:absolute;";
+                template.querySelector("[data-info='Status']")
+                template.setAttribute("style", styles);
+
+            }
+        }
+
+        function GetItemByDevice(id) {
+            for (var item in items) {
+                var current = items[item];
+                if (current.Device.toUpperCase() === id)
+                {
+                    return current;
+                }
+            }
+            return null;
+        }
+
+        /**
+        * Disposes the content of the Generic widget
+        */
+        function clearContent() {
+            document.getElementById("container").innerHTML = "";
+        }
+
+        // API actions for dashboard mode
+        function fw_dashStart(mode) {
+
+            if (mode !== "DASHBOARD") {
+                document.getElementsByTagName("html")[0].style.setProperty("background-color", "grey");
+            }
+            addLabelIcon();
+
+            return "OK";
+        }
+
+        function setSensorColor(sensor, color) {
+            for (var citem in sensor.children) {
+                var child = sensor.children[citem];
+                if (child.style === undefined) {
+
+                }
+                else {
+                    if (child.children.length > 0) {
+                        setSensorColor(child, color);
+                    }
+                    else {
+
+                   //     child.style.setProperty("fill", "red");
+                        child.style.setProperty("stroke", color);
+                    }
+                }
+
+
+            }
+        }
+
+        function resize(data) {
+            const { height, width } = data;
+            if(height)
+                fw.func("ADJUSTSIZE", "HEIGHT", height);
+            if(width)
+                fw.func("ADJUSTSIZE", "WIDTH", width);
+        }
+
+        function ToggleSensorOff(sensor)
+        {
+
+            var res = sensor.firstChild.querySelector("[data-info='allChildren']");
+            setSensorColor(res, deactiveColor);
+        }
+
+        // API startup actions for toolbox. Return "OK" if startup OK else return an error string
+        function fw_toolStart(mode) {
+            return "OK";
+        }
+
+        // API startup actions when first created by dropping in design mode. Return "OK" if startup OK else return an error string
+        function fw_newWidget(mode) {
+            return fw_dashStart();
+        }
+
+        // API called when switching to design mode (optional, delete if not using)
+        function fw_startDesign() {
+            return true;
+        }
+
+        // API called to manage scaling
+        function fw_scale(scaleX, scaleY) {
+            // fw.widgetID.style.setProperty("width", (options.settings.iniWidth * scaleX) + "px");
+            // fw.widgetID.style.setProperty("height", (options.settings.iniHeight * scaleY) + "px");
+
+            return true;
+        }
+
+        // API called when widget edit starts (return false to stop editor, "NOSCALE", "NOVERT", "NOHORIZ", "NOVERT,NOHORIZ" to customise scaling)
+        function fw_startEdit() {
+            return true;
+        }
+
+        // API called when widget edit finishes (apply edit changes here)
+        function fw_endEdit(mode) {
+        }
+
+        function fw_db(channel, scope, data) {
+        }
+
+        // API called for incoming channel events
+        function fw_feed(channel, scope, data) {
+
+            var getItem = GetItemByDevice(channel.split("/")[2]);
+            if (getItem !== null)
+            {
+                var res = getItem.Reference.firstChild.querySelector("[data-info='allChildren']");
+                setSensorColor(res, activeColor);
+                setTimeout(function () { ToggleSensorOff(getItem.Reference) }, 2000);
+            }
+        }
+
+        // Initialize widget framework API - DO NOT ADJUST OR DELETE
+        var fw = new parent.widgetAPI(window.name);  // widget framework object
+        fw.ready();
+
+        function httpGet(theUrl) {
+            var xmlHttp = new XMLHttpRequest();
+            xmlHttp.open("GET", theUrl, false); // false for synchronous request
+            xmlHttp.send(null);
+            return xmlHttp.responseText;
+        }</script>
+
+
+
+</body>
+</html>

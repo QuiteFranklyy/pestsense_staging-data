@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="preload" href="../fonts/OpenSans400.woff2" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../fonts/MaterialIcons-Regular.woff2" as="font" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" media="all" href="../css/style.min.css"/>
+    <link rel="stylesheet" type="text/css" media="all" href="../css/highlight/sensahub.css"/>
+    <link rel="stylesheet" type="text/css" media="all" href="../css/help.min.css"/>
+    
+    <title>HelpViewer (Sensahub Dashboard Widget)</title>
+    <style>
+        body {
+            overflow: hidden;
+            font-family: 'Open Sans';
+            font-size: 16px;
+            background-color: transparent;
+        }
+    </style>
+
+</head>
+<body id="body" ondragstart="return false;" ondrop="return false;">
+    <div id="group">
+        <div id="widget" draggable="false" style="position: relative; height: 200px; width: 150px; position: absolute; left: 0px; top: 0px; border: 2px solid #808080; border-radius: 3px; overflow:auto; background-color: white;">
+            <div id="help-content" class="help-content" style="background-color: white;" ></div>
+        </div>
+    </div>
+
+    
+    <script src="api/Client.js"></script>
+    <script src="api/Utils.js"></script>
+    <script src="../js/remarkable/remarkable.min.js"></script>
+    <script src="../js/highlight/highlight.pack.js"></script>
+    <script>
+        "use strict";
+
+        //#region --- Widget Settings ---
+        var options = {
+            settings: {
+                "category": "widget",
+                "type": window.location.pathname.split("/").slice(-1)[0].split(".")[0].replace("%20", " "),
+                "iniHeight": parseInt(widget.style.height),
+                "iniWidth": parseInt(widget.style.width),
+                "author": "Sensavation",
+                "tbTooltip": "HelpViewer",
+                "tooltip": "",
+                "version": "202605",
+                "group": "visualisation",
+                "zIndex": "ZINDEX_DEFAULT",
+                "scaling": true,
+                "disabled": false,
+                "help": { "type": "file", "source": "help/widgets/Image.md" }
+            },
+            clientEvents: {
+                inputEvents: {
+                    "set helpfile": setHelpfile,
+                    "clear helpfile": clearHelpfile,
+                    "set zoom": setZoom
+                }
+            },
+            serverEvents: { 
+                inputEvents: {
+                    "feed": {
+                        "function": fw_feed
+                    },
+                    "ini": {
+                        "function": fw_feed
+                    }
+                }
+            },
+            dataTypes: {
+                "feed": ["string"],
+                "ini": ["string"],
+            },
+            attribs: {
+                "3D shadow": {
+                    "type": "checkbox",
+                    "default": "false",
+                    "tooltip": "3D Shadow below image",
+                    "group": "General"
+                },
+                "border width": {
+                    "type": "input",
+                    "default": 1,
+                    "group": "Widget Specific",
+                    "tooltip": "Width of border around image"
+                },
+                "border color": {
+                    "type": "color",
+                    "default": "#000000",
+                    "group": "Widget Specific",
+                    "tooltip": "Color of border around image"
+                },
+                "background color": {
+                    "type": "color",
+                    "default": "#FFFFFF",
+                    "group": "Widget Specific",
+                    "tooltip": "Color of widget when nothing is displayed"
+                },
+                "default filepath": {
+                    "type": "input",
+                    "default": "",
+                    "group": "Widget Specific",
+                    "tooltip": "Leave blank to display no file by default"
+                },
+                "zoom": {
+                    "type": "input",
+                    "default": 1,
+                    "group": "Widget Specific",
+                    "tooltip": "Zoom level of help file"
+                }
+            }
+        };
+        //#endregion
+
+        // For autorotating images taken by a camera: https://stackoverflow.com/a/46814952/2328253
+
+        //#region --- Declarations ---
+        var mainContent = document.getElementById("help-content");
+        // var widget = document.getElementById("widget");
+        //#endregion
+
+        // Load file from events (client or server)
+        // all of the functions were taken and slightly altered from the utilities.js
+        function open_markdown(file) {
+            // debugger;
+            // An unholy callback hell
+            getFileAsBlob(file, function (e) {
+                processRequest(e.target, function (blob) {
+                    parseBlob(blob, function (e) {
+                        var string = parseToMarkdown(e.target.result);
+                        mainContent.innerHTML = string;
+                    });
+                });
+            });
+        }
+
+        //#region --- Widget specific functions ---
+
+        /**
+        * @author Elijah Blowes
+        * @description Creates a XMLHttpRequest. Sets the responseType as blob.
+        * Sets the onload event to callback and calls XMLHttpRequest.send()
+        * @param {String} url Url of file to request
+        * @param {CallableFunction} callback function to call on XMLHttpRequest
+        * @returns Soemthing
+        */
+        function getFileAsBlob(url, callback) {
+            if (url === null) return null;
+            if (typeof url !== "string") return null;
+
+            var request = new XMLHttpRequest();
+            request.open("GET", url, true);
+            request.responseType = "blob";
+            if(typeof callback === "function") request.onload = callback;
+            request.send();
+            return request.response;
+        }
+
+
+        /**
+         * XML HTTP Request wrapper
+         * @author Elijah Blowes    
+         * @param {String} method  - HTTP Request Method To Use
+         * @param {String} url - Request URL
+         * @param {Object} options - Dictionary containing options for request.
+         * Looks for:
+         *  options.type which must be a string
+         *  options.headers which is a dictionary with header: value. Where value is a string.
+         *  options.data which is the data to be sent in the request.
+         * @param {Function} callback - Callback function to be called on readyStateChange
+         */
+        function sendXmlHttpRequest(method, url, options, callback) {
+            switch(arguments.length) {
+                case 2:
+                    options = null;
+                    callback = null;
+                    break;
+                case 3:
+                    // If third argument is Object set options to argument 3
+                    if (Object.prototype.toString.call(arguments[2]) === "[object Object]") {
+                        options = arguments[2];
+                        callback = null;
+                    }
+                    // If third argument is a function set callback to be argument 3
+                    if (typeof arguments[2] === "function" || arguments[2] instanceof Function) {
+                        callback = arguments[2];
+                        options = null;
+                    }
+                    break;
+                case 4:
+                    break;
+                default:
+                    throw new Error("only '" + arguments.length + "' passed. Expected at least 2 and no more than 4.");
+            }
+
+            // Add error checking here;
+            if (typeof method !== "string" && !(method instanceof String)) {
+                throw new TypeError("method is of type '" + typeof method + "'.Expected type 'string'.");
+            }
+            if (typeof url !== "string" && !(url instanceof String)) {
+                throw new TypeError("url is of type '" + typeof url + "'.Expected type 'string'.");
+            }
+            if (options !== null && Object.prototype.toString.call(options) !== "[object Object]") {
+                throw new TypeError("options is not a JSON object.");
+            }
+            if (callback !== null && typeof callback !== "function") {
+                throw new TypeError("callback is not a function");
+            }
+
+            method = method.toUpperCase();
+            var data = null;
+
+            var request = new XMLHttpRequest();
+            request.open(method, url, true);
+            
+            if (callback !== null) {
+                request.onreadystatechange = callback;
+            }
+
+            if (options !== null) {
+
+                if (options.type !== undefined && (typeof options.type === "string" || options.type instanceof String)) {
+                    request.responseType = options.type;
+                }
+            
+                if (options.headers !== undefined && Object.prototype.toString.call(options.headers) === "[object Object]") {
+                    Object.keys(options.headers).forEach(function (key) {
+                        var value = options.headers[key];
+                        request.setRequestHeader(key, value);
+                    });   
+                }
+            
+                if (options.data !== undefined) {
+                    data = options.data;
+                }
+            }
+
+            request.send(data);
+        }
+
+
+
+        /**
+         * @author Elijah Blowes
+         * @description Creates a new FileReader object used to read in a blob file as text. Optional param 'callback' is set to be called on the onload event.
+         * @param {Blob} blob
+         * @param {Function} callback
+         * @returns {FileReader} The file reader used to read in the Blob.
+         */
+        function readBlobAsText(blob, callback) {
+            // TODO Add error checking
+            var reader = new FileReader();
+            reader.onload = callback;
+            reader.readAsText(blob);
+            return reader;
+        }
+
+
+
+        /**
+         * @author Elijah Blowes
+         * @description Proccesses a XMLHttpRequest.
+         * If the status is "OK" proceed by calling param 'callback' on XMLHttpRequest.response.
+         * @param {XMLHttpRequest} event
+         * @param {CallableFunction} process
+         */
+        function processRequest(request, callback) {
+            // Add error checking
+            var response = request.response;
+            switch (request.statusText) {
+                case "OK":
+                    callback(response);
+                    break;
+                default:
+                    console.log("Error processing request: " + request);
+                    console.log("Request status returned - " + request.statusText + ":" + request.status);
+                    break;
+            }
+        }
+
+
+
+        /**
+         * @author Elijah Blowes
+         * @description Used to parse a blob file to HTML depending on the Blob type.
+         * This is mainly used for the help documents but can be expanded for other uses.
+         * @param {any} blob
+         */
+        function parseBlob(blob, callback) {
+            readBlobAsText(blob, callback);
+        }
+
+
+
+        /**
+         * @author Elijah Blowes
+         * @description Used to convert a string in markdown format to a html file format.
+         * @param {String} string
+         * @returns {String} returns a HTML formatted string
+         */
+        function parseToMarkdown(string) {
+            var md = new remarkable.Remarkable({
+                html: true,
+                typographer: true,
+            });
+            // highlighting library uses ES6 so need to do a browser check first.
+            // window.document.documentMode is only used in IE
+            if (!window.document.documentMode) {
+                // This code comes directly from https://github.com/jonschlinkert/remarkable
+                // Might want to implement our own highlighting function
+                md.highlight = function (str, lang) {
+                    if (lang && hljs.getLanguage(lang)) {
+                        try {
+                            return hljs.highlight(lang, str).value;
+                        } catch (err) { }
+                    }
+                    try {
+                        return hljs.highlightAuto(str).value;
+                    } catch (err) { }
+
+                    return ''; // use external default escaping
+                }
+            }
+            return md.render(string);
+        }
+
+
+        //#endregion
+
+        //#region --- Event functions ---
+        // function to receive data from a local channel/scope
+        function setHelpfile(eventData) {
+            // the data should just be a file that is inside of the help folder, so add the required filepath to the helpfolder from the scope of this widget
+            open_markdown(eventData.value);
+            fw.widgetID.style.setProperty("background-color", "#FFFFFF");
+        }
+
+        // function to clear the help file
+        function clearHelpfile(eventData) {
+            // clear out the content
+            mainContent.innerHTML = "";
+            // set the background color to the color defined in the settings
+            fw.widgetID.style.setProperty("background-color", fw.attribs("background color"));
+        }
+
+        // function to set the zoom of the help file
+        function setZoom(eventData) {
+            var desired_zoom = eventData.value;
+            mainContent.style.setProperty("zoom", desired_zoom);
+        }
+
+        //#endregion
+
+        //#region --- Widget API functions ---
+
+        // API startup actions for dashboard, initialises widget. Return "OK" if startup OK else return an error string. Don't delete
+        function fw_dashStart(mode) {
+            fw.widgetID.style.setProperty("border", fw.attribs("border width") + "px solid " + fw.attribs("border color"));
+            if (typeof fw.attribs("3D shadow") !== "undefined" && fw.attribs("3D shadow") === "true") {
+                fw.widgetID.style.setProperty("box-shadow", "4px 4px 6px #cccccc");
+            } else {
+                fw.widgetID.style.removeProperty("box-shadow");
+                // fw.widgetID.style.setProperty("box-shadow", "none");
+            }
+
+            if (typeof fw.attribs("zoom") !== "undefined") {
+                mainContent.style.setProperty("zoom", fw.attribs("zoom"));
+            }
+
+            fw.widgetID.style.setProperty("background-color", fw.attribs("background color"));
+
+            if (typeof fw.attribs("default filepath") !== "undefined"){ 
+                open_markdown("../help/" + fw.attribs("default filepath"));
+            }
+            return "OK";
+        }
+
+        // API startup actions for toolbox. Return "OK" if startup OK else return an error string
+        function fw_toolStart(mode) {
+            mainContent.style.setProperty("user-select", "none")
+            fw.widgetID.style.setProperty("height", "100px");
+            fw.widgetID.style.setProperty("width", "100px");
+            fw.widgetID.style.removeProperty("border");
+            mainContent.style.setProperty("zoom", "0.25");
+            fw.widgetID.style.setProperty("overflow", "hidden");
+            open_markdown("../help/Help Overview.md");
+            
+            return "OK"
+        }
+
+        // API startup actions when first created by dropping in design mode. Return "OK" if startup OK else return an error string
+        function fw_newWidget(mode) {
+            return fw_dashStart();
+        }
+
+        // API called when switching to design mode (optional, delete if not using)
+        function fw_startDesign() {
+            return true;
+        }
+
+        // API called to manage scaling
+        function fw_scale(scaleX, scaleY) {
+            fw.widgetID.style.setProperty("width", (options.settings.iniWidth * scaleX-10) + "px");
+            fw.widgetID.style.setProperty("height", (options.settings.iniHeight * scaleY-10) + "px");
+            
+            if (typeof fw === "undefined" || !("atrribs" in fw)) {
+                return;
+            }
+        }
+
+        // API called when widget edit starts (return false to stop editor, "NOSCALE", "NOVERT", "NOHORIZ", "NOVERT,NOHORIZ" to customise scaling)
+        function fw_startEdit() {
+            return "";                            // Preserve image aspect ration
+        }
+
+        // API called when widget edit finishes (apply edit changes here)
+        function fw_endEdit(mode) {
+            fw_dashStart(mode);
+
+            return true;
+        }
+
+        // API called for incoming channel events
+        function fw_feed(channel, client, data) {
+            var numeric = getInt(data.value, null);
+            setVal(numeric);
+            return true;
+        }
+
+
+        // Initialize widget framework API - DO NOT ADJUST OR DELETE
+        var fw = new parent.widgetAPI(window.name);  // widget framework object
+        fw.ready();
+                //#endregion
+    </script>
+</body>
+</html>

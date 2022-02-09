@@ -1,0 +1,317 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Barcode Reader</title>
+    <link rel="preload" href="../fonts/OpenSans400.woff2" as="font" crossorigin="anonymous">
+    <link rel="preload" href="../fonts/MaterialIcons-Regular.woff2" as="font" crossorigin="anonymous">
+    <style id="cssProperties">
+
+
+
+        body {
+            font-family: "Open Sans";
+            font-size: 16px;
+            user-select: none;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            width: 100%;
+            height: 100vh;
+        }
+
+
+
+        @font-face {
+            font-family: "Open Sans";
+            font-style: normal;
+            font-weight: 400;
+            src: local("Open Sans"), local("OpenSans"), url(../fonts/OpenSans400.woff2) format("woff2"), url(../fonts/OpenSans400.woff) format("woff");
+            font-display: block;
+        }
+
+        .wrapper {
+            position: relative;
+            width: 100%;
+            height: 96%;
+            margin: 1%;
+            user-select: none;
+        }
+
+        .scanner-pad {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 400px;
+            height: 200px;
+        }
+        #group{
+            overflow: hidden;
+            height: 100vh;
+        }
+    </style>
+</head>
+
+
+<body id="body">
+
+
+    <div id="group">
+        <select id="cameraOptions" style="width:100%; display: none;" onchange="CameraChanged()">
+        </select>
+        <div id="widget" style="position: absolute; left: 0px; top: 0px; width:100px; height:100px; z-index: 100; overflow:hidden;">
+            <div class="wrapper">
+
+                <div id="iconTemplate" style="display:none;">
+                    <svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 502.432 502.432" style=" width: 100%; height: 100%; position:absolute" xml:space="preserve">
+
+                    <g>
+                    <path d="M196.052,212.818l9.801,76.786h-27.777l6.539-76.786H196.052z M394.005,52.637h-18.966v10.843h18.966V52.637z    M419.761,52.637v10.843h82.671V52.637H419.761z M394.005,74.322h-18.966v5.422h18.966V74.322z M419.761,79.744h82.671v-5.422   h-82.671V79.744z M420.434,125.822h81.998v-5.417h-81.998V125.822z M394.005,85.841h-18.966v12.741h18.966V85.841z M419.761,98.582   h82.671V85.841h-82.671V98.582z M419.761,111.387h0.673v6.304h81.998v-6.369h-82.671V111.387z M375.039,142.536h18.977v-10.827   h-18.977V142.536z M420.434,131.715h-0.673v10.826h82.671v-10.848h-81.998V131.715z M419.761,158.802h82.671v-5.423h-82.671   V158.802z M375.039,158.802h18.977v-5.423h-18.977V158.802z M419.761,204.879h82.671v-5.418h-82.671V204.879z M375.039,204.879   h18.977v-5.418h-18.977V204.879z M375.039,177.647h18.977v-12.741h-18.977V177.647z M419.761,177.647h82.671v-12.741h-82.671   V177.647z M375.039,196.75h18.977v-6.372h-18.977V196.75z M419.761,196.75h82.671v-6.372h-82.671V196.75z M405.188,111.387h-84.147   V75.583c0-11.729,9.511-21.242,21.236-21.242c3.893,0,7.488,1.119,10.621,2.947V41.274H142.141c-4.272,0-8.33,0.873-12.061,2.363   c-6.646-1.501-13.522-2.363-20.619-2.363c-51.429,0-93.123,41.693-93.123,93.125c0,25.108,8.545,47.002,26.146,64.603   C57.731,313.03,0,428.479,0,428.479c0,18.052,14.628,32.679,32.678,32.679h84.959c18.046,0,32.672-14.627,32.672-32.679   l26.138-229.477c0-4.137,1.629-9.057,7.632-9.057c10.336,0,168.819,0,168.819,0v-12.747c-3.139,1.823-6.729,2.947-10.626,2.947   c-11.725,0-21.236-9.507-21.236-21.242v-38.027h84.152v84.329h4.066V51.056h-4.066V111.387L405.188,111.387z" />
+                    </g>
+
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="api/"></script>
+    <script src="../js/qrcodescanner/html5-qrcode.min.js"></script>
+
+    <script>
+        "use strict";
+
+        var options = {
+            settings: {
+                "category": "widget",
+                "type": window.location.pathname.split("/").slice(-1)[0].split(".")[0].replace("%20", " "),
+                "iniHeight": parseInt(widget.style.height),
+                "iniWidth": parseInt(widget.style.width),
+                "author": "Sensavation",
+                "tbTooltip": "QRCode scanner allowing to scan different types of QR codes",
+                "tooltip": "",
+                "version": "190104",
+                "group": "forms",
+                "zIndex": "ZINDEX_DEFAULT",
+                "disabled": false,
+                "scaling": true,
+                "help": { "type": "file", "source": "help/widgets/Generic.md" }
+            },
+            clientEvents: {
+                inputEvents: {
+                    "activate": activateScanner
+                },
+                outputEvents: [
+                    "Detected",
+                    "Error"
+                ]
+            },
+            serverEvents: {
+                inputEvents: {
+                    "feed": {
+                        "function": fw_feed
+                    }
+                },
+                outputEvents: []
+            },
+            dataTypes: {
+                "feed": ["sensacollection"],
+
+            },
+            attribs: {
+
+
+            }
+        };
+        var Devices;
+        var cameraOptions = document.getElementById("cameraOptions");
+        var html5QrcodeScanner;
+        var resultElement = document.getElementById('code')
+        var width = 1920;
+        var height = 1080;
+        var video;
+        var currentIndex;
+        var currentWidget = document.getElementById("widget");
+        
+        function activateScanner(eventData) {
+            setupLiveReader(resultElement);
+        }
+
+        function setupLiveReader(resultElement) {
+           
+
+            LoadScanner();
+        }
+
+        function CameraChanged() {
+
+            var selected = cameraOptions.value;
+            currentIndex = selected;
+            StartScanner(selected, Devices);
+
+        }
+
+        function onScanSuccess(qrCodeMessage) {
+
+            // handle on success condition with the decoded message
+            fw.fireEvent("Detected", qrCodeMessage);
+
+        }
+
+        function LoadScanner() {
+
+            var camera;
+            Html5Qrcode.getCameras().then(devices => {
+                /**
+                 * devices would be an array of objects of type:
+                 * { id: "id", label: "label" }
+                 */
+
+                for (var device in devices) {
+                    var currentDevice = devices[device];
+                    var option = document.createElement("option");
+                    option.innerHTML = currentDevice.label;
+                    option.value = device;
+                    cameraOptions.appendChild(option);
+                }
+                if (devices && devices.length) {
+                    Devices = devices;
+                    currentIndex = devices.length - 1;
+                    StartScanner(devices.length - 1, devices);
+                }
+            }).catch(err => {
+                // handle err
+            });
+
+
+
+        }
+
+        function StartScanner(index, devices) {
+            const html5QrcodeScanner = new Html5Qrcode(/* element id */ "widget");
+
+            var cameraId = devices[index].id;
+            // .. use this to start scanning
+            //   camera = cameraId;
+            html5QrcodeScanner.start(
+                cameraId,
+                {
+                    fps: 500,    // Optional frame per seconds for qr code scanning
+                    qrbox: 250 // Optional if you want bounded box UI,\
+
+                },
+                qrCodeMessage => {
+
+                    onScanSuccess(qrCodeMessage);
+                },
+                errorMessage => {
+                    console.log(errorMessage);
+                    // parse error, ignore it.
+                    fw.fireEvent("Error", errorMessage);
+
+                })
+                .catch(err => {
+                    console.log(err);
+                    // Start failed, handle it.
+                    fw.fireEvent("Error", errorMessage);
+
+
+                });
+                var element = document.getElementsByTagName("video");
+                element.style.setProperty("height","100%");
+            //html5QrcodeScanner.render(onScanSuccess);
+        }
+
+        function stopBarcodeReader() {
+
+
+        }
+
+        // API actions for dashboard mode
+        function fw_dashStart(mode) {
+            var icon = document.getElementById("iconTemplate");
+            icon.style.setProperty("display", "block");
+            return "OK";
+        }
+
+        // API startup actions for toolbox. Return "OK" if startup OK else return an error string
+        function fw_toolStart(mode) {
+
+            var icon = document.getElementById("iconTemplate");
+            icon.style.setProperty("display", "");
+            cameraOptions.style.setProperty("display", "none");
+            fw.widgetID.style.setProperty("width", "100px");
+            fw.widgetID.style.setProperty("height", "100px");
+
+            return "OK";
+        }
+
+        // API startup actions when first created by dropping in design mode. Return "OK" if startup OK else return an error string
+        function fw_newWidget(mode) {
+            return fw_dashStart();
+        }
+
+        // API called when switching to design mode (optional, delete if not using)
+        function fw_startDesign() {
+            var icon = document.getElementById("iconTemplate");
+            icon.style.setProperty("display", "");
+            // filter.style.setProperty("display", "");
+
+            return true;
+        }
+
+        // API called to manage scaling
+        function fw_scale(scaleX, scaleY) {
+
+            // fw.widgetID.style.setProperty("width", (options.settings.iniWidth * scaleX) + "px");
+            // fw.widgetID.style.setProperty("height", (options.settings.iniWidth * scaleY) + "px");
+
+            // // width = options.settings.iniWidth * scaleX - 10;
+            // // height = options.settings.iniHeight * scaleY - 10;
+            if (currentWidget !== undefined) {
+                currentWidget.style.setProperty("width","100%");
+                currentWidget.style.setProperty("height","100vh");
+            }
+            var videoOutput = document.getElementsByTagName("video");
+
+            if (videoOutput[0] !== undefined) {
+
+                videoOutput[0].style.setProperty("width", "100%");
+                videoOutput[0].style.setProperty("height", "100%");
+                videoOutput[0].setAttribute("style", "width:100%;" + "height:100vh;")
+                StartScanner(currentIndex, Devices);
+            }
+
+            return true;
+        }
+
+        // API called when widget edit starts (return false to stop editor, "NOSCALE", "NOVERT", "NOHORIZ", "NOVERT,NOHORIZ" to customise scaling)
+        function fw_startEdit() {
+            return true;
+        }
+
+        // API called when widget edit finishes (apply edit changes here)
+        function fw_endEdit(mode) {
+
+
+        }
+
+        function fw_db(channel, scope, data) {
+        }
+
+        // API called for incoming channel events
+        function fw_feed(channel, client, data) {
+
+            receive_value(data);
+        }
+
+        var fw = new parent.widgetAPI(window.name);  // widget framework object
+        fw.ready();
+
+
+
+
+    </script>
+
+
+
+</body>
+</html>

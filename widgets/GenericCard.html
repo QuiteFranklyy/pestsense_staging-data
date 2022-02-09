@@ -1,0 +1,2246 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Trap Widget</title>
+    <link rel="preload" href="../fonts/OpenSans400.woff2" as="font" crossorigin="anonymous" />
+    <style>
+        /* Customize the label (the container) */
+        .container {
+            display: block;
+            position: relative;
+            padding-left: 2px;
+            /* padding: 15px; */
+            cursor: pointer;
+            /* font-size: 22px; */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+            /* Hide the browser's default checkbox */
+            .container input {
+                position: absolute;
+                opacity: 0;
+                cursor: pointer;
+                height: 0;
+                width: 0;
+            }
+
+        /* Create a custom checkbox */
+        .checkmark {
+            position: absolute;
+            top: 3px;
+            left: 0;
+            height: 15px;
+            width: 15px;
+            background-color: #f2f2f2;
+            border-radius: 2px;
+            border: 2px solid #e57123;
+        }
+
+        /* On mouse-over, add a grey background color */
+        .container:hover input ~ .checkmark {
+            background-color: rgba(247, 152, 89, 0.7);
+        }
+
+        /* When the checkbox is checked, add a blue background */
+        .container input:checked ~ .checkmark {
+            background-color: rgba(245, 129, 51);
+        }
+
+        /* Create the checkmark/indicator (hidden when not checked) */
+        .checkmark:after {
+            content: "";
+            position: absolute;
+            display: none;
+        }
+
+        /* Show the checkmark when checked */
+        .container input:checked ~ .checkmark:after {
+            display: block;
+        }
+
+        /* Style the checkmark/indicator */
+        .container .checkmark:after {
+            left: 4px;
+            /* top: 1px; */
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 3px 3px 0;
+            -webkit-transform: rotate(45deg);
+            -ms-transform: rotate(45deg);
+            transform: rotate(45deg);
+        }
+
+        body {
+            font-family: "Open Sans";
+            font-size: 16px;
+            user-select: none;
+            overflow-x: hidden;
+            overflow-y: auto;
+            margin:0;
+            overflow: hidden;
+        }
+
+        @font-face {
+            font-family: "Open Sans";
+            font-style: normal;
+            font-weight: 400;
+            src: local("Open Sans"), local("OpenSans"), url("../fonts/OpenSans400.woff") format("woff");
+        }
+
+        @font-face {
+            font-family: "Open Sans";
+            font-style: normal;
+            font-weight: 700;
+            src: local("Open Sans"), local("OpenSans"), url("../fonts/OpenSans700.woff") format("woff");
+        }
+
+        .noSelect {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        #widget {
+            background-color: white;
+        }
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        #container::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        #container {
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+
+        #container {
+            position: fixed;
+            height: calc(100% - 2px);
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            overflow: auto;
+        }
+
+        thead th {
+            position: sticky;
+            position: -webkit-sticky;
+            top: 35px;
+            z-index: 999;
+            background-color: #f2f2f2;
+        }
+
+        .selectBtn:hover {
+            border-bottom: 2px solid #29bd2c;
+            color: #000000;
+            text-decoration: none;
+            font-family: sans-serif;
+            background-color: white;
+            padding: 10px 25px;
+            cursor: pointer;
+            margin: 2%;
+            height: 15px;
+        }
+
+        .btnSelected {
+            border-bottom: 2px solid #4c4c4c;
+            color: #000000;
+            text-decoration: none;
+            font-family: sans-serif;
+            background-color: #4c4c4c;
+            padding: 10px 25px;
+            cursor: pointer;
+            margin: 2%;
+            height: 15px;
+        }
+
+        .selectBtn {
+            background-color: #f88924ff;
+            /* Green */
+            font-family: sans-serif;
+            margin: 2%;
+            border: none;
+            color: white;
+            padding: 10px 25px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 1rem;
+            border-radius: 6px;
+            height: 15px;
+            cursor: pointer;
+        }
+
+        table {
+            border-collapse: collapse;
+            table-layout: fixed;
+            border-spacing: 0;
+            width: 100%;
+            max-height: calc(100% - 30px);
+            border: none;
+            bottom: 38px;
+        }
+
+        th {
+            text-transform: capitalize;
+            text-align: left;
+            padding: 5px 0px 5px 0px;
+            margin: 0px 4px 0px 4px;
+            background-color: white;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .checkbox-row {
+            height: 1.5rem;
+        }
+
+        td {
+            position: sticky;
+            text-align: left;
+            word-break: break-word;
+            padding: 5px 10px 5px 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        tr:nth-child(even) {
+            background-color: rgba(0,0,0,.05);
+        }
+
+        tr.selected {
+            background-color: #dff0d8;
+            font-weight: bold /* our pastel green*/
+        }
+
+        .rowHover:hover td {
+            background-color: #fffaf3;
+            /* our pastel yellow*/
+        }
+
+
+
+        /* Remove blue box around textbox. */
+        input:focus {
+            outline: none;
+        }
+
+        #headerBar {
+            top: 0;
+            z-index: 100;
+            position: sticky;
+            display: none;
+            background-color: #f2f2f2;
+            height: 34px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        #tableTitle {
+            float: left;
+            margin: 6px 0 6px 14px;
+        }
+
+        .headCol {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+
+
+        .capitalize {
+            text-transform: capitalize;
+            font-size: 12.5px;
+            word-break: break-word;
+        }
+
+        .CardAddress {
+            display: inline-block;
+            word-wrap: break-word;
+            font-size: 10.5px;
+            width: 100%;
+        }
+
+        .container {
+            height: 60px;
+            position: relative;
+        }
+
+        .vertical-center {
+            margin: 0;
+            position: absolute;
+            top: 50%;
+            -ms-transform: translateY(-50%);
+            transform: translateY(-50%);
+        }
+
+        ul {
+            margin: 4px 0 4px 0;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        li {
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+
+        .dialText {
+            font-size: 12px;
+        }
+
+        .fullWidth {
+            width: 80%;
+        }
+
+        .container-fluid {
+            margin: 3%;
+        }
+
+        .displayContainer {
+            display: grid;
+            text-align: end;
+        }
+
+        .UnderlineGreen {
+            width: 100%;
+            border: 1px solid #388b3d;
+            border-radius: 52px;
+            margin-top: 3.7px;
+            margin-bottom: 3.7px;
+            background-color: #388b3d;
+        }
+
+        .UnderlineOrange {
+            width: 100%;
+            border: 1px solid #f88924ff;
+            border-radius: 52px;
+            margin-top: 3.7px;
+            margin-bottom: 3.7px;
+            background-color: #f88924ff;
+        }
+
+        
+        .UnderlineRed {
+            width: 100%;
+            border: 1px solid #d74423ff;
+            border-radius: 52px;
+            margin-top: 3.7px;
+            margin-bottom: 3.7px;
+            background-color: #d74423ff;
+        }
+        .UnderlineGray {
+            width: 100%;
+            border: 3px solid gray;
+            border-radius: 52px;
+            margin-top: 3.7px;
+            margin-bottom: 3.7px;
+            background-color: gray;
+        }
+
+        .underlineIndicatorLeft {
+            border: 0.1px solid #ffffff;
+            border-radius: 52px;
+            background-color: #ffffff;
+            height: 3px;
+            display: flex;
+            width: 9px;
+            position: relative;
+            left: 0%;
+        }
+
+        .underlineIndicatorRight {
+            border: 0.1px solid #ffffff;
+            border-radius: 52px;
+            background-color: #ffffff;
+            height: 3px;
+            display: flex;
+            width: 9px;
+            position: relative;
+            left: 92%;
+        }
+
+
+
+        .underlineIndicatorCenter {
+            border: 0.1px solid #ffffff;
+            border-radius: 52px;
+            background-color: #ffffff;
+            height: 3px;
+            display: flex;
+            width: 9px;
+            position: relative;
+            left: 40%;
+        }
+
+        .LabelStyle {
+            font-size: 11.5px;
+            justify-content: center;
+            position: relative;
+            font-stretch: extra-condensed;
+        }
+
+        .Date {
+            float: right;
+            position: absolute;
+            left: 0;
+            right: 52%;
+        }
+
+        @media screen and (max-width: 1440px) {
+            .underlineIndicatorLeft {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 0%;
+            }
+
+            .underlineIndicatorRight {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 89%;
+            }
+
+
+
+            .underlineIndicatorCenter {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 44%;
+            }
+        }
+
+        @media screen and (max-width: 1024px) {
+            .underlineIndicatorLeft {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 0%;
+            }
+
+            .underlineIndicatorRight {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 84%;
+            }
+
+
+
+            .underlineIndicatorCenter {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 43%;
+            }
+        }
+
+
+        @media screen and (max-width: 768px) {
+            .underlineIndicatorLeft {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 0%;
+            }
+
+            .underlineIndicatorRight {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 78%;
+            }
+
+
+
+            .underlineIndicatorCenter {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 40%;
+            }
+        }
+
+        @media screen and (max-width: 425px) {
+            .underlineIndicatorLeft {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 0%;
+            }
+
+            .LabelStyle {
+                font-size: 6.5px;
+                justify-content: center;
+                position: relative;
+                font-stretch: extra-condensed;
+            }
+
+            .underlineIndicatorRight {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 78%;
+            }
+
+
+
+            .underlineIndicatorCenter {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 40%;
+            }
+        }
+
+        @media screen and (max-width: 375px) {
+            .underlineIndicatorLeft {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 0%;
+            }
+
+            .underlineIndicatorRight {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 74%;
+            }
+
+
+
+            .underlineIndicatorCenter {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 38%;
+            }
+        }
+
+
+
+        @media screen and (max-width: 320px) {
+            .underlineIndicatorLeft {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 0%;
+            }
+
+            .underlineIndicatorRight {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 70%;
+            }
+
+
+
+            .underlineIndicatorCenter {
+                border: 0.1px solid #ffffff;
+                border-radius: 52px;
+                background-color: #ffffff;
+                height: 3px;
+                display: flex;
+                width: 9px;
+                position: relative;
+                left: 35%;
+            }
+        }
+
+        .SideBarGray {
+            border-left: 8px solid gray;
+        }
+
+        .SideBarGreen {
+            border-left: 8px solid #388b3dff;
+        }
+
+        .SideBarYellow {
+            border-left: 8px solid #f88924ff;
+        }
+
+        .SideBarRed {
+            border-left: 8px solid #d74423ff;
+        }
+
+        .StatusIndicator {
+            float: right;
+            font-size: 10px;
+        }
+
+        .ValueStyle {
+            font-size: 15.5px;
+            font-weight: bold;
+            color: #41505aff;
+        }
+
+        .normalCardBorder {
+            background-color: #e6e6e6ff;
+        }
+
+            .normalCardBorder:hover {
+                background-color: #f2f2f2;
+            }
+
+        .CardWidth {
+            width: 99.5%;
+        }
+
+        .iconWidth {
+            width: 5%;
+        }
+
+        .setupContent {
+            width: 45%;
+            display: grid;
+            margin-left: 4%;
+        }
+
+        @media screen and (max-width: 2560px) {
+            .CardWidth {
+                width: 99.5%;
+            }
+
+            .setupContent {
+                width: 45%;
+                display: grid;
+                margin-left: 3%;
+            }
+        }
+
+        @media screen and (max-width: 1504px) {
+            .CardWidth {
+                width: 99%;
+            }
+
+            .setupContent {
+                width: 45%;
+                display: grid;
+                margin-left: 3.5%;
+            }
+        }
+
+        @media screen and (max-width: 1404px) {
+            .CardWidth {
+                width: 99%;
+            }
+
+            .setupContent {
+                width: 45%;
+                display: grid;
+                margin-left: 5.5%;
+            }
+        }
+
+
+        @media screen and (max-width: 868px) {
+            .CardWidth {
+                width: 99%;
+            }
+
+            .setupContent {
+                width: 45%;
+                display: grid;
+                margin-left: 7%;
+            }
+        }
+
+
+        @media screen and (max-width: 722px) {
+            .CardWidth {
+                width: 99%;
+            }
+
+            .setupContent {
+                width: 38%;
+                display: grid;
+                margin-left: 11%;
+            }
+        }
+
+
+        @media screen and (max-width: 427px) {
+            .CardWidth {
+                width: 97%;
+            }
+
+            .setupContent {
+                width: 34%;
+                display: grid;
+                margin-left: 14%;
+            }
+        }
+
+        @media screen and (max-width: 320px) {
+            .CardWidth {
+                width: 97%;
+            }
+
+            .setupContent {
+                width: 33%;
+                display: grid;
+                margin-left: 15%;
+            }
+        }
+
+        .flex {
+            display: -webkit-box; /* OLD - iOS 6-, Safari 3.1-6, BB7 */
+            display: -ms-flexbox; /* TWEENER - IE 10 */
+            display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+            display: flex; /* NEW, Spec - Firefox, Chrome, Opera */
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            -webkit-display: flex;
+            -webkit-flex-direction: row;
+            -webkit-align-items: flex-start;
+        }
+
+        @supports (overflow:-webkit-marquee) and (justify-content:inherit) {
+            .flex {
+                display: -webkit-flex; /* NEW - Safari 6.1+. iOS 7.1+, BB10 */
+                flex: 1;
+                width: 100%;
+                flex-direction: row;
+                align-items: flex-start;
+                flex-wrap: wrap-reverse
+            }
+        }
+
+        .iconWidth{
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body id="body">
+    <div id="group">
+
+
+        <div id="widget" style="position:absolute; left:0px; top:0px; width:100%; height:100px; z-index:100;">
+            <div id="container" style="border:none;">
+                <div id="headerBar">
+                    <b id="tableTitle"></b>
+                </div>
+                <table id="table" style="width: 100%">
+                    <thead>
+                        <tr id="header">
+                        </tr>
+                    </thead>
+                    <tbody id="tbody">
+                    </tbody>
+                </table>
+
+                <div id="newCardTemplate" style="display:none;">
+                    <div data-section="main" data-info="SideBarStatus" data-value="triggered" data-id="0" class="normalCardBorder  SideBarGreen" onclick="doubleclick(this, function(){alert('single')}, function(){alert('double')})" style="font-family: sans-serif; padding: 8px; overflow:auto;background-color:#dadada;">
+                        <div data-section="cell" class="CardWidth">
+                            <div>
+                                <div class="container flex" style="margin: 8px 8px 4px 0;  width: 100%;">
+
+                                    <div class="flex" style="border-right: 0.98px solid #9b9b9bff;  width:100%;">
+                                        <div class="iconWidth" data-info="childIcon">
+
+                                        </div>
+
+                                        <!--<div data-info="icon" class="redIcon vertical-center" style="display: inline-block; width: 25px; height: 25px;"></div>-->
+                                        <div class="vertical-center setupContent">
+                                            <div class="row">
+                                                <div class="capitalize CardName" data-value="CardName" style="font-weight: bold; font-weight:bold;">
+                                                    New
+                                                </div>
+
+                                                <div class="CardAddress" data-value="CardAddress" style="display:inline-block;word-wrap:break-word;">
+                                                     
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex" style="  width:100%;">
+
+                                        <?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+                                        <svg  
+                                             width="45.0px"
+                                             height="45.0px"
+                                             viewBox="0 0 79.0 79.0"
+                                             version="1.1"
+                                             id="SVGRoot"
+                                             style=" right: 0px; position: absolute; overflow: hidden; height: 100%;">
+                                             
+
+                                            <g id="layer1">
+                                                <g transform="matrix(1.3333333,0,0,-1.3333333,-1925.5044,-4.9314565)"
+                                                   id="g51865"
+                                                   style="fill:#ffffff;stroke:#ffffff">
+                                                    <g style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-opacity:1"
+                                                       transform="matrix(1.2405965,0,0,0.77048162,1298.6988,-536.71297)"
+                                                       id="g51857">
+                                                        <g style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-opacity:1"
+                                                           id="g51855"
+                                                           transform="translate(-1.9768456,17.213215)">
+                                                            <path id="path51853"
+                                                                  d="m 122.22505,635.64386 h 40.70944"
+                                                                  style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:7.31057;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+                                                        </g>
+                                                    </g>
+                                                    <g style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-opacity:1"
+                                                       transform="matrix(0,1.2405965,-0.77048162,0,1976.1447,-208.13009)"
+                                                       id="g51863">
+                                                        <g style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-opacity:1"
+                                                           id="g51861"
+                                                           transform="translate(-1.9768456,17.213215)">
+                                                            <path id="path51859"
+                                                                  d="m 122.22505,635.64386 h 40.70944"
+                                                                  style="opacity:1;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:7.31057;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+                                                        </g>
+                                                    </g>
+                                                </g>
+                                            </g>
+                                        </svg>
+
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="footer" style="height:30px; width: 100%; display:none"></div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- <script src="api/DataTypes.js"></script> -->
+    <script src="api/Database.js"></script>
+    <script src="api/Script.js"></script>
+    <script src="api/Utils.js"></script>
+    <script src="api/ClientEvents.js"></script>
+
+
+    <script>
+        "use strict";
+
+        var options = {
+            settings: {
+                "category": "widget",
+                "type": window.location.pathname.split("/").slice(-1)[0].split(".")[0].replace("%20", " "),
+                "iniHeight": parseInt(widget.style.height),
+                "iniWidth": parseInt(widget.style.width),
+                "author": "Sensavation",
+                "tbTooltip": "Display data by column/row",
+                "tooltip": "",
+                "version": "190104",
+                "group": "forms",
+                "zIndex": "ZINDEX_DEFAULT",
+                "disabled": false,
+                "scaling": true,
+                "help": "card"
+            },
+            clientEvents: {
+                inputEvents: {
+                    "receive value": receive_value,
+                    "receive headers": receive_headers,
+                    "toggle card": toggleCardEvent,
+                    "sort": sortEvent,
+                    "sort init": sortEventInit,
+                    "filter": filterCards,
+                    "set report log": incomingLogMessage,
+                    "clear content": clearContent,
+                    "set header template": setHeaderTemplate,
+                    "set value template": setValueTemplate,
+                    "change visible counter": ChangeCardHeaderType,
+                    "change view pointer": ChangeCardPointer,
+                    "Ignore Enabled": SetIgnoreEnabled,
+                    "ignore row": IgnoreRow,
+                    "EnableEdit": EnableEdit,
+                    "SetNewItemIcon": ChangeNewItemIcon,
+                    "setTopPosition": setTopPosition,
+                },
+                outputEvents: ["deactivate trap", "address pressed", "set trap", "check trap", "clear trap", "photo icon pressed","DeviceLevelActivated"]
+            },
+            serverEvents: {
+                inputEvents: {
+                    "feed": {
+                        "function": fw_feed
+                    }
+                },
+                outputEvents: []
+            },
+            dataTypes: {
+                "feed": ["sensacollection"],
+                "retValue": ["array"]
+            },
+            attribs: {
+
+            }
+        };
+        //#endregion
+
+        var tableBody = document.getElementById("tbody");
+        var cardTemplate = document.getElementById("cardTemplate");
+        var cardChildTemplate = document.getElementById("cardChildTemplate");
+
+
+        var ActiveDatasource;
+
+        var rowElems = {};
+        var rowHeaderElems = {};
+        var rowState = {};
+        var rowStateChild = {};
+        var cardSelected;
+        var activeCards = {};
+        var sidebarStatuses = [];
+        var sidebarAdvisories = [];
+        sidebarAdvisories["Urgent"] = 0;
+        sidebarAdvisories["Important"] = 0;
+        sidebarAdvisories["Minor"] = 0;
+        sidebarStatuses["NoAction"] = 0;
+        sidebarStatuses["Attention"] = 0;
+        sidebarStatuses["Danger"] = 0;
+        var SelectedVisibleState = 2;
+        var rowKeys;
+        var lastHeader;
+        var lastR;
+        var lastY;
+        var lastG;
+        var IgnoreRows;
+        var IgnoreEnabled = true;
+        var MaitnanceMode = false;
+        var showActive = true;
+
+        //#region --- Widget Dial specific functions ---
+        function SetIgnoreEnabled(eventData) {
+            IgnoreEnabled = eventData.value;
+        }
+
+        function IgnoreRow(eventData) {
+            IgnoreRows = eventData.value;
+        }
+
+        /**
+         * takes an array of ids and hides all other cards.
+         * Or takes a string to find mathing values
+         *
+         * @param eventData
+         */
+        function filterCards(eventData) {
+            if (eventData.value === undefined) {
+                // error
+                throw new Error("Filter expected a client event object.");
+                return;
+            }
+
+            if (Array.isArray(eventData.value)) {
+                // Must have an array of IDs
+                var children = tbody.children;
+
+                for (var i = 0; i < children.length; i++) {
+                    if (eventData.value.length === 0) {
+                        children[i].style.setProperty("display", "");
+                    } else if (eventData.value.indexOf(children[i].getAttribute("data-id")) === -1) {
+                        children[i].style.setProperty("display", "none");
+                    } else {
+                        children[i].style.setProperty("display", "");
+                    }
+                }
+
+                
+            } else if (typeof eventData.value === "string") {
+                var children = tbody.children;
+                // var grandChildren = document.getElementById("childrenContainer").children;
+                var grandChildren = document.querySelectorAll("[data-selector='Children']");
+                var grandChildrenNodes = [];
+                for (var i = 0; i < grandChildren.length; i++) {
+                    grandChildrenNodes.push(...Array.from(grandChildren[i].children));
+                }
+                var children = Array.from(children).concat(Array.from(grandChildrenNodes));
+
+                for (var i = 0; i < children.length; i++) {
+                    if (eventData.value.length === 0) {
+                        // Blank query, display result
+                        children[i].style.setProperty("display", "");
+                    } else if (children[i].getElementsByClassName("CardAddress")[0].innerHTML.toUpperCase().indexOf(eventData.value.toUpperCase()) === -1 &&
+                               children[i].querySelector("[data-value='CardName']").innerHTML.toUpperCase().indexOf(eventData.value.toUpperCase()) === -1 ) {
+                        // Address and name does not contain the search query, do not display result
+                        children[i].style.setProperty("display", "none");
+                    } else {
+                        // Address or name contains search query, display result
+                        children[i].style.setProperty("display", "");
+                        // If this is a child node, ensure the parent is visible
+                        if (children[i].parentElement.dataset.selector === "Children") {
+                            children[i].parentElement.parentElement.parentElement.parentElement.style.setProperty("display", "");
+                        }
+                    }
+                }
+            } else if(typeof eventData.value === "object" ) {
+                if(eventData.value.value === 'All') {
+                    document.querySelectorAll("[data-status='0']").forEach(item => item.style.display = '');
+                    showActive = false;
+                } else {
+                    document.querySelectorAll("[data-status='0']").forEach(item => item.style.display = 'none');
+                    showActive = true;
+                }
+            } else {
+                throw new TypeError("Filter must be an array or a string. Found " + typeof eventData.value);
+            }
+        }
+
+        function ElementToggled(eventData) {
+
+            var dbVal = {};
+            var id = eventData.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.getAttribute("data-id");
+            var status = eventData.checked;
+            if (status === true) {
+
+                eventData.parentElement.querySelector("[data-value='SelectElement']").setAttribute("class", "activeToggle");
+                eventData.parentElement.querySelector("[data-value='SelectElement']").innerHTML = "open";
+                dbVal[id] = {
+                    "Id": id,
+                    "Status": 1
+                };
+
+                // Update a record's values, Fails if the record does not exist.
+                Database.updateRecord("rodent", "SiteEvents", dbVal, function (data) {
+
+                });
+            }
+            else {
+                eventData.parentElement.querySelector("[data-value='SelectElement']").setAttribute("class", "inactiveToggle");
+                eventData.parentElement.querySelector("[data-value='SelectElement']").innerHTML = "close";
+                dbVal[id] = {
+                    "Id": id,
+                    "Status": 0
+                };
+
+
+                // Update a record's values, Fails if the record does not exist.
+                Database.updateRecord("rodent", "SiteEvents", dbVal, function (data) {
+
+                });
+            }
+        }
+
+        function EnableEdit(eventData) {
+               
+            if (eventData.value === "true") {
+                if (rowStateChild[0] !== undefined && rowStateChild[0] !== null) {
+                    rowStateChild[0]["Card"].style.setProperty("display", "");
+                }
+                MaitnanceMode = true;
+            }
+            else
+            {
+                if (rowStateChild[0] !== undefined && rowStateChild[0] !== null) {
+                    rowStateChild[0]["Card"].style.setProperty("display", "none");
+                }
+                MaitnanceMode = false;
+            }
+        }
+
+        function toggleCardEvent(packet) {
+
+            var id = packet.value;
+
+
+            if (rowHeaderElems[id] === undefined) {
+                return;
+            }
+
+            var card = rowHeaderElems[id];
+            genericHeaderClicked(card);
+        }
+
+        /**
+        * Changes the visible counters on the screen.
+        * @param packet
+        */
+        function ChangeCardHeaderType(packet) {
+              
+            UpdateCardSource(rowState, packet, false);
+            UpdateCardSource(rowStateChild, packet, true);
+
+            if (packet.value === 2) {
+                Script.setState("changeVisibleCounterVal", 2);
+                sortCardsInit(rowStateChild, "1", true);
+            }
+            else if (packet === 2) {
+                Script.setState("changeVisibleCounterVal", 2);
+                sortCardsInit(rowStateChild, "1", true);
+            }
+            else {
+                Script.setState("changeVisibleCounterVal", 1);
+                sortCardsInit(rowStateChild, "2", true);
+            }
+        }
+
+
+        /**
+        * Changes the visible count pointer on the screen.
+        * @param eventData - holds an integer value from 1 - 3  based on the active view.
+        */
+        function ChangeCardPointer(eventData) {
+             
+            if (isNaN(eventData)) {
+                eventData = eventData.value;
+            }
+            UpdateCardPointer(rowState, eventData);
+            UpdateCardPointer(rowStateChild, eventData);
+        }
+
+        function UpdateCardPointer(source, packet) {
+
+            for (var row in source) {
+                var currentRow = source[row];
+                if (!currentRow.IsSystem) {
+                    var card = currentRow["Card"];
+                    switch (packet) {
+                        case 1:
+                            card.querySelector("[data-value='status1Pos']").setAttribute("class", "underlineIndicatorLeft");
+                            card.querySelector("[data-value='status2Pos']").setAttribute("class", "underlineIndicatorLeft");
+                            card.querySelector("[data-value='status3Pos']").setAttribute("class", "underlineIndicatorLeft");
+                            break;
+                        case 2:
+                            card.querySelector("[data-value='status1Pos']").setAttribute("class", "underlineIndicatorRight");
+                            card.querySelector("[data-value='status2Pos']").setAttribute("class", "underlineIndicatorRight");
+                            card.querySelector("[data-value='status3Pos']").setAttribute("class", "underlineIndicatorRight");
+                            break;
+                        case 3:
+                            card.querySelector("[data-value='status1Pos']").setAttribute("class", "underlineIndicatorCenter");
+                            card.querySelector("[data-value='status2Pos']").setAttribute("class", "underlineIndicatorCenter");
+                            card.querySelector("[data-value='status3Pos']").setAttribute("class", "underlineIndicatorCenter");
+                            break;
+                    }
+                }
+            }
+        }
+
+        function UpdateCardSource(source, packet, isChild) {
+
+            for (var row in source) {
+                var currentRow = source[row];
+                if (!currentRow.IsSystem) {
+
+               
+
+                    var card = currentRow["Card"];
+                    if (packet === 2) {
+
+                        card.querySelector("[data-info='lbl1']").innerHTML = "URGENT";
+                        card.querySelector("[data-info='lbl2']").innerHTML = "IMPORTANT";
+                        card.querySelector("[data-info='lbl3']").innerHTML = "NO ACTIVITY";
+                        card.querySelector("[data-value='Urgent']").innerHTML = currentRow["Urgent"];
+                        card.querySelector("[data-value='Important']").innerHTML = currentRow["Important"];
+                        card.querySelector("[data-value='Minor']").innerHTML = currentRow["Minor"];
+                        SelectedVisibleState = 2;
+                        if (isChild) {
+                            setAdvisory(card, currentRow);
+
+                        }
+
+                    }
+                    else if (packet.value === 2) {
+
+
+                        card.querySelector("[data-info='lbl1']").innerHTML = "URGENT";
+                        card.querySelector("[data-info='lbl2']").innerHTML = "IMPORTANT";
+                        card.querySelector("[data-info='lbl3']").innerHTML = "NO ACTIVITY";
+                        card.querySelector("[data-value='Urgent']").innerHTML = currentRow["Urgent"];
+                        card.querySelector("[data-value='Important']").innerHTML = currentRow["Important"];
+                        card.querySelector("[data-value='Minor']").innerHTML = currentRow["Minor"];
+                        SelectedVisibleState = 2;
+                        if (isChild) {
+                            setAdvisory(card, currentRow);
+
+                        }
+
+
+                    }
+                    else {
+
+                        card.querySelector("[data-info='lbl1']").innerHTML = "URGENT";
+                        card.querySelector("[data-info='lbl2']").innerHTML = "IMPORTANT";
+                        card.querySelector("[data-info='lbl3']").innerHTML = "NO ACTIVITY";
+                        card.querySelector("[data-value='Urgent']").innerHTML = currentRow["Danger"];
+                        card.querySelector("[data-value='Important']").innerHTML = currentRow["Attention"];
+                        card.querySelector("[data-value='Minor']").innerHTML = currentRow["NoAction"];
+                        SelectedVisibleState = 1;
+                        if (isChild) {
+                            setSatus(card, currentRow);
+                        }
+
+                    }
+                }
+            }
+
+
+
+        }
+
+        /**
+         * Deactivates a trap
+         * @param event
+         */
+        function deactivateTrap(event) {
+            // get trap ID
+            var id = cardSelected.parentNode.parentNode.getAttribute("data-id");
+            // build sensacollection of card
+            setState(id, 1);
+            fw.fireEvent("deactivate trap", rowState[id]);
+
+        }
+
+        function clearContent(packet) {
+             
+            rowHeaderElems = [];
+            rowElems = [];
+            var getParent = document.getElementById("tbody");
+            getParent.innerHTML = "";
+        }
+
+        function incomingLogMessage(packet) {
+
+            var data = packet.value;
+        }
+
+        /**
+         * Sets the card state to either triggered (2), set (1), or deactivated (0)
+         *
+         * @param id - id of the card to be modified.
+         * @param value {number} - state to change the card to.
+         */
+        function setState(id, value) {
+
+            if (typeof value !== "number") {
+                throw new TypeError("Value must be a number, found '" + typeof value + "'.");
+            }
+            if (value > 3 || value < 0) {
+                throw new Error("State value must either 0, 1, 2. Found " + value);
+            }
+
+            var card = rowElems[id];
+            var sideStatus = card.querySelector("[data-info='SideBarStatus'");
+            var hours = card.querySelector("[data-value='Hours']");
+
+            switch (value) {
+                case 1:
+                    sideStatus.setAttribute("class", "SideBarGray")
+                    hours.style.setProperty("visibility", "hidden");
+                    card.querySelector("[data-button='addBait']").style.setProperty("display", "");
+                    card.querySelector("[data-button='resetIR']").style.setProperty("display", "none");
+                    card.querySelector("[data-button='manualLog']").style.setProperty("display", "none");
+                    card.querySelector("[data-button='noActivity']").style.setProperty("display", "none");
+
+                    var trapTypeSelect = card.querySelector("[data-select='trapType']");
+                    if (rowState[id].animalType !== undefined) {
+                        trapTypeSelect.value = rowState[id].animalType;
+                    }
+                    card.querySelector("[data-value='SetTimeFormatted']").innerHTML = "-";
+
+
+                    break;
+                case 2:
+                    sideStatus.setAttribute("class", "SideBarGreen")
+                    var trapTypeSelect = card.querySelector("[data-select='trapType']");
+                    card.querySelector("[data-button='addBait']").style.setProperty("display", "");
+                    card.querySelector("[data-button='resetIR']").style.setProperty("display", "");
+                    card.querySelector("[data-button='manualLog']").style.setProperty("display", "");
+                    card.querySelector("[data-button='noActivity']").style.setProperty("display", "");
+
+                    if (rowState[id].animalType !== undefined) {
+                        trapTypeSelect.value = rowState[id].animalType;
+                    }
+                    break;
+                case 3:
+                    sideStatus.setAttribute("class", "SideBarRed")
+                    card.querySelector("[data-button='addBait']").style.setProperty("display", "none");
+                    card.querySelector("[data-button='resetIR']").style.setProperty("display", "");
+                    card.querySelector("[data-button='manualLog']").style.setProperty("display", "");
+                    card.querySelector("[data-button='noActivity']").style.setProperty("display", "");
+
+                    var trapTypeSelect = card.querySelector("[data-select='trapType']");
+                    if (rowState[id].animalType !== undefined) {
+                        trapTypeSelect.value = rowState[id].animalType;
+                    }
+
+                    // Display notes
+                    if (rowState[id].notes && rowState[id] !== "") {
+                        card.querySelector("[data-section='notes']").style.setProperty("display", "flex");
+                    } else {
+                        //card.querySelector("[data-section='notes']").style.setProperty("display", "none");
+                    }
+
+                    break;
+
+            }
+            rowState[id].State = value;
+        }
+
+        function genericHeaderClicked(event) {
+        
+            var clearScreen = event.parentNode.parentNode.querySelector("[data-selector='Children']");
+            if (clearScreen.style.display === "none") {
+
+                lastHeader = event.parentNode.parentNode;
+                clearScreen.style.setProperty("display", "");
+                cardSelected = clearScreen.parentNode.parentNode.parentNode;
+
+                var id = cardSelected.getAttribute("data-id");
+                
+                fw.func("PUBLISHCLIENT", "GnericCardPressed", id);
+            }
+            else {
+                clearScreen.style.setProperty("display", "none");
+                // fw.func("PUBLISHCLIENT", "GnericCardPressed", id);
+                fw.func("PUBLISHCLIENT", "GnericCardPressed", -1);
+
+            }
+        }
+        function deleteCard(id) {
+
+            if (rowElems[id]) {
+                var card = cardSelected.querySelector("[data-id='" + id + "']");
+                card.remove();
+                delete rowElems[id];
+            }
+        }
+        function doubleclick(el, onsingle, ondouble) {
+            
+            var id = el.parentNode.parentNode.getAttribute("data-id");
+            
+            if (el.getAttribute("data-dblclick") == null) {
+                el.setAttribute("data-dblclick", 1);
+                setTimeout(function () {
+                    if (el.getAttribute("data-dblclick") == 1) {
+                        genericChildClicked(id);
+                    }
+                    el.removeAttribute("data-dblclick");
+                }, 300);
+            } else {
+                el.removeAttribute("data-dblclick");
+                genericChildDoubleClicked(id);
+            }
+        }
+        function genericChildClicked(id) {
+               
+            if (!MaitnanceMode) {
+                fw.func("PUBLISHCLIENT", "GnericCardChildPressed", id);
+            }
+            else
+            {
+                fw.func("PUBLISHCLIENT", "ChildMaitnancePressed", id);
+            }
+
+        }
+        function genericChildDoubleClicked(id) {
+         //   alert("Card Double clicked"); 
+            //  if (!MaitnanceMode) {
+            //     fw.func("PUBLISHCLIENT", "GnericCardChildPressed", id);
+            // }
+            // else
+            // {
+            //     fw.func("PUBLISHCLIENT", "ChildMaitnancePressed", id);
+            // }
+ 
+            fw.func("PUBLISHCLIENT", "DeviceLevelActivated", id);
+
+        }
+
+
+        function ChangeNewItemIcon(packet) {
+            if (rowStateChild[0] !== undefined && rowStateChild[0] !== null) {
+                rowStateChild[0].Card.querySelector('[data-info="childIcon"]').innerHTML = "";
+                rowStateChild[0].Card.querySelector('[data-info="childIcon"]').appendChild(packet.value);
+            }
+        } 
+
+        function setTopPosition(packet) {
+            fw.func("ADJUSTSIZE", "TOPOFFSET", packet.value);
+        }
+
+        /**
+        *  Setups the card header template
+        *  Accepts any HTML template
+        * @param packet
+        */
+        function setHeaderTemplate(packet) {
+             
+            var mainParent = document.getElementById("body");
+            var headerTempalteExist = document.getElementById("cardTemplate");
+            if (headerTempalteExist !== undefined && headerTempalteExist !== null) {
+                headerTempalteExist.remove();
+            }
+           
+            mainParent.appendChild(packet.value);
+            cardTemplate = document.getElementById("cardTemplate");
+        }
+
+        /**
+         *  Setups the card children template
+         *  Accepts any HTML template
+         * @param packet
+         */
+        function setValueTemplate(packet) {
+
+            var mainParent = document.getElementById("body");
+
+            var childTemplateExist = document.getElementById("cardChildTemplate");
+            if (childTemplateExist !== undefined && childTemplateExist!== null) {
+                childTemplateExist.remove();
+            }
+
+            mainParent.appendChild(packet.value);
+            cardChildTemplate = document.getElementById("cardChildTemplate");
+        }
+
+        function CheckIgnored(id) {
+            if (!IgnoreEnabled)
+                return true;
+
+            var result = false;
+            if (IgnoreRows === undefined) {
+                return true;
+            }
+            IgnoreRows.forEach(x => {
+                if (x === id) {
+                    result = true;
+                }
+            })
+            return result;
+        }
+
+        /**
+        * Adds a new record or updates and existing record header with the given sensor collection.
+        *
+        * The columns available are: CardName, CardLocation,UrgentCount, ImportantCount, MinorCount.
+        *
+        * Anything with data-value will automaticcally have the value updated in .innerHTML. From items etc neet to use the second switch statement.
+        *
+        * @param packet
+        */
+        function receive_headers(packet) {
+            // debugger;
+            var collection = packet.value.value;
+            var rowHeaderKeys = Object.keys(collection.data);
+            for (var i = 0; i < rowHeaderKeys.length; i++) {
+                 
+                 //CheckIgnored(rowHeaderKeys[i])
+                if (CheckIgnored(rowHeaderKeys[i])) {
+ 
+                    var card = rowHeaderElems[rowHeaderKeys[i]];
+                    if (card == undefined) {
+                        // Create new card
+                        card = cardTemplate.cloneNode(true);
+                        card.setAttribute("id", "");
+                        card.style.setProperty("display", "");
+                        rowHeaderElems[rowHeaderKeys[i]] = card;
+
+                        // Add to table.
+                        addCard(rowHeaderKeys[i], card, collection.data[parseInt(rowHeaderKeys[i])][3]);
+                        rowState[rowHeaderKeys[i]] = {};
+                    }
+                    ActiveDatasource = collection.data;
+
+                    // Update stats
+                    for (var j = 0; j < collection.headers.length; j++) {
+                        var headerValue = collection.headers[j];
+                        var elem = card.querySelector("[data-value='" + headerValue + "']");
+
+                        // It may not exist.
+                        if (elem !== null) {
+                            switch (headerValue) {
+                                case "CardName":
+                                    if (collection.data[rowHeaderKeys[i]][j] === "") {
+                                        card.querySelector("[data-value='CardName']").innerHTML = "";
+                                    } else {
+                                        card.querySelector("[data-value='CardName']").innerHTML = collection.data[rowHeaderKeys[i]][j];
+                                    }
+                                    break;
+                                case "CardAddress":
+                                    if (collection.data[rowHeaderKeys[i]][j] === "") {
+                                        card.querySelector("[data-value='CardAddress']").innerHTML = "";
+                                    } else {
+                                        card.querySelector("[data-value='CardAddress']").innerHTML = collection.data[rowHeaderKeys[i]][j];
+                                    }
+                                    break;
+                                case "Urgent":
+                                    if (collection.data[rowHeaderKeys[i]][j] === "") {
+                                        card.querySelector("[data-value='Urgent']").innerHTML = "0";
+                                    } else {
+                                        card.querySelector("[data-value='Urgent']").innerHTML = collection.data[rowHeaderKeys[i]][j];
+                                    }
+                                    break;
+                                case "Important":
+
+                                    if (collection.data[rowHeaderKeys[i]][j] === "") {
+                                        card.querySelector("[data-value='Important']").innerHTML = "0";
+                                    } else {
+                                        card.querySelector("[data-value='Important']").innerHTML = collection.data[rowHeaderKeys[i]][j];
+                                    }
+                                    break;
+                                case "Minor":
+                                    if (collection.data[rowHeaderKeys[i]][j] === "") {
+                                        card.querySelector("[data-value='Minor']").innerHTML = "0";
+                                    } else {
+                                        card.querySelector("[data-value='Minor']").innerHTML = collection.data[rowHeaderKeys[i]][j];
+                                    }
+                                    break;
+
+                            }
+                        }
+                        else {
+                            switch (headerValue) {
+                                case "NoAction":
+                                    rowState[rowHeaderKeys[i]]["NoActionVal"] = parseInt(collection.data[rowHeaderKeys[i]][j]);
+                                    break;
+                                case "Danger":
+                                    rowState[rowHeaderKeys[i]]["DangerVal"] = parseInt(collection.data[rowHeaderKeys[i]][j]);
+                                    break;
+                                case "Attention":
+                                    rowState[rowHeaderKeys[i]]["AttentionVal"] = parseInt(collection.data[rowHeaderKeys[i]][j]);
+                                    break;
+
+                            }
+                        }
+                        rowState[rowHeaderKeys[i]][headerValue] = collection.data[rowHeaderKeys[i]][j];
+                    }
+                    rowState[rowHeaderKeys[i]]["Card"] = card;
+
+
+                }
+            }
+        }
+
+        /**
+         * Adds a new record or updates and existing record with the given sensor collection.
+         *
+         * The columns available are: technician, trapType, temp, setTime, updateTime, triggeredTime.
+         *
+         * Anything with data-value will automaticcally have the value updated in .innerHTML. From items etc neet to use the second switch statement.
+         *
+         * @param packet
+         */
+        function receive_value(packet) {
+            activeCards = [];
+            rowElems = {};
+            rowStateChild = {};
+            var advSort;
+            var collection = packet.value.value;
+            var children = cardSelected.querySelector("[data-selector='Children']");
+            children.innerHTML = '';
+            
+            
+            var existing = cardSelected.querySelector("[data-id='0']")
+            if (existing === undefined || existing === null) {
+                var newCardTemplate = document.getElementById("newCardTemplate");
+                newCardTemplate.setAttribute("data-info", "newCard");
+                var newCard = newCardTemplate.cloneNode(true);
+                if (!MaitnanceMode) {
+                    newCard.style.setProperty("display", "none");
+                }
+                else {
+                    newCard.style.setProperty("display", "");
+                }
+
+                AddCardChild(0, newCard, cardSelected);
+                rowStateChild[0] = {};
+                rowStateChild[0]["Card"] = newCard;
+                rowStateChild[0]["IsSystem"] = true;
+            }
+            else {
+                if (!MaitnanceMode) {
+                    existing.querySelector("[data-info='newCard']").style.setProperty("display", "none");
+                }
+                else {
+                    existing.querySelector("[data-info='newCard']").style.setProperty("display", "");
+                }
+                rowStateChild[0] = {};
+                rowStateChild[0]["Card"] = existing.querySelector("[data-info='newCard']");
+                rowStateChild[0]["IsSystem"] = true;
+            }
+            rowKeys = Object.keys(collection.data);
+            for (var i = 0; i < rowKeys.length; i++) {
+                var card = rowElems[rowKeys[i]];
+                if (card == undefined) {
+                    // Create new card
+                    card = cardChildTemplate.cloneNode(true);
+                    card.setAttribute("id", "");
+                    card.style.setProperty("display", "");
+                    rowElems[rowKeys[i]] = card;
+
+                    // Add to table.
+                    AddCardChild(rowKeys[i], card, cardSelected, collection.data[parseInt(rowKeys[i])][3]? collection.data[parseInt(rowKeys[i])][3] : '0');
+                    rowStateChild[rowKeys[i]] = {};
+                }
+                ActiveDatasource = collection.data;
+                var advisories = false;
+                rowStateChild[rowKeys[i]]["sacount"] = 0;
+                rowStateChild[rowKeys[i]]["RowId"] = rowKeys[i];
+                // Update stats
+                for (var j = 0; j < collection.headers.length; j++) {
+                    var headerValue = collection.headers[j];
+                    var elem = card.querySelector("[data-value='" + headerValue + "']");
+
+                    // It may not exist.
+                    if (elem !== null) {
+                        switch (headerValue) {
+                            case "CardName":
+                                if (collection.data[rowKeys[i]][j] === "") {
+                                    card.querySelector("[data-value='CardName']").innerHTML = "";
+                                } else {
+                                    card.querySelector("[data-value='CardName']").innerHTML = collection.data[rowKeys[i]][j];
+                                }
+                                break;
+                            case "CardAddress":
+                                if (collection.data[rowKeys[i]][j] === "") {
+                                    card.querySelector("[data-value='CardAddress']").innerHTML = "";
+                                }
+                                else {
+                                    card.querySelector("[data-value='CardAddress']").innerHTML = collection.data[rowKeys[i]][j];
+                                }
+                                break;
+                            case "Urgent":
+                                rowStateChild[rowKeys[i]]["UrgentVal"] = parseInt(collection.data[rowKeys[i]][j]);
+                                if (collection.data[rowKeys[i]][j] === "") {
+                                    card.querySelector("[data-value='Urgent']").innerHTML = "0";
+                                }
+                                else {
+                                    card.querySelector("[data-value='Urgent']").innerHTML = collection.data[rowKeys[i]][j];
+                                    rowStateChild[rowKeys[i]]["urgentC"] = parseInt(collection.data[rowKeys[i]][j]);
+
+                                }
+                                break;
+                            case "Important":
+                                rowStateChild[rowKeys[i]]["ImportantVal"] = parseInt(collection.data[rowKeys[i]][j]);
+                                if (collection.data[rowKeys[i]][j] === "") {
+                                    card.querySelector("[data-value='Important']").innerHTML = "0";
+                                }
+                                else {
+                                    card.querySelector("[data-value='Important']").innerHTML = collection.data[rowKeys[i]][j];
+                                    rowStateChild[rowKeys[i]]["importantC"] = parseInt(collection.data[rowKeys[i]][j]);
+
+                                }
+                                break;
+                            case "Minor":
+                                rowStateChild[rowKeys[i]]["MinorVal"] = parseInt(collection.data[rowKeys[i]][j]);
+                                if (collection.data[rowKeys[i]][j] === "") {
+                                    card.querySelector("[data-value='Minor']").innerHTML = "0";
+                                }
+                                else {
+                                    card.querySelector("[data-value='Minor']").innerHTML = collection.data[rowKeys[i]][j];
+                                    rowStateChild[rowKeys[i]]["minorC"] = parseInt(collection.data[rowKeys[i]][j]);
+
+                                }
+                                break;
+
+                        }
+
+                    }
+                    else {
+                        switch (headerValue) {
+
+                            case "Date":
+                                if (collection.data[rowKeys[i]][j] === "") {
+                                    card.querySelector("[data-value='date']").innerHTML = "09/08/2020";
+                                }
+
+                                break;
+                            case "assigned":
+                                if (collection.data[rowKeys[i]][j] !== "") {
+                                    card.querySelector("[data-value='Assignee']").innerHTML = collection.data[rowKeys[i]][j];
+                                }
+
+                                break;
+                            case "title":
+                                if (collection.data[rowKeys[i]][j] !== "") {
+                                    card.querySelector("[data-value='AdvisoryName']").innerHTML = collection.data[rowKeys[i]][j];
+                                }
+
+                                break;
+                            case "SiteEventPriority":
+
+                                advisories = true;
+                                if (collection.data[rowKeys[i]][j] === "") {
+                                    card.querySelector("[data-value='barline']").setAttribute("class", "normalCardBorder SideBarGreen");
+                                } else {
+                                    switch (collection.data[rowKeys[i]][j]) {
+                                        case "1":
+                                            card.querySelector("[data-info='SideBarStatus']").setAttribute("class", "normalCardBorder SideBarRed");
+                                            advSort = 6;
+                                            break;
+                                        case "2":
+                                            card.querySelector("[data-info='SideBarStatus']").setAttribute("class", "normalCardBorder SideBarYellow");
+                                            advSort = 3;
+                                            break;
+                                        case "3":
+                                            card.querySelector("[data-info='SideBarStatus']").setAttribute("class", "normalCardBorder SideBarGreen");
+                                            advSort = 1;
+                                            break;
+                                    }
+
+                                }
+                                break
+                            case "SiteEventType":
+                                if (collection.data[rowKeys[i]][j] !== "") {
+                                    card.querySelector("[data-value='AdvisoryType']").innerHTML = collection.data[rowKeys[i]][j].toUpperCase();
+                                }
+
+                                break;
+                            case "reason":
+                                if (collection.data[rowKeys[i]][j] !== "") {
+                                    card.querySelector("[data-value='AdvisoryText']").innerHTML = collection.data[rowKeys[i]][j];
+                                }
+                                break;
+                            case "NoAction":
+                                if (collection.data[rowKeys[i]][j] !== "") {
+                                    rowStateChild[rowKeys[i]]["NoActionVal"] = parseInt(collection.data[rowKeys[i]][j]);
+                                    rowStateChild[rowKeys[i]]["NoActionC"] = parseInt(collection.data[rowKeys[i]][j]);
+                                }
+
+                                break;
+                            case "Danger":
+                                if (collection.data[rowKeys[i]][j] !== "") {
+                                    rowStateChild[rowKeys[i]]["DangerVal"] = parseInt(collection.data[rowKeys[i]][j]);
+                                    rowStateChild[rowKeys[i]]["DangerC"] = parseInt(collection.data[rowKeys[i]][j]);
+
+                                }
+
+                                break;
+                            case "Attention":
+                                if (collection.data[rowKeys[i]][j] !== "") {
+                                    rowStateChild[rowKeys[i]]["AttentionVal"] = parseInt(collection.data[rowKeys[i]][j]);
+                                    rowStateChild[rowKeys[i]]["AttentionC"] = parseInt(collection.data[rowKeys[i]][j]);
+                                }
+
+                                break;
+                            case "SiteEventStatus":
+                                if (collection.data[rowKeys[i]][j] !== "") {
+                                     
+                                    if (parseInt(collection.data[rowKeys[i]][j]) === 1) {
+                                        advSort += 8;
+                                        card.querySelector("[data-value='checkbox']").checked = true;
+                                        card.querySelector("[data-value='SelectElement']").setAttribute("class", "activeToggle");
+                                        card.querySelector("[data-value='SelectElement']").innerHTML = "open";
+                                    }
+                                    else {
+
+                                        card.querySelector("[data-value='checkbox']").checked = false;
+                                        card.querySelector("[data-value='SelectElement']").setAttribute("class", "inactiveToggle");
+                                        card.querySelector("[data-value='SelectElement']").innerHTML = "closed";
+                                    }
+                                }
+
+                                break;
+                            case "Time":
+
+                                if (collection.data[rowKeys[i]][j] === "") {
+                                    card.querySelector("[data-value='ReportDate']").innerHTML = "0";
+                                } else {
+
+                                    var date = new Date(collection.data[rowKeys[i]][j] / 1000).toLocaleString();
+                                    var d = date.split(",");
+                                    var d0 = d[0].split("/");
+                                    d0[2] = d0[2] - 2000;
+
+                                    card.querySelector("[data-value='ReportDate']").innerHTML = d0;
+                                }
+                                break;
+                            case "SetDate":
+
+                                if (collection.data[rowKeys[i]][j] === "") {
+                                    card.querySelector("[data-value='ReportDate']").innerHTML = "0";
+                                } else {
+
+                                    var date = new Date(collection.data[rowKeys[i]][j] * 1000).toLocaleString();
+                                    var d = date.split(",");
+                                    var d0 = d[0].split("/");
+                                    d0[2] = d0[2] - 2000;
+
+                                    card.querySelector("[data-value='ReportDate']").innerHTML = d0;
+                                }
+                                break;
+                        }
+                    }
+                    rowStateChild[rowKeys[i]][headerValue] = collection.data[rowKeys[i]][j];
+
+                }
+                 
+                if (advSort !== undefined) {
+
+                    rowStateChild[rowKeys[i]]["advisoriessort"] = advSort;
+                }
+                rowStateChild[rowKeys[i]]["Card"] = card;
+
+            }
+
+            for (var index in rowStateChild) {
+                var currentCard = rowStateChild[index];
+                var sidebarStatus;
+                var sidebarAdvisory;
+
+                if (advisories === false) {
+                    sidebarStatus = setSatus(currentCard["Card"], currentCard);
+                    sidebarAdvisory = setAdvisory(currentCard["Card"], currentCard);
+                }
+
+
+                if (sidebarStatus !== null && sidebarAdvisory !== null && advisories === false) {
+                    rowStateChild[index]["sstatus"] = sidebarStatus;
+                    rowStateChild[index]["sadvisories"] = sidebarAdvisory;
+                }
+            }
+
+        }
+
+
+
+        /**
+         * Sets the status of the card child based on the selected view mode either Advisories or Status
+         */
+        function setAdvisory(card, row) {
+
+            var result = "";
+            var cardStatus = card.querySelector("[data-info='SideBarStatus']");
+            var parentcard = card.parentNode.parentNode.parentNode.parentNode.firstElementChild.firstElementChild;
+
+            if (cardStatus === null) {
+                return null;
+            }
+
+
+            var urgent = CompareRowParam("UrgentVal", row);
+            var important = CompareRowParam("ImportantVal", row);
+            var minor = CompareRowParam("MinorVal", row);
+
+            if (row["MinorVal"] >= 1) {
+                parentcard.setAttribute("class", "normalCardBorder SideBarGreen");
+                cardStatus.setAttribute("class", "normalCardBorder SideBarGreen");
+                result = 2 + (minor + important + urgent);
+
+            }
+            if (row["ImportantVal"] >= 1) {
+                parentcard.setAttribute("class", "normalCardBorder SideBarYellow");
+                cardStatus.setAttribute("class", "normalCardBorder SideBarYellow");
+                result = 3 + (minor + important + urgent);
+            }
+            if (row["UrgentVal"] >= 1) {
+                parentcard.setAttribute("class", "normalCardBorder SideBarYellow");
+                cardStatus.setAttribute("class", "normalCardBorder SideBarRed");
+                result = 4 + (minor + important + urgent);
+            }
+
+            if (result === "") {
+                parentcard.setAttribute("class", "normalCardBorder SideBarGray");
+                cardStatus.setAttribute("class", "normalCardBorder SideBarGray");
+                result = 1;
+            }
+
+            return result;
+        }
+
+
+
+        function setSatus(card, row) {
+
+            var urgent = CompareRowParam("DangerVal", row);
+            var important = CompareRowParam("AttentionVal", row);
+            var minor = CompareRowParam("NoActionVal", row);
+
+            var result = "";
+            var cardStatus = card.querySelector("[data-info='SideBarStatus']");
+            var parentcard = card.parentNode.parentNode.parentNode.parentNode.firstElementChild.firstElementChild;
+            if (cardStatus === null) {
+                return null;
+            }
+             
+            var prevStatus = parentcard.getAttribute("class");
+
+            if (row["NoActionVal"] >= 1) {
+                if (!prevStatus.includes("SideBarRed") && !prevStatus.includes("SideBarYellow")) {
+                    parentcard.setAttribute("class", "normalCardBorder SideBarGreen");
+                }
+                cardStatus.setAttribute("class", "normalCardBorder SideBarGreen");
+                result = 2 + (minor + important + urgent);
+            }
+            if (row["AttentionVal"] >= 1) {
+
+                if (!prevStatus.includes("SideBarRed")) {
+                    parentcard.setAttribute("class", "normalCardBorder SideBarYellow");
+                }
+
+                cardStatus.setAttribute("class", "normalCardBorder SideBarYellow");
+                result = 3 + (minor + important + urgent);
+
+            }
+            if (row["DangerVal"] >= 1) {
+                parentcard.setAttribute("class", "normalCardBorder SideBarRed");
+
+                cardStatus.setAttribute("class", "normalCardBorder SideBarRed");
+                result = 4 + (minor + important + urgent);
+            }
+
+            if (result === "") {
+                if (!prevStatus.includes("SideBarRed") && !prevStatus.includes("SideBarYellow") && !prevStatus.includes("SideBarGreen")) {
+                    parentcard.setAttribute("class", "normalCardBorder SideBarGray");
+                }
+
+                cardStatus.setAttribute("class", "normalCardBorder SideBarGray");
+                result = 1;
+            }
+
+            return result;
+        }
+
+
+        function CompareRowParam(paramName, curentRow) {
+
+            var result = 0;
+            var lastIndex;
+            for (var index in rowState) {
+                if (lastIndex === undefined) {
+                    lastIndex = index;
+                }
+
+                var row = rowState[index];
+                if (curentRow[paramName] > row[paramName]) {
+                    result = curentRow[paramName];
+                }
+                else {
+                    return rowState[lastIndex][paramName];
+                }
+                lastIndex = index;
+            }
+            return result;
+
+        }
+
+        /**
+         * Sorts the cards by the given column value.
+         *
+         * @param payload
+         */
+        function sortEventInit(payload) {
+
+
+
+            if (typeof payload.value === "string") {
+                payload.value[0] = [payload.value.toLowerCase()];
+
+            }
+
+
+
+            var order = sortCardsInit(rowStateChild, payload.value[0], payload.value[1]);
+
+            reorderCards(order);
+        }
+
+
+
+        /**
+         * Sorts the cards by the given column value.
+         *
+         * @param payload
+         */
+        function sortEvent(payload) {
+
+
+
+            if (typeof payload.value !== "string") {
+
+                throw new TypeError(x + " is an invalid sort. Please use valid string from: " + validSorts.join());
+
+            }
+
+            var validSorts = ["baitname", "sstatus", "advisoriessort", "urgentc", "importantc", "minorc", "noactionc", "dangerc", "attentionc"];
+            if (validSorts.indexOf(payload.value) === -1) {
+                throw new TypeError(x + " is an invalid sort. Please use " + validSorts.join());
+            }
+
+
+            var order = sortCards(rowStateChild, payload.value, true);
+
+            reorderCards(order);
+        }
+
+
+        /**
+         * Reorders the cards in the table.
+         * @param order
+         */
+        function reorderCards(order) {
+
+            // debugger;
+            for (var i = 0; i < order.length; i++) {
+                if (order[i] in rowElems){
+                    cardSelected.querySelector("[data-selector='Children']").appendChild(rowElems[order[i]].parentElement);
+                }
+            }
+
+            // for (var key in order) {
+            //     if (key in rowElems) {
+            //         cardSelected.appendChild(rowElems[key].parentElement);
+            //     }
+            // }
+        }
+
+        /**
+         * The sort function used for sorting the cards. This is a custom function per card application.
+         * @param data Data object containing the state of all the cards.
+         * @param sortType Field inside the object to sort by.
+         */
+        function sortCards(data, sortType, asc) {
+
+            var dataKeys = Object.keys(data);
+
+            if (asc === false) {
+                return dataKeys.sort(function (firstKey, secondKey) {
+
+                    var first = data[firstKey];
+                    var second = data[secondKey];
+
+                    if (first[sortType] < second[sortType]) {
+                        return -1;
+                    } else if (first[sortType] == second[sortType]) {
+                        return 0;
+                    } else {
+                        return 1;
+                    }
+
+                });
+            } else {
+                return dataKeys.sort(function (firstKey, secondKey) {
+                    var first = data[firstKey];
+                    var second = data[secondKey];
+
+                    if (first[sortType] > second[sortType]) {
+                        return -1;
+                    } else if (first[sortType] == second[sortType]) {
+                        return 0;
+                    } else {
+                        return 1;
+                    }
+
+                });
+            }
+        }
+
+        function CheckExists(source, val) {
+            for (var item in source) {
+                if (val === source[item]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function sortCardsInit(data, sortType, asc) {
+
+            var sorting = [];
+            for (var element in data) {
+
+                var current = data[element];
+
+                for (var i in data) {
+
+                    var inner = data[i];
+                    if (current["sstatus"] <= inner["sstatus"] && current["urgentC"] <= inner["urgentC"]
+                        && current["importantC"] <= inner["importantC"] && current["minorC"] <= inner["minorC"]
+                    ) {
+                        data[element]["sortid"] = 2;
+                    }
+
+
+                    else if (current["sstatus"] === 1) {
+                        data[element]["sortid"] = 0;
+
+                    }
+                    else if (current["sstatus"] > inner["sstatus"]) {
+                        data[element]["sortid"] = 2;
+
+                    }
+                    else if (current["sstatus"] === inner["sstatus"] && current["urgentC"] === inner["urgentC"]
+                        && current["importantC"] === inner["importantC"] && current["minorC"] === inner["minorC"]) {
+                        data[element]["sortid"] = 2;
+
+                    }
+                    else {
+                        data[element]["sortid"] = 1;
+
+                    }
+                }
+            }
+
+            sorting = sortCards(data, "sortid", true);
+            return sorting;
+
+
+        }
+
+
+
+        function addCard(id, card, status) {
+            tableBody = document.getElementById("tbody");
+            var row = document.createElement("tr");
+            row.appendChild(card);
+            row.setAttribute("data-id", id);
+            row.setAttribute("data-status", status);
+            if(showActive && status == '0'){
+                row.style.display = 'none';
+            }
+            tableBody.appendChild(row);
+        }
+
+
+        function AddCardChild(id, card, parent, status) {
+            var cardBody = parent.querySelector("[data-selector='Children']");
+            var row = document.createElement("div");
+            row.appendChild(card);
+            row.setAttribute("data-id", id);
+            if(status)
+                row.setAttribute("data-status", status);
+            if(showActive && status == '0'){
+                row.style.display = 'none';
+            }
+            cardBody.appendChild(row);
+            activeCards.push(id);
+
+        }
+
+        // API actions for dashboard mode
+        function fw_dashStart(mode) {
+
+            if (mode !== "DASHBOARD") {
+                document.getElementsByTagName("html")[0].style.setProperty("background-color", "grey");
+            }
+
+            return "OK";
+        }
+
+        // API startup actions for toolbox. Return "OK" if startup OK else return an error string
+        function fw_toolStart(mode) {
+            return "OK";
+        }
+
+        // API startup actions when first created by dropping in design mode. Return "OK" if startup OK else return an error string
+        function fw_newWidget(mode) {
+            return fw_dashStart();
+        }
+
+        // API called when switching to design mode (optional, delete if not using)
+        function fw_startDesign() {
+            return true;
+        }
+
+        // API called to manage scaling
+        function fw_scale(scaleX, scaleY) {
+            fw.widgetID.style.setProperty("width", (options.settings.iniWidth * scaleX) + "px");
+            fw.widgetID.style.setProperty("height", (options.settings.iniHeight * scaleY) + "px");
+
+            return true;
+        }
+
+        // API called when widget edit starts (return false to stop editor, "NOSCALE", "NOVERT", "NOHORIZ", "NOVERT,NOHORIZ" to customise scaling)
+        function fw_startEdit() {
+            return true;
+        }
+
+        // API called when widget edit finishes (apply edit changes here)
+        function fw_endEdit(mode) {
+        }
+
+        function fw_db(channel, scope, data) {
+        }
+
+        // API called for incoming channel events
+        function fw_feed(channel, scope, data) {
+
+            receive_value(data);
+        }
+
+
+        // Initialize widget framework API - DO NOT ADJUST OR DELETE
+        var fw = new parent.widgetAPI(window.name);  // widget framework object
+        fw.ready();
+
+
+    </script>
+</body>
+</html>
