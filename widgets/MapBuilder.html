@@ -565,7 +565,9 @@
                     x: xC,
                     y: yC,
                     id: id,
-                    UID: addingElement.getAttribute("id")
+                    UID: addingElement.getAttribute("id"),
+                    label: addingElement.querySelector(".textContainer")?.innerHTML,
+                    iconUrl: addingElement.querySelector('img')?.src
                 };
             }
             var styles = "top:" + yC + "%;left:" + xC + "%;position:absolute;";

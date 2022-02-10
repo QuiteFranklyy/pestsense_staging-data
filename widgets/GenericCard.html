@@ -1513,7 +1513,9 @@
                         rowHeaderElems[rowHeaderKeys[i]] = card;
 
                         // Add to table.
-                        addCard(rowHeaderKeys[i], card, collection.data[parseInt(rowHeaderKeys[i])][3]);
+                        var statusIndex = collection.headers.indexOf("Status");
+                        var cardStatus = collection.data[parseInt(rowHeaderKeys[i])][statusIndex]? collection.data[parseInt(rowHeaderKeys[i])][statusIndex] : '0';
+                        addCard(rowHeaderKeys[i], card, cardStatus);
                         rowState[rowHeaderKeys[i]] = {};
                     }
                     ActiveDatasource = collection.data;
@@ -1605,6 +1607,7 @@
             var collection = packet.value.value;
             var children = cardSelected.querySelector("[data-selector='Children']");
             children.innerHTML = '';
+            debugger;
             
             
             var existing = cardSelected.querySelector("[data-id='0']")
@@ -1618,8 +1621,10 @@
                 else {
                     newCard.style.setProperty("display", "");
                 }
-
-                AddCardChild(0, newCard, cardSelected);
+                
+                // var statusIndex = collection.headers.indexOf("Status");
+                // var cardStatus = collection.data[parseInt(rowKeys[i])][statusIndex]? collection.data[parseInt(rowKeys[i])][statusIndex] : '0';
+                AddCardChild(0, newCard, cardSelected, 1);
                 rowStateChild[0] = {};
                 rowStateChild[0]["Card"] = newCard;
                 rowStateChild[0]["IsSystem"] = true;
@@ -1646,7 +1651,9 @@
                     rowElems[rowKeys[i]] = card;
 
                     // Add to table.
-                    AddCardChild(rowKeys[i], card, cardSelected, collection.data[parseInt(rowKeys[i])][3]? collection.data[parseInt(rowKeys[i])][3] : '0');
+                    var statusIndex = collection.headers.indexOf("Status");
+                    var cardStatus = collection.data[parseInt(rowKeys[i])][statusIndex]? collection.data[parseInt(rowKeys[i])][statusIndex] : '0';
+                    AddCardChild(rowKeys[i], card, cardSelected, cardStatus);
                     rowStateChild[rowKeys[i]] = {};
                 }
                 ActiveDatasource = collection.data;
@@ -1709,6 +1716,14 @@
 
                                 }
                                 break;
+                            // case "Status":
+                            //     if (collection.data[rowKeys[i]][j] == "0" || collection.data[rowKeys[i]][j] == 0) {
+                            //         card.setProperty("display","none");
+                            //     } else {
+                            //         card.setProperty("display","");
+                            //     }
+                            //     break;
+                                
 
                         }
 
