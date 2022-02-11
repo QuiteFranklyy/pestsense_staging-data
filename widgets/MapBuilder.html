@@ -721,36 +721,59 @@
             items = [];
             var dataSource = eventData.value;
             for (var item in dataSource) {
-                var current = dataSource[item];
+                let current = dataSource[item];
 
-                var icon = httpGet('/userfiles/mapicons/' + current.id + ".svg");
-                icon += "<p class='labelStyle'>" + current.Device + "</p>";
-                var template = iconTemplate.cloneNode(true);
+                let template;
 
-                template.innerHTML = icon;
-                template.setAttribute("style", "");
+                if(current.url){
+                    if(current.url.toLowerCase().includes('nonsmart')){
+                        template = document.getElementById('componentGrid').querySelector(`[data-label='regular']`)?.parentElement.cloneNode(true);
+                    } else {
+                        template = document.getElementById('componentGrid').querySelector(`[data-label='smart']`)?.parentElement.cloneNode(true);
+                    }
+                } else {
+                    template = document.getElementById('componentGrid').querySelector(`[data-label='DEFAULT_TEXT_LABEL']`)?.parentElement.cloneNode(true);
+                }
 
-                //if (template.getAttribute("id") !== null) {
-                //    bindingItem = items[event.relatedTarget.getAttribute("id")];
-                //    id = event.relatedTarget.firstChild.getAttribute("id");
-                //}
+                if(template){
+                    template.setAttribute("style", "");
 
-                map.append(template);
+                    var addingElementObj;
+                    if (template.childNodes[0].dataset.label === DEFAULT_TEXT_LABEL) {
+                        addingElementObj = template.getElementsByClassName("colorContainer")[0];
+                        template.getElementsByClassName("textContainer")[0].innerHTML = current.label;
+                        addingElementObj.style.setProperty("width", "");
+                        addingElementObj.style.setProperty("position", "absolute");
+                    } else {
+                        if(iconCounters <= parseInt(current.label)) {
+                            iconCounters = parseInt(current.label) + 1
+                        }
+                        template.getElementsByClassName("textContainer")[0].innerHTML = current.label;
+                        document.getElementById("numberInput").value = iconCounters;
+                        template.style.setProperty("display","none");
+                        addingElementObj = template.getElementsByTagName("img")[0];
+                        addingElementObj.style.setProperty("width", "30px");
+                    }
 
-                template.setAttribute("id", current.UUID);
-                items[current.UUID] = {
-                    id: current.id,
-                    x: current.x,
-                    y: current.y,
-                    UUID: current.UUID,
-                    Device: current.Device,
-                    Reference: template
-                };
+                    addingElementObj.style.setProperty("height", "30px");
+                    template.setAttribute("id",addedElements)
+                    template.setAttribute("class", "draggble");
+                    template.setAttribute("class","draggble ResizableIcon");
 
-                var styles = "top:" + current.y + "%;left:" + current.x + "%;position:absolute;";
-                template.querySelector("[data-info='Status']")
-                template.setAttribute("style", styles);
+                    map.append(template);
+                    template.setAttribute("id", current.uid);
+                    items[current.uid] = {
+                        x: current.x,
+                        y: current.y,
+                        UUID: current.uid,
+                        Device: current.deviceId,
+                        label: current.label,
+                        iconUrl: current.url,
+                    };
 
+                    var styles = "top:" + current.y + "%;left:" + current.x + "%;position:absolute;";
+                    template.setAttribute("style", styles);
+                }
             }
         }
 
