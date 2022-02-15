@@ -102,7 +102,8 @@
                     "set css": addStyles,
                     "set html": addHtml,
                     "handle generic": handleGeneric,
-                    "set action": setAction
+                    "set action": setAction,
+                    "toggle element visibility": toggleElementVisibility
                 },
                 outputEvents: [
                     "EditCard",
@@ -406,6 +407,11 @@
             fw.fireEvent("UploadFile", "true");
         }
 
+        function EditFloorPlan(element) {
+            fw.func("PUBLISHCLIENT", "edit-floor-plan", 1);
+            fw.func("SHOWWIDGET", "SaveFloorMap");
+        }
+
         function toggleSearchBar(eventData) {
             console.log(eventData);
             // eventData.getElementsByClassName("bi-funnel-fill")[0].style.setProperty("display","");
@@ -482,6 +488,18 @@
         */
         function clearContent() {
             document.getElementById("container").innerHTML = "";
+        }
+
+        /**
+        * Toggles visibility of the provided
+        */
+        function toggleElementVisibility(packet) {
+            let data = packet.value;
+            if(data.id){
+                const element = document.getElementById(data.id);
+                if(element)
+                    element.style.visibility = data.visibility;
+            }
         }
 
         // API actions for dashboard mode

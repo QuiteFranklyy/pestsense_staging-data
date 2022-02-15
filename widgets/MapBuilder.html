@@ -225,6 +225,7 @@
             clientEvents: {
                 inputEvents: {
                     "clear content": clearContent,
+                    "remove image": removeImage,
                     "set image": eventImage,
                     "toggle navigation": navigationChanged,
                     "set icons": setIconSource,
@@ -348,6 +349,14 @@
                         break;
                     case 3:
                         populateIcons(props);
+                        break;
+                    case 4:
+                        draggableGrid.innerHTML = "";
+                        _DragEnabled = false;
+                        document.getElementById("outer-dropzone").style.setProperty("height", "100%");
+                        document.getElementById("ImageHolder").style.setProperty("height", "100%");
+                        document.getElementById("menuArea").style.setProperty("display", "none");
+                        fw.func("HIDEWIDGET", "SaveFloorMap");
                         break;
                 }
             }
@@ -718,6 +727,8 @@
          */
         function setDataSource(eventData) {
             var map = document.getElementById("outer-dropzone");
+            map.innerHTML = '';
+            iconCounters = 1;
             items = [];
             var dataSource = eventData.value;
             for (var item in dataSource) {
@@ -765,7 +776,7 @@
                     items[current.uid] = {
                         x: current.x,
                         y: current.y,
-                        UUID: current.uid,
+                        UID: current.uid,
                         Device: current.deviceId,
                         label: current.label,
                         iconUrl: current.url,
@@ -793,6 +804,13 @@
         */
         function clearContent() {
             document.getElementById("container").innerHTML = "";
+        }
+
+        /**
+        * Disposes the content of the Generic widget
+        */
+        function removeImage() {
+            document.getElementById("ImageHolder").innerHTML = "";
         }
 
         // API actions for dashboard mode

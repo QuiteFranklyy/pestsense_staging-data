@@ -1900,11 +1900,11 @@
                 </div>
             </div>
             <div data-section="clearScreen" onclick="event.stopPropagation()" style="width:100%;background-color: #41505aff;border: 1px solid #bfbfbf; overflow: hidden; display: none;">
-                <div class="flex" style="width:100%; ">
-                    <a href="#" class=" tabBtnSelected" data-info="btnActions" style="width:50%;" onclick="OpenActions(event)">
+                <div data-info="btnActionsCtl" class="flex" style="width:100%; ">
+                    <a id="devAction" href="#" class="tabBtnSelected" data-info="btnActions" style="width:50%;" onclick="OpenActions(event)">
                         Actions
                     </a>
-                    <a href="#" class="tabBtn" data-info="btnInfo" style="width:50%;" onclick="OpenDeviceInfo(event)">
+                    <a id="devInfo" href="#" class="tabBtn" data-info="btnInfo" style="width:50%;" onclick="OpenDeviceInfo(event)">
                         Device Info
                     </a>
                 </div>
@@ -1920,7 +1920,7 @@
                         <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info-circle" width="15" height="10" class="svg-inline--fa fa-info-circle fa-w-16" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z"></path></svg>
                         <span data-value="errorDate" onclick="OpenError(event)" style="cursor:pointer;"></span> 
                         <span style="width: 100%;cursor:pointer;" data-value="ErrorDescription" onclick="OpenError(event)" ></span> 
-                        <span class="iconHover" style="float: right;padding-right: 24px; margin-top: -3px;" onclick="RemoveError(event)">
+                        <span data-value="errorIcon" class="iconHover" style="float: right;padding-right: 24px; margin-top: -3px;" onclick="RemoveError(event)">
                             <svg width="15" height="15" aria-hidden="true" focusable="false" data-prefix="far" data-icon="trash-alt" class="svg-inline--fa fa-trash-alt fa-w-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M268 416h24a12 12 0 0 0 12-12V188a12 12 0 0 0-12-12h-24a12 12 0 0 0-12 12v216a12 12 0 0 0 12 12zM432 80h-82.41l-34-56.7A48 48 0 0 0 274.41 0H173.59a48 48 0 0 0-41.16 23.3L98.41 80H16A16 16 0 0 0 0 96v16a16 16 0 0 0 16 16h16v336a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128h16a16 16 0 0 0 16-16V96a16 16 0 0 0-16-16zM171.84 50.91A6 6 0 0 1 177 48h94a6 6 0 0 1 5.15 2.91L293.61 80H154.39zM368 464H80V128h288zm-212-48h24a12 12 0 0 0 12-12V188a12 12 0 0 0-12-12h-24a12 12 0 0 0-12 12v216a12 12 0 0 0 12 12z"></path></svg>
                         </span>
                     </p>
@@ -2514,6 +2514,7 @@
                     "toggle card": toggleCardEvent,
                     "set new photo status": newPhotoEvent,
                     "sort": sortEvent,
+                    "device action": controlDeviceAction,
                     "filter": filterCards,
                     "set baits": setBaits, // Depricated
                     "set baitTypes": setBaitTypes,
@@ -2657,6 +2658,7 @@
         var currentStationId;
         var adjacentStationIds;
         var showActive = true;
+        var deviceControlToggle = 0;
 
         Date.prototype.addDays = function (days) {
             var date = new Date(this.valueOf());
@@ -2735,7 +2737,7 @@
                 .parentNode
                 .parentNode
                 .querySelector("[data-info='btnInfo']")
-                .setAttribute("class", "tabBtn");
+                .setAttribute("class", "tabBtn"); 
         }
 
         function OpenDeviceInfo(event) {
@@ -2760,7 +2762,7 @@
                 .parentNode
                 .parentNode
                 .querySelector("[data-info='btnInfo']")
-                .setAttribute("class", "tabBtnSelected");
+                .setAttribute("class", "tabBtnSelected"); 
             event
                 .currentTarget
                 .parentNode
@@ -3121,7 +3123,9 @@
         }
 
         function toggleCardEvent(packet) {
-
+            //deviceControlToggle = packet.value[0];
+            console.log("The packet received " + JSON.stringify(packet, null, 4));
+            //var id = packet.value[1];
             var id = packet.value;
             if (typeof id !== "string") {
                 return;
@@ -3522,31 +3526,38 @@
         }
 
 
-        function SetDeviceErrors(event)
-        {
-             
-            if(cardSelected === undefined || cardSelected === null)
-            {
+        function SetDeviceErrors(event) {
+
+            if (cardSelected === undefined || cardSelected === null) {
                 return;
             }
             Errors = {};
             var errorParent = cardSelected.querySelector("[data-info='ErrorSection']");
             errorParent.innerHTML = "";
-            event.value.forEach(x=>{
-                
+            var errorEnable = event.value.pop();
+            //var dev = document.getElementById("devAction"); //.style.setProperty("display", "none");
+            //dev.innerHTML = "";
+            //this.parentElement.querySelector("[data-info='devAction']").style.setProperty("display", "none");
+            //console.log(" The value received is " + errorEnable + " type is  " + typeof errorEnable);
+            event.value.forEach(x => {
+
                 var template = cardSelected.querySelector("[data-component='ErrorTempalte']").cloneNode(true);
-                template.style.setProperty("display","");
+                template.style.setProperty("display", "");
                 var date = new Date(parseInt(x.CreatedAt));
                 var formated = formatDate(date, "dd/MM/yy H:mm");
                 template.querySelector("[data-value='errorDate']").innerHTML = formated + ":";
                 template.querySelector("[data-value='ErrorDescription']").innerHTML = x.Description;
-                template.setAttribute("data-value",x.IssueId);
+
+                if (errorEnable === 0) {
+                    template.querySelector("[data-value='errorIcon']").setAttribute("hidden", "hidden");
+                }
+                template.setAttribute("data-value", x.IssueId);
                 errorParent.appendChild(template);
                 Errors[x.IssueId] = {
-                    Id : x.IssueId,
+                    Id: x.IssueId,
                     TroubleshootingHelp: x.TroubleshootingHelp,
                     TransactionId: x.Id
-                }; 
+                };
             });
         }
 
@@ -3879,6 +3890,21 @@
 
             ActiveCardProduct = DefaultActiveCardProduct;
             CancelBait(event);
+        }
+
+        function controlDeviceAction(event){
+
+            deviceControlToggle = event.value;
+
+           // if(deviceControlToggle == 0) {
+                //document.getElementById("devAction").remove();
+                 //document.getElementById("devAction").style.setProperty("display", "none"); //btnActions querySelector("[data-section='clearScreen']").style.setProperty("display", "none");
+                //document.getElementById("devInfo").style.setProperty("width", "100%"); //.style.setProperty("display", "none");
+            //devInfo.
+           // }
+            
+
+
         }
 
         // End form Add Bait 
@@ -4774,16 +4800,17 @@
          * @param event
          */
         function toggleClearScreen(event) {
+            
             var clearScreen = event.querySelector("[data-section='clearScreen']");
             if (clearScreen.style.display == "none") {
                 if (cardSelected) {
                     cardSelected.classList.remove("openCardBorder");
                     cardSelected.querySelector("[data-section='clearScreen']").style.setProperty("display", "none");
                     cardSelected.querySelector("[data-section='formScreen']").style.setProperty("display", "none");
-                    //   cardSelected.querySelector("[data-button='clearButton']").style.setProperty("display", "");
+                   
                 }
 
-                clearScreen.style.setProperty("display", "");
+                clearScreen.style.setProperty("display", ""); 
                 cardSelected = clearScreen.parentNode.parentNode;
                 try {
                     setTimeout(ToggleChildPosition, 200);
@@ -4803,44 +4830,77 @@
                 BindChartData(rowState[id].DeviceNumber);
 
                 var deviceType = rowState[id].DeviceType;
-                clearScreen.querySelector("[data-section='Actions']").style.setProperty("display", "");
-                cardSelected.querySelector("[data-section='DeviceInfo']").style.setProperty("display", "none");
-
-                cardSelected.querySelector('[data-info="chart"]').style.setProperty("display", "");
-                cardSelected.querySelector('[data-info="lineChart"]').style.setProperty("display", "none");
-                _selectedDay = 0;
-                _IsGraphOpened = false;
-                _ToggledChartType = true;
-                var toggle = cardSelected.querySelector('[data-value="SelectElement"]');
-                cardSelected.querySelector('[data-value="checkbox"]').checked = true;
-                toggle.innerHTML = "Taken";
-                toggle.setAttribute("class", "activeToggle");
-                cardSelected.querySelector('[data-info="chart"]').style.setProperty("display", "none");
-
-                var name = rowState[id].DeviceNumber;
-                fw.fireEvent("ChildCardToggled", name);
 
 
+                if(deviceControlToggle === 0) {
+                 
+                
+                    cardSelected.querySelector("[data-info='btnActions']").style.display = 'none';
+                    cardSelected.querySelector("[data-info='btnInfo']").style.width = '100%';
+                    cardSelected.querySelector("[data-info='btnInfo']").click();
 
-                if (deviceType === "1") {
+                    cardSelected.querySelector("[data-info='btnInfo']").disabled = true;
 
-                    var ordinary = event.querySelector("[data-section='OrdinaryDevice']");
-                    var smart = event.querySelector("[data-section='SmartDevice']");
-                    smart.style.setProperty("display", "");
-                    ordinary.style.setProperty("display", "none");
+        
+                    clearScreen.querySelector("[data-section='Actions']").style.setProperty("display", "none");
+                    cardSelected.querySelector("[data-section='DeviceInfo']").style.setProperty("display", "");
+                    cardSelected.querySelector("[data-info='btnInfo']").setAttribute("class", "tabBtnSelected");
+                    //devInfo.click();
+                    fw.fireEvent("ChangeBait", { ID: id, form: form });
+                    
 
+                   
+                        
+
+                } else {
+                    //document.querySelector("[data-section='btnActions']").style.setProperty("display", "none");
+                    cardSelected.querySelector("[data-info='btnActions']").setAttribute("class", "tabBtnSelected");
+                    cardSelected.querySelector("[data-info='btnInfo']").setAttribute("class", "tabBtn");
+                    clearScreen.querySelector("[data-section='Actions']").style.setProperty("display", "");
+                    cardSelected.querySelector("[data-section='DeviceInfo']").style.setProperty("display", "none");
+
+
+                    cardSelected.querySelector('[data-info="chart"]').style.setProperty("display", "");
+                    cardSelected.querySelector('[data-info="lineChart"]').style.setProperty("display", "none");
+                    _selectedDay = 0;
+                    _IsGraphOpened = false;
+                    _ToggledChartType = true;
+                    var toggle = cardSelected.querySelector('[data-value="SelectElement"]');
+                    cardSelected.querySelector('[data-value="checkbox"]').checked = true;
+                    toggle.innerHTML = "Taken";
+                    toggle.setAttribute("class", "activeToggle");
+                    cardSelected.querySelector('[data-info="chart"]').style.setProperty("display", "none");
+
+                    var name = rowState[id].DeviceNumber;
+                    fw.fireEvent("ChildCardToggled", name);
+
+
+
+                    if (deviceType === "1") {
+
+                        var ordinary = event.querySelector("[data-section='OrdinaryDevice']");
+                        var smart = event.querySelector("[data-section='SmartDevice']");
+                        console.log("Inside device 1");
+                        smart.style.setProperty("display", "");
+                        ordinary.style.setProperty("display", "none");
+
+                    }
+                    else {
+                        console.log("Inside not device");
+                        var ordinary = event.querySelector("[data-section='OrdinaryDevice']");
+                        var smart = event.querySelector("[data-section='SmartDevice']");
+                        smart.style.setProperty("display", "");
+                        ordinary.style.setProperty("display", "none");
+                    }
+                    console.log("Trying to toggle the selected card in if again");
+                    cardSelected.querySelector("[data-info='btnActions']").setAttribute("class", "tabBtnSelected");
+                    cardSelected.querySelector("[data-info='btnInfo']").setAttribute("class", "tabBtn");
+                    fw.fireEvent("ChangeBait", { ID: id, form: form });
                 }
-                else {
-                    var ordinary = event.querySelector("[data-section='OrdinaryDevice']");
-                    var smart = event.querySelector("[data-section='SmartDevice']");
-                    smart.style.setProperty("display", "");
-                    ordinary.style.setProperty("display", "none");
-                }
-                cardSelected.querySelector("[data-info='btnActions']").setAttribute("class", "tabBtnSelected");
-                cardSelected.querySelector("[data-info='btnInfo']").setAttribute("class", "tabBtn");
-                fw.fireEvent("ChangeBait", { ID: id, form: form  });
 
             } else {
+                //document.getElementById("devAction").style.setProperty("display", "none"); //btnActio
+
                 clearScreen.style.setProperty("display", "none");
                 if (cardSelected) {
                     cardSelected.querySelector("[data-section='formScreen']").style.setProperty("display", "none");
@@ -4853,7 +4913,12 @@
 
                 }
             }
+            
+            
+            
         }
+
+
 
         function ToggleChildPosition() {
 

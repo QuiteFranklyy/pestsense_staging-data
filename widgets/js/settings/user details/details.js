@@ -344,7 +344,6 @@
 Script.on("load", load);
 
 function load() {
-    console.log("HEY WE MADE A CHANGE YOU BASTARD");
 	var deleteAccountIcon = Script.getWidget("deleteAccountIcon");
 	deleteAccountIcon.subscribe("pressed", async function () {
 		var form = Script.getFormByKey("details");
@@ -482,6 +481,10 @@ async function save() {
 	let res = await Client.confirm("Are you sure you would like to save these changes?", "Save User Information", {confirmText: "Save"})
     if (res) {
         var formData = Script.getFormByKey("details");
+        console.log(JSON.stringify(formData,null,4));
+        if (formData.accessrole === "no role"){
+            formData.accessrole = 0;
+        }
 
         if (formData === null) return;
         formData.status = formData.status === true ? 1 : 0;
@@ -578,7 +581,7 @@ function updateForm(username) {
     // rename the accessrole to be the text value instead of the ID
     var accessRoleId = record.accessrole;
 	console.log("Access role id: " + accessRoleId + " TYPE: " + typeof accessRoleId);
-    if (accessRoleId === undefined || accessRoleId === null || accessRoleId === "") {
+    if (accessRoleId === undefined || accessRoleId === null || accessRoleId === "" || accessRoleId === "no role") {
         // hasn't been set, don't try to find a name for it
         console.log("No access role was set for the user on load");
 		
@@ -586,8 +589,8 @@ function updateForm(username) {
         Script.setForm("details", record);
 		
 		// if it was set to -1, then it was set to no role previously
-    } else if (accessRoleId === -1) {
-		console.log("access role was set to -1");
+    } else if (accessRoleId === 0) {
+		console.log("access role was set to 0");
 		record.accessrole = "no role";
         Script.setForm("details", record);
 		
@@ -619,7 +622,7 @@ function populateAllUserAccessRoles() {
     	// Populate the Access Roles dropdown
 	var defaultRoleData = {
 		"text": "no role",
-		"value": -1
+		"value": 0
 	};
 	
     // set the filter to read the user roles table
