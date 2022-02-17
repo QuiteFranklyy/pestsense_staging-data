@@ -43,6 +43,7 @@
             position: absolute;
             top: 85%;
             background: #f2f2f2;
+            align-items: center;
         }
 
         .row {
@@ -163,6 +164,12 @@
             width: 25px;
             height: 25px;
         }
+        .textContainer {
+            text-overflow: ellipsis;
+            max-width: 68px;
+            white-space: nowrap;
+            overflow: hidden;
+        }
     </style>
 </head>
 
@@ -281,6 +288,7 @@
         var draggableGrid = document.getElementById("componentGrid");
 
         var _DragEnabled = true;
+        var _DeleteEnabled = false;
         var activeColor = "green";
         var deactiveColor = "Black";
 
@@ -316,6 +324,7 @@
         function setMode(eventData) {
             if (eventData.value === "true") {
                 _DragEnabled = false;
+                interact('.draggble').draggable(false);
                 // document.getElementById("mapArea").setAttribute("class", "row col-12");
                 document.getElementById("outer-dropzone").style.setProperty("height", "100%");
                 document.getElementById("ImageHolder").style.setProperty("height", "100%");
@@ -323,6 +332,7 @@
             }
             else {
                 _DragEnabled = true;
+                interact('.draggble').draggable(true);
                 // document.getElementById("mapArea").setAttribute("class", "row");
                 document.getElementById("outer-dropzone").style.setProperty("height", "85%");
                 document.getElementById("ImageHolder").style.setProperty("height", "85%");
@@ -351,7 +361,7 @@
                         populateIcons(props);
                         break;
                     case 4:
-                        draggableGrid.innerHTML = "";
+                        draggableGrid.parentElement.style.display = "none";
                         _DragEnabled = false;
                         document.getElementById("outer-dropzone").style.setProperty("height", "100%");
                         document.getElementById("ImageHolder").style.setProperty("height", "100%");
@@ -387,7 +397,24 @@
             if (source.length > 0) {
                 // icons were in fact added
                 // create an input field to manually override the next icon number
-                draggableGrid.appendChild(getInputIcon("numberInput", "number", "40px", () => iconCounters = +document.getElementById("numberInput").value, 1));
+                draggableGrid.appendChild(getInputIcon("numberInput", "number", "40px", () => iconCounters = +document.getElementById("numberInput").value, iconCounters));
+                // create an delete icon to remove items from map
+                let bin = document.createElement('div');
+                bin.innerHTML = `<svg id="deleteMapItemsBin" version="1.0" xmlns="http://www.w3.org/2000/svg" onclick="deleteMapItems(this)" width="24" height="24" viewBox="0 0 24.000000 24.000000" preserveAspectRatio="xMidYMid meet" style="visibility: inherit; margin-left: 1rem;">
+					<g transform="translate(0.000000,24.000000) scale(0.100000,-0.100000)" fill="red" stroke="none">
+                        <path d="M74 225 c-4 -8 -17 -15 -31 -15 -15 0 -23 -5 -21 -12 6 -18 190 -18
+                        196 0 2 7 -6 12 -21 12 -14 0 -27 7 -31 15 -3 10 -19 15 -46 15 -27 0 -43 -5
+                        -46 -15z m76 -5 c0 -5 -13 -10 -30 -10 -16 0 -30 5 -30 10 0 6 14 10 30 10 17
+                        0 30 -4 30 -10z"></path>
+                        <path d="M35 93 c4 -43 9 -81 12 -85 6 -10 140 -10 146 0 3 4 8 42 12 85 l7
+                        77 -92 0 -92 0 7 -77z m54 -11 c-1 -47 -3 -52 -9 -27 -12 45 -12 97 0 90 6 -3
+                        9 -32 9 -63z m41 8 c0 -33 -4 -60 -10 -60 -6 0 -10 27 -10 60 0 33 4 60 10 60
+                        6 0 10 -27 10 -60z m31 -25 l-9 -40 -1 56 c-1 31 2 59 7 63 11 12 14 -35 3
+                        -79z"></path>
+					</g>
+				</svg>`;
+                bin = bin.firstChild;
+                draggableGrid.appendChild(bin);
             }
         }
 
@@ -397,7 +424,7 @@
         function addLabelIcon() {
             var labelIcon = `<div data-label="${DEFAULT_TEXT_LABEL}" style="width:100%; height:100%; ">
                                 <div style="position: relative; text-align:center;">
-                                    <div class="colorContainer" style="display:block; background-color: red; width: 50px; height: 50px;">
+                                    <div class="colorContainer" style="display:block; background-color: #343a40; width: 50px; height: 50px;">
                                         <div class="textContainer" position: absolute; style="top: 2px; width: 100%; text-align:center; color: white; font-weight:600;"></div>
                                     </div>
                                 </div>
@@ -501,14 +528,46 @@
 
         //#endregion
 
+        function deleteMapItems() {
+            if(_DeleteEnabled){
+                _DeleteEnabled = false;
+                interact('.draggble').draggable(true);
+                document.getElementById('deleteMapItemsBin').style.setProperty("border", "");
+            } else {
+                _DeleteEnabled = true;
+                interact('.draggble').draggable(false);
+                document.getElementById('deleteMapItemsBin').style.setProperty("border", "solid black 2px");
+            }
+        }
+
 
         //#region Functions
         function EnableDrag(event) {
 
-            if (!_DragEnabled) {
+            if(_DeleteEnabled){
+                event.remove();
+                const mapItems = [];
+                for (var key in items) {
+                    if(key !== event.id) {
+                        mapItems[key] = items[key];
+                    }
+                }
+                items = mapItems;
+                fw.fireEvent("map source updated", mapItems);
                 return;
             }
 
+            if (!_DragEnabled) {
+                return;
+            }
+            let colorContainer = event.getElementsByClassName("colorContainer");
+            for (var i = 0; i < colorContainer.length; i++) { 
+                colorContainer[i].style.setProperty("border", "");
+            }
+            let eventIconElements = event.getElementsByTagName("img");
+            for (var i = 0; i < eventIconElements.length; i++) { 
+                eventIconElements[i].style.setProperty("border", "");
+            }
             ActiveAddElement = event.cloneNode(true);
             // Remove border from all icon elements
             let iconElements = componentGrid.getElementsByTagName("img");
@@ -560,6 +619,7 @@
             addingElement.setAttribute("id",addedElements)
             addingElement.setAttribute("class", "draggble");
             addingElement.setAttribute("class","draggble ResizableIcon");
+            addingElement.addEventListener("click", function(e){ e.stopPropagation() });
             map.append(addingElement);
 
             var xC = (x / map.clientWidth) * 100;
@@ -760,6 +820,7 @@
                             iconCounters = parseInt(current.label) + 1
                         }
                         template.getElementsByClassName("textContainer")[0].innerHTML = current.label;
+                        const inpt = document.getElementById("numberInput");
                         document.getElementById("numberInput").value = iconCounters;
                         template.style.setProperty("display","none");
                         addingElementObj = template.getElementsByTagName("img")[0];
@@ -770,6 +831,7 @@
                     template.setAttribute("id",addedElements)
                     template.setAttribute("class", "draggble");
                     template.setAttribute("class","draggble ResizableIcon");
+                    template.addEventListener("click", function(e){ e.stopPropagation() });
 
                     map.append(template);
                     template.setAttribute("id", current.uid);

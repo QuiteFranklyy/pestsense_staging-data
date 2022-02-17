@@ -382,8 +382,6 @@
                 fw.func("HIDEWIDGET", "Graph#4");
                 fw.func("HIDEWIDGET", "Graph#5");
                 fw.func("SHOWWIDGET", "DeviceLevelFoorMap");
-                fw.func("SHOWWIDGET", "SaveFloorMap");
-                // fw.func("PUBLISHCLIENT", "ResizeDeviceLevelFoorMap", { width: 700, height: 450 });
             }
             else {
                 eventData.querySelector('[data-value="floorPlanCheckbox"]').checked = false;
@@ -461,6 +459,13 @@
             toggle.setAttribute("class", "inactiveToggle");
             fw.fireEvent("EditCard", "false");
         }
+
+        async function DeleteFloorPlan(element) {
+            const res = await Client.confirm('Do you want to delete Floor Map.');
+            if(res)
+                fw.func("PUBLISHCLIENT", "delete-floor-map", true);
+        }
+
         /**
         * Assigns an incoming html template over the generic widget as main view structure
         *
