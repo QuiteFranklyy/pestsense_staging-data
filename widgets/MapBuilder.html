@@ -777,8 +777,8 @@
         });
         window.addEventListener('touchmove', e => {
 
-            defX = e.x - 26;
-            defY = e.y - 15;
+            defX = e.touches[0].pageX - 26;
+            defY = e.touches[0].pageY - 15;
 
         });
 
