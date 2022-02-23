@@ -1266,10 +1266,16 @@
 
 
 
-    .iconError {
+    .iconDeviceError {
     position: absolute;
     left: 3px;
     top: -10px;
+    }
+
+    .iconCommunicationError {
+        position: absolute;
+        left: 19px;
+        top: -10px;
     }
 
     .PositionToggle {
@@ -1684,7 +1690,7 @@
                         <!--Dummy Trap Icon start-->
                         <div style="border-right: 0.98px solid #9b9b9bff;width:99%;">
                             <span data-value="DeviceNumber" class="PositionNumber">--</span>
-                            <div class="iconError" data-info="errorStatus" style="display:none">
+                            <div class="iconDeviceError" data-info="deviceErrorStatus" style="display:none">
 
                                 <svg xmlns:dc="http://purl.org/dc/elements/1.1/"
                                      xmlns:cc="http://creativecommons.org/ns#"
@@ -1731,6 +1737,11 @@
                                               style="fill:#d74423;fill-opacity:1;stroke:#d74423;stroke-width:2.66488314;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
                                     </g>
                                 </svg>
+                            </div>
+                            <div class="iconCommunicationError" data-info="communicationErrorStatus" style="display:none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-wifi-off" viewBox="0 0 16 16">
+                                    <path d="M10.706 3.294A12.545 12.545 0 0 0 8 3C5.259 3 2.723 3.882.663 5.379a.485.485 0 0 0-.048.736.518.518 0 0 0 .668.05A11.448 11.448 0 0 1 8 4c.63 0 1.249.05 1.852.148l.854-.854zM8 6c-1.905 0-3.68.56-5.166 1.526a.48.48 0 0 0-.063.745.525.525 0 0 0 .652.065 8.448 8.448 0 0 1 3.51-1.27L8 6zm2.596 1.404.785-.785c.63.24 1.227.545 1.785.907a.482.482 0 0 1 .063.745.525.525 0 0 1-.652.065 8.462 8.462 0 0 0-1.98-.932zM8 10l.933-.933a6.455 6.455 0 0 1 2.013.637c.285.145.326.524.1.75l-.015.015a.532.532 0 0 1-.611.09A5.478 5.478 0 0 0 8 10zm4.905-4.905.747-.747c.59.3 1.153.645 1.685 1.03a.485.485 0 0 1 .047.737.518.518 0 0 1-.668.05 11.493 11.493 0 0 0-1.811-1.07zM9.02 11.78c.238.14.236.464.04.66l-.707.706a.5.5 0 0 1-.707 0l-.707-.707c-.195-.195-.197-.518.04-.66A1.99 1.99 0 0 1 8 11.5c.374 0 .723.102 1.021.28zm4.355-9.905a.53.53 0 0 1 .75.75l-10.75 10.75a.53.53 0 0 1-.75-.75l10.75-10.75z"/>
+                                  </svg>
                             </div>
                             <div class="deviceIcon">
                                 <svg xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -2589,6 +2600,11 @@
         var cardTemplate = document.getElementById("cardTemplate");
         var cardChildTemplate = document.getElementById("cardChildTemplate");
 
+        // enum type object to remove magic numbers for card state - State is the red, yellow, green, grey colour of the card
+        const CardState = {UrgentRed: 4, ImportantYellow: 3, NormalGreen: 2, DeactivatedGrey: 1, Unassigned: 0};
+        // status is whether the device is enabled or disabled. 
+        const CardStatus = {Disabled: 0, Enabled: 1};
+
         var weekday = new Array(7);
         weekday[1] = "Mon";
         weekday[2] = "Tue";
@@ -2790,6 +2806,17 @@
             if (!card.parentElement.parentElement.classList.contains('alertBorder')) {
                 //card.parentElement.parentElement.classList.add("newPhotoBorder");
             }
+        }
+
+
+         /**
+         * checks if priority2 is higher than priority1. Returns true or false
+         *
+         * @param priority1
+         * @param priority2
+         */
+        function isHigherUrgency(priority1, priority2) {
+            return priority2 < priority1;
         }
 
         /**
@@ -3050,78 +3077,6 @@
             }
         }
 
-        function ShowMap(event) {
-
-            var id;
-            if (cardSelected === undefined || cardSelected === null) {
-                id = event.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.parentNode.getAttribute("data-id");
-            }
-            else {
-                id = cardSelected.parentNode.getAttribute("data-id");
-            }
-
-            var currentItem = ActiveDatasource[id]
-            var popupTemplate = Script.getScriptElement("popup");
-            // popupTemplate.querySelector("[data-value='title']").innerHTML = currentItem[16];
-            var icon = popupTemplate.querySelector("[data-value='icon']");
-            var state = rowState[id].State;
-            var name = rowState[id].DeviceNumber;
-            var sideStatus = popupTemplate.querySelector("[data-info='SideBarStatus'");
-
-            if (state === 3) {
-                sideStatus.setAttribute("class", "normalCardBorder SideBarRed")
-
-            }
-            else if (state === 2) {
-                sideStatus.setAttribute("class", "normalCardBorder SideBarGreen")
-            }
-            else if (state === 4) {
-                sideStatus.setAttribute("class", "normalCardBorder SideBarYellow")
-            }
-            else {
-                sideStatus.setAttribute("class", "normalCardBorder SideBarGreen")
-            }
-
-            popupTemplate.querySelector("[data-value='DeviceNumber']").innerHTML = name;
-            popupTemplate.querySelector("[data-value='BaitName']").innerHTML = "Bait Type: " + currentItem[23] + " " + currentItem[24];
-
-
-            // popupTemplate.querySelector("[data-value='status']").innerHTML = "Device Status: " + currentItem[1];
-            //   popupTemplate.querySelector("[data-value='emptyBy']").innerHTML = "Empty By: " + currentItem[14];
-            popupTemplate.querySelector("[data-value='battery']").innerHTML = "Battery level: " + currentItem[21] + "%";
-            var location = currentItem[10];
-            var coords = location.split(',');
-            var bindingItem = {
-                "title": currentItem[0],
-                "loc": {
-                    "lat": parseFloat(coords[0]),
-                    "lng": parseFloat(coords[1])
-                },
-                "label": currentItem[0],
-                "content": popupTemplate,
-                "id": name
-            };
-            var eventData = {
-                "value": bindingItem
-            }
-            var focusData = {
-
-                "value": {
-                    lng: parseFloat(coords[1]),
-                    lat: parseFloat(coords[0])
-                }
-            };
-            fw.func("PUBLISHCLIENT", "CUSTOM", eventData);
-            fw.func("PUBLISHCLIENT", "set-map", focusData);
-
-
-
-            //  fw.func("PUBLISHCLIENT", "POPZOOM", zoompacket);
-            fw.func("JUMPSCREEN", "Map");
-
-            //    fw.func("PUBLISHCLIENT", "POPZOOM", zoompacket);
-        }
-
         function toggleCardEvent(packet) {
             //deviceControlToggle = packet.value[0];
             console.log("The packet received " + JSON.stringify(packet, null, 4));
@@ -3238,7 +3193,7 @@
             // get trap ID
             var id = cardSelected.parentNode.parentNode.getAttribute("data-id");
             // build sensacollection of card
-            setState(id, 1);
+            setState(id, CardState.DeactivatedGrey);
             fw.fireEvent("deactivate trap", rowState[id]);
 
         }
@@ -3421,7 +3376,7 @@
 
             //rowElems[id].querySelector("[data-value='SignalStatus']").innerHTML = "Rodent Activity";
             //      rowElems[id].querySelector("[data-value='Status']").innerHTML = "Manual Device triggered";
-            rowState[id]["sstatus"] = 4;
+            setState(id, CardState.UrgentRed);
 
             rowElems[id].querySelector("[data-value='SetTimeFormatted']").innerHTML = d[1] + "<br />" + d0;
             //  rowElems[id].querySelector("[data-value='updateTimeFormatted']").innerHTML = d[1] + "<br />" + d0;
@@ -3442,10 +3397,10 @@
             dbVal[val] = {
                 "Id": val,
                 "SignalStatus": "Rodent Activity.",
-                "Status": "Rodent Activity",
+                "Status": CardStatus.Enabled,
                 "BaitRate": baitThreshold - 1,
                 "Hours": triggerTresholdUpper + 1,
-                "State": 3,
+                "State": CardState.UrgentRed,
                 "SetTime": new Date(),
                 "SignalStrenght": 0
             };
@@ -3453,10 +3408,10 @@
             Database.updateRecord("Rodent", "Devices", dbVal, function (data) {
 
             });
-            setState(id, 3);
+            setState(id, CardState.UrgentRed);
             sortEvent({
                 value: [
-                    "sstatus",
+                    "State",
                     "false"
                 ]
             });
@@ -3650,7 +3605,7 @@
                 }];
                 Database.cudParam("Rodent","Devices",paramUpdateDevices, function (data){
                 });
-                cardSelected.querySelector("[data-info='errorStatus']").style.setProperty("display", "none");
+                cardSelected.querySelector("[data-info='deviceErrorStatus']").style.setProperty("display", "none");
                 
             }
         }
@@ -3883,7 +3838,7 @@
             ChangeHeaderValue();
             sortEvent({
                 value: [
-                    "sstatus",
+                    "State",
                     "false"
                 ]
             });
@@ -3923,7 +3878,7 @@
                 "Id": val,
                 "Hours": "0",
                 // "BaitRate": baitThresholdUpper + 1,
-                "Status": "Active",
+                "Status": CardStatus.Enabled
                // "UpdateTime": new Date()
 
             };
@@ -3939,7 +3894,7 @@
             rowElems[id].querySelector("[data-info='UnderlineSignal']").setAttribute("class", "UnderlineGreen");
             sortEvent({
                 value: [
-                    "sstatus",
+                    "State",
                     "false"
                 ]
             });
@@ -3994,7 +3949,7 @@
                 setDeviceStatus(id);
                 sortEvent({
                     value: [
-                        "sstatus",
+                        "State",
                         "false"
                     ]
                 });
@@ -4026,7 +3981,7 @@
             d0 = d0.join("/");
 
             rowElems[id].querySelector("[data-value='SetTimeFormatted']").innerHTML = d[1] + "<br />" + d0;
-            setState(id, 1);
+            setState(id, CardState.DeactivatedGrey);
 
             areaReport.push({
                 "CardName": id,
@@ -4036,9 +3991,9 @@
             var dbVal = {};
             dbVal[val] = {
                 "Id": val,
-                "State": 1,
+                "State": CardState.DeactivatedGrey,
                 "BaitRate": 100,
-                "Status": "Device Disabled",
+                "Status": CardStatus.Disabled,
                 "Alert": "",
                 "EmptyBy": new Date(),
                 "SignalStatus": "",
@@ -4062,7 +4017,7 @@
             setDeviceStatus(id);
             sortEvent({
                 value: [
-                    "sstatus",
+                    "State",
                     "false"
                 ]
             });
@@ -4217,7 +4172,7 @@
                 "StationId": cardSelected.querySelector("[data-info='stationInput']").value,
                 "TriggerTime" : new Date().getTime(),
                 "Owner": user,
-                "Status": "1"
+                "Status": CardStatus.Enabled
             };
             // Update a record's values, Fails if the record does not exist.
             Database.updateRecord("Rodent", "Devices", dbVal, function (data) {
@@ -4268,7 +4223,7 @@
                 "Location":null,
                 "UpdateTime": null,
                 "Hours":null,
-                "State"	:"1",
+                "State"	: CardState.DeactivatedGrey,
                 "StationId": null,
                 "Technician":null,
                 "BaitRate":null,
@@ -4310,7 +4265,7 @@
                 "L2":null,
                 "BaitEnalbed": "1",
                 "CompanyProductId":null,
-                "Status": "0"
+                "Status": CardStatus.Disabled
             };
             // Update a record's values, Fails if the record does not exist.
             Database.updateRecord("Rodent", "Devices", dbVal, function (data) {
@@ -4483,7 +4438,7 @@
             }
             else
             {
-                setState(getRow["rowId"],2);
+                setState(getRow["rowId"],CardState.NormalGreen);
                 getRow.Card.querySelector("[data-info='UnderlineBait']").setAttribute("class","UnderlineGray");
                 getRow.Card.querySelector("[data-info='UnderlineBaitTaken']").setAttribute("class","UnderlineGray");
                 getRow.Card.querySelector("[data-info='UnderlineHours']").setAttribute("class","UnderlineGray");
@@ -4606,7 +4561,7 @@
 
         }
         /**
-         * Sets the card state to either triggered (2), set (1), or deactivated (0)
+         * 1: Grey, deactivated. 2: green, activated. 3: yellow, important 4: red, urgent
          *
          * @param id - id of the card to be modified.
          * @param value {number} - state to change the card to.
@@ -4630,7 +4585,7 @@
             //icon.classList.remove("greyIcon");
 
             switch (value) {
-                case 1:
+                case CardState.DeactivatedGrey:
                     sideStatus.setAttribute("class", "normalCardBorder SideBarGray")
 
                     var trapTypeSelect = card.querySelector("[data-select='trapType']");
@@ -4641,14 +4596,14 @@
                         id:
                         {
                             "Id": id,
-                            "State": 1,
+                            "State": CardState.DeactivatedGrey,
 
                         }
                     }, function (data) {
 
                     });
                     break;
-                case 2:
+                case CardState.NormalGreen:
                     sideStatus.setAttribute("class", "normalCardBorder SideBarGreen");
                     var trapTypeSelect = card.querySelector("[data-select='trapType']");
 
@@ -4659,14 +4614,14 @@
                         id:
                         {
                             "Id": id,
-                            "State": 2,
+                            "State": CardState.NormalGreen,
 
                         }
                     }, function (data) {
 
                     });
                     break;
-                case 3:
+                case CardState.UrgentRed:
                     sideStatus.setAttribute("class", "normalCardBorder SideBarRed")
                     areaReport.push({
                         "CardName": id,
@@ -4677,7 +4632,7 @@
                         id:
                         {
                             "Id": id,
-                            "State": 3,
+                            "State": CardState.UrgentRed,
 
                         }
                     }, function (data) {
@@ -4696,12 +4651,12 @@
                     }
 
                     break;
-                case 4:
+                case CardState.ImportantYellow:
                     Database.saveRecordParam("Rodent", "Devices", {
                         id:
                         {
                             "Id": id,
-                            "State": 4,
+                            "State": CardState.ImportantYellow,
 
                         }
                     }, function (data) {
@@ -5056,13 +5011,14 @@
                     card.style.setProperty("display", "");
                     rowElems[rowKeys[i]] = card;
                     // Add to table.
-                    AddCardChild(rowKeys[i], card, cardSelectedParent, collection.data[parseInt(rowKeys[i])][1]? collection.data[parseInt(rowKeys[i])][1] : '0');
+                    var statusIndex = collection._columnMap.Status;
+                    AddCardChild(rowKeys[i], card, cardSelectedParent, collection.data[parseInt(rowKeys[i])][statusIndex]? collection.data[parseInt(rowKeys[i])][statusIndex] : '0');
                     rowState[rowKeys[i]] = {};
                     rowState[rowKeys[i]]["rowId"] = rowKeys[i];
 
 
                     if (collection.headers.indexOf("State") === -1) {
-                        setState(rowKeys[i], 0);
+                        setState(rowKeys[i], CardState.Unassigned);
                     }
 
                 }
@@ -5257,8 +5213,8 @@
                                 break;
                             case "State":
                                 // Set correct color
+                                // unsure if this is needed, set device state seems to do this as well, and is run at the end of this function
                                 setState(rowKeys[i], parseInt(collection.data[rowKeys[i]][j]));
-                                rowState[rowKeys[i]]["State"] = collection.data[rowKeys[i]][j];
 
                                 break;
                             case "BaitTypeName":
@@ -5323,40 +5279,43 @@
                                 }
                                 break;
                                 
-                            // case "CommunicationError":
-                            //     // TODO remove this case once ErrorCodeFlag has been fully implemented
-                            //     if (collection.data[rowKeys[i]][j] !== "" ) {
-                                      
-                            //         if (collection.data[rowKeys[i]][j] === "1" && collection.data[rowKeys[i]][20] === "1") {
-                            //             card.querySelector("[data-info='errorStatus']").style.setProperty("display", "");
-                            //             rowState[rowKeys[i]]["DeviceError"] = true;
+                                case "CommunicationError":
+                                // TODO remove this case once ErrorCodeFlag has been fully implemented - presumably damien did this, sebastian is now putting it back in.
+                                // communication error and error code flag have been modified on the app server temporarily to
+                                // fix an issue with the communication error not displaying. These changes will be ovewritten
+                                // on the next production push
+                                if (collection.data[rowKeys[i]][j] !== "" ) {                                      
+                                    if (collection.data[rowKeys[i]][j] === "1" && collection.data[rowKeys[i]][20] === "1") {
+                                        card.querySelector("[data-info='communicationErrorStatus']").style.setProperty("display", "");
+                                        rowState[rowKeys[i]]["CommunicationError"] = true;
 
-                            //         }
-                            //         else if (collection.data[rowKeys[i]][j] === "0" && collection.data[rowKeys[i]][20] === "1") {
-                            //             card.querySelector("[data-info='errorStatus']").style.setProperty("display", "none");
-                            //         }
-                            //         else if(collection.data[rowKeys[i]][j] === "2")
-                            //         {
-                            //             card.querySelector("[data-info='errorStatus']").style.setProperty("display", "");
-                            //             rowState[rowKeys[i]]["DeviceError"] = true;
-                            //         }
-                            //     }
-                            //     else {
-                            //         card.querySelector("[data-info='errorStatus']").style.setProperty("display", "none");
-                            //         rowState[rowKeys[i]]["DeviceError"] = false;
-                            //     }
-                            //     break;
+                                    }
+                                    else if (collection.data[rowKeys[i]][j] === "0" && collection.data[rowKeys[i]][20] === "1") {
+                                        card.querySelector("[data-info='communicationErrorStatus']").style.setProperty("display", "none");
+                                    }
+                                    else if(collection.data[rowKeys[i]][j] === "2")
+                                    {
+                                        card.querySelector("[data-info='communicationErrorStatus']").style.setProperty("display", "");
+                                        rowState[rowKeys[i]]["CommunicationError"] = true;
+                                    }
+                                }
+                                else {
+                                    card.querySelector("[data-info='communicationErrorStatus']").style.setProperty("display", "none");
+                                    rowState[rowKeys[i]]["CommunicationError"] = false;
+                                }
+                                break;
+
                             case "ErrorCodeFlag":
                                 if (collection.data[rowKeys[i]][j] !== "" ) {
                                     if (collection.data[rowKeys[i]][j] === "1") {
-                                        card.querySelector("[data-info='errorStatus']").style.setProperty("display", "");
+                                        card.querySelector("[data-info='deviceErrorStatus']").style.setProperty("display", "");
                                         rowState[rowKeys[i]]["DeviceError"] = true;
                                     } else if (collection.data[rowKeys[i]][j] === "0") {
-                                        card.querySelector("[data-info='errorStatus']").style.setProperty("display", "none");
+                                        card.querySelector("[data-info='deviceErrorStatus']").style.setProperty("display", "none");
                                         rowState[rowKeys[i]]["DeviceError"] = false;
                                     }
                                 } else {
-                                    card.querySelector("[data-info='errorStatus']").style.setProperty("display", "none");
+                                    card.querySelector("[data-info='deviceErrorStatus']").style.setProperty("display", "none");
                                     rowState[rowKeys[i]]["DeviceError"] = false;
                                 }
                                 break;
@@ -5571,7 +5530,6 @@
                         }
                     }
                 }
-
                 setDeviceStatus(rowKeys[i]);
                 //if (rowState[rowKeys[i]]["DeviceError"]) {
                 //    DisableDevice(rowState[rowKeys[i]]);
@@ -5593,43 +5551,36 @@
             card.querySelector("[data-info='UnderlineBait']").setAttribute("class", "UnderlineGray");
             card.querySelector("[data-value='FoodName']").innerHTML = "--";
 
-            setState(1, 1);
+            setState(1, CardState.DeactivatedGrey);
         }
 
+        // set the Device Status and State
         function setDeviceStatus(id) {
-                
             rowState[id]["exiperyRisen"] = false;
             var prevStatus = rowState[id]["sstatus"];
             var foodItem;
 
             if (prevStatus === undefined) {
-                prevStatus = 2;
+                prevStatus == CardStatus.Disabled;
             }
 
-            
-
             if (rowState[id].PacketType === -1) {
-                rowState[id]["sstatus"] = 0;
-                setState(id, 1);
-
+                rowState[id]["sstatus"] = CardStatus.Disabled;
+                setState(id, CardState.DeactivatedGrey);
                 return;
 
             }
 
             if (rowState[id].PacketType === "1") {
-                rowState[id]["sstatus"] = 0;
-                setState(id, 1);
+                rowState[id]["sstatus"] = CardStatus.Disabled;
+                setState(id, CardState.DeactivatedGrey);
                 rowState[id].Card.querySelector("[data-info='UnderlineBait']").setAttribute("class","UnderlineGray");
                 rowState[id].Card.querySelector("[data-info='UnderlineBaitTaken']").setAttribute("class","UnderlineGray");
                 rowState[id].Card.querySelector("[data-info='UnderlineHours']").setAttribute("class","UnderlineGray");
                 rowState[id].Card.querySelector("[data-info='UnderlineDuration']").setAttribute("class","UnderlineGray");
                 return;
 
-            }
-
-
-
-       
+            } 
 
             activeDropdowndataSources.forEach(current => {
                 if (current.Name === "BaitType") {
@@ -5640,22 +5591,21 @@
                     });
                 }
             });
-            var sidebarStatusVal = CheckRowStatus(parseInt(rowState[id]["CalculatedWeight"]), parseInt(rowState[id]["Hours"]), rowState[id]["DeviceError"], id);
 
-            
-            rowState[id]["sstatus"] = sidebarStatusVal;
+            // check the weight, hours, and device error and set the state accordingly.
+            var sidebarStateVal = CheckRowState(parseInt(rowState[id]["CalculatedWeight"]), parseInt(rowState[id]["Hours"]), rowState[id]["DeviceError"], id);
+            setState(id, sidebarStateVal);
 
-            if (sidebarStatusVal !== null && rowState[id]["DeviceType"] === "1") {
-
-                if (sidebarStatusVal === 2 || sidebarStatusVal === 3) {
+            // if there is a state, and the device is type 1
+            if (sidebarStateVal !== null && rowState[id]["DeviceType"] === "1") {
+                // only if it is green or yellow, check the food date expiry
+                if (sidebarStateVal === CardState.NormalGreen || sidebarStateVal === CardState.ImportantYellow) {
 
 
                     var date = new Date();
                     var foodDate;
                     var foodDateVal = rowState[id]["FoodDateVal"];
                     if (foodDateVal !== "") {
-
-
 
                         foodDate = new Date(foodDateVal);
 
@@ -5666,14 +5616,16 @@
                         {
                             SetCardLineColor(rowState[id].Card, diffDays, parseInt(foodItem.LowerThreshold), parseInt(foodItem.UpperThreshold), "UnderlineDuration");
                             
-                            var updatedVal = CheckRowStatusManul(diffDays, parseInt(foodItem.LowerThreshold), parseInt(foodItem.UpperThreshold), id);
-                            if (sidebarStatusVal < updatedVal) {
-                                rowState[id]["sstatus"] = updatedVal;
+                            var updatedVal = CheckRowStateManul(diffDays, parseInt(foodItem.LowerThreshold), parseInt(foodItem.UpperThreshold), id);
+                            // if updated val is higher priority, then update the sstatus
+                            if (isHigherUrgency(sidebarStateVal, updatedVal)) {
+                                setState(id, updatedVal);
                             }
                             else {
-                                switch (sidebarStatusVal) {
-                                    case 4:
-                                        setState(id, 4);
+                                // if it isn't a higher priority, set it to yellow?
+                                switch (sidebarStateVal) {
+                                    case CardState.ImportantYellow:
+                                        setState(id, CardState.ImportantYellow);
 
                                         break;
 
@@ -5691,7 +5643,7 @@
                     else {
                         rowState[id].Card.querySelector("[data-value='Duration']").innerHTML = "--";
                         rowState[id].Card.querySelector("[data-info='UnderlineDuration']").setAttribute("class", "UnderlineGray");
-                        rowState[id]["sstatus"] = 2;
+                        setState(id, CardState.NormalGreen);
 
                     }
                 }
@@ -5709,33 +5661,30 @@
                     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
                     rowState[id].Card.querySelector("[data-value='Duration']").innerHTML = diffDays + "d";
                     SetCardLineColor(rowState[id].Card, diffDays, 3, 5, "UnderlineDuration");
-                    //   rowState[id]["sstatus"] = CheckRowStatusManul(diffDays, parseInt(foodItem.LowerThreshold), parseInt(foodItem.UpperThreshold), id);
+                    var stateValue = CheckRowStateManul(diffDays, parseInt(foodItem.LowerThreshold), parseInt(foodItem.UpperThreshold), id);
+                    setState(id, stateValue);
 
                 }
                 else {
                     card.querySelector("[data-value='Duration']").innerHTML = "--";
                     card.querySelector("[data-info='UnderlineDuration']").setAttribute("class", "UnderlineGray");
-                    rowState[id]["sstatus"] = 2;
+                    setState(id, CardState.NormalGreen);
 
                 }
 
             }
 
-            if(rowState[id]["ConsumptionStatus"] === 1 && sidebarStatusVal < 3)
+            if(rowState[id]["ConsumptionStatus"] === 1 && sidebarStateVal < CardState.ImportantYellow)
             {
-                rowState[id]["sstatus"] = 4;
-                setState(id, 4);
+                setState(id, CardState.ImportantYellow);
                 return;
             }
 
             if(rowState[id]["ConsumptionStatus"] === 2)
             {
-                rowState[id]["sstatus"] = 3;
-                setState(id, 3);
+                setState(id, CardState.UrgentRed);
                 return;
             }
-
-
 
         }
 
@@ -5753,16 +5702,15 @@
                 var row = rowState[rowIndex];
                 if(row.PacketType !== -1 && row.PacketType !== 1)
                 {
-                    switch (row.sstatus) 
+                    switch (row["State"]) 
                     {
-                        case 4:
+                        case CardState.UrgentRed:
                             redCount += 1;
-
                             break;
-                        case 3:
+                        case CardState.ImportantYellow:
                             yellowCount += 1;
                             break;
-                        case 2:
+                        case CardState.NormalGreen:
                             greenCount += 1;
                             break;
                     }
@@ -5773,79 +5721,79 @@
             cardSelectedParent.querySelector("[data-value='Urgent']").innerHTML = redCount;
             cardSelectedParent.querySelector("[data-value='Important']").innerHTML = yellowCount;
             cardSelectedParent.querySelector("[data-value='Minor']").innerHTML = greenCount;
-
-
-
         }
 
-
-        function CheckRowStatusManul(expiery, threshold, tresholdUpper, row) {
+        // checks the state of the card, using the expiry and bait thresholds.
+        function CheckRowStateManul(expiery, threshold, tresholdUpper, row) {
             var result;
             if (expiery === '') {
-                setState(row, 1);
-                result = 0;
+                result = CardState.Unassigned;
                 return result;
             }
 
             if (expiery <= threshold) {
-                result = 4;
-              //  setState(row, 3);
+                result = CardState.UrgentRed;
 
             }
             else if (expiery >= threshold && expiery <= tresholdUpper) {
-                result = 3;
-            //    setState(row, 4);
+                result = CardState.ImportantYellow;
 
             }
             else {
-                result = 2;
-            //    setState(row, 2);
+                result = CardState.NormalGreen;
 
             }
 
             return result;
         }
 
-        function CheckRowStatus(baitLeft, triggers, deviceError, row) {
-            var result = 0;
+        // checks the state of the row, also sets the state of the row. Should not change the state of the row, just check.
+        function CheckRowState(baitLeft, triggers, deviceError, row) {
+            var result = CardState.Unassigned;
             var importantRisen = 0;
             var urgentRisen = 0;
 
+            // if there is a device error, set the state to red
             if (deviceError) {
-                setState(row, 3);
-                result = 4;
+                result = CardState.UrgentRed;
                 return result;
             }
  
-
+            // if the bait left is less than the bait threshold, raise urgent
             if (parseInt(baitLeft) <= baitThreshold && baitLeft !== "" && Number.isInteger(parseInt(baitLeft)))  {
                 urgentRisen = 1;
             }
+            // if the number of triggers is bigger than the upper threshold, raise urgent
             else if (parseInt(triggers) > triggerTresholdUpper && Number.isInteger(parseInt(triggers)) ) {
                 urgentRisen = 1;
             }
+            // if the bait left is less than the baitThresholdUpper (but more than the bait threshold), raise important
             else if (parseInt(baitLeft) <= baitThresholdUpper && baitLeft !== "" && Number.isInteger(parseInt(baitLeft))) {
                 importantRisen = 1;
             }
+            // if the triggers is bigger than the trigger threshold (but less than the triggerTresholdUpper), raise important
             else if (parseInt(triggers) >= triggerTreshold && parseInt(triggers) <= triggerTresholdUpper && Number.isInteger(parseInt(triggers)) ) {
                 importantRisen = 1;
             }
+            // if there are negative triggers, raise urgent
             else if (parseInt(triggers) < 0) {
                 urgentRisen = 1;
             }
 
-
+            // if there was an important risen, but no urgent risen, set the state to yellow
             if (importantRisen === 1 && urgentRisen === 0) {
-                setState(row, 4);
-                result = 3;
+                // setState(row, CardState.ImportantYellow);
+                result = CardState.ImportantYellow;
             }
+            // if there was an urgent risen, set the state to red
             else if (urgentRisen == 1) {
-                setState(row, 3);
-                result = 4;
+                // setState(row, CardState.UrgentRed);
+                result = CardState.UrgentRed;
             }
+            // otherwise set the state to green
             else {
-                setState(row, 2);
-                result = 2;
+                // setState(row, CardState.NormalGreen);
+                result = CardState.NormalGreen;
             }
 
 
@@ -6736,7 +6684,7 @@
             UpdateCardSource(rowStateHeaders, packet, false);
             sortEvent({
                 value: [
-                    "sstatus",
+                    "State",
                     "false"
                 ]
             });
@@ -6791,9 +6739,9 @@
                     card.querySelector("[data-info='lbl1']").innerHTML = "URGENT";
                     card.querySelector("[data-info='lbl2']").innerHTML = "IMPORTANT";
                     card.querySelector("[data-info='lbl3']").innerHTML = "NO ACTIVITY";
-                    //card.querySelector("[data-value='Urgent']").innerHTML = currentRow["Urgent"];
-                    //card.querySelector("[data-value='Important']").innerHTML = currentRow["Important"];
-                    //card.querySelector("[data-value='Minor']").innerHTML = currentRow["Minor"];
+                    card.querySelector("[data-value='Urgent']").innerHTML = currentRow["Urgent"];
+                    card.querySelector("[data-value='Important']").innerHTML = currentRow["Important"];
+                    card.querySelector("[data-value='Minor']").innerHTML = currentRow["Minor"];
                     SelectedVisibleState = 2;
 
                     if (isChild) {
@@ -6829,7 +6777,7 @@
             else {
 
                 sortCards({
-                    value: "sstatus"
+                    value: "State"
                 });
             }
         }
@@ -6847,18 +6795,13 @@
                     throw new TypeError("Traps Card sort event expected an Array or string but found '" + typeof payload.value + "'.");
                 }
                 else {
-                    payload.value = [payload.value[0].toLocaleLowerCase()];
+                    payload.value = [payload.value[0]];
                 }
             }
 
-            if (typeof payload.value === "string") {
-                payload.value = [payload.value.toLowerCase()];
 
-            }
-
-
-            var validSorts = ["BaitName", "Settime", "sstatus", "updatetime", "triggeredtime", "State", "technician"];
-            if (validSorts.indexOf(payload.value[0].toLowerCase()) === -1) {
+            var validSorts = ["BaitName", "SetTime", "sstatus", "updateTime", "triggeredtime", "State", "technician"];
+            if (validSorts.indexOf(payload.value[0]) === -1) {
                 throw new TypeError(payload.value + " is an invalid sort. Please use " + validSorts.join());
             }
 
@@ -6890,6 +6833,7 @@
         function sortCards(data, sortType, asc) {
 
             var dataKeys = Object.keys(data);
+            asc = false;
 
             if (asc === false) {
                 return dataKeys.sort(function (firstKey, secondKey) {
@@ -6897,10 +6841,30 @@
                     var first = data[firstKey];
                     var second = data[secondKey];
 
-                    if (first[sortType] < second[sortType]) {
+                    if (first["State"] > second["State"]) {
                         return -1;
-                    } else if (first[sortType] == second[sortType]) {
-                        return 0;
+                    } else if (first["State"] == second["State"]) {
+                        // if states are equal, sort by bait taken % (lowest first)
+                        if (parseInt(first["BaitRate"]) < parseInt(second["BaitRate"])) {
+                            return -1;
+                            // need the OR statement if both are undefined
+                        } else if (parseInt(first["BaitRate"]) == parseInt(second["BaitRate"]) || first["BaitRate"] == second["BaitRate"]) {
+                            
+                            // if states and baittaken % are both equal, sort by active cycle
+                            if (parseInt(first["Hours"]) > parseInt(second["Hours"])) {
+                                return -1;
+                            // need the OR statement if both are undefined
+                            } else if (parseInt(first["Hours"]) == parseInt(second["Hours"]) || first["Hours"] == second["Hours"]) {
+                                return 0;
+
+                            } else {
+                                return 1;
+                            }
+
+                        } else {
+                            return 1;
+                        }
+                    
                     } else {
                         return 1;
                     }
@@ -6911,7 +6875,7 @@
                     var first = data[firstKey];
                     var second = data[secondKey];
 
-                    if (first[sortType] > second[sortType]) {
+                    if (first[sortType] < second[sortType]) {
                         return -1;
                     } else if (first[sortType] == second[sortType]) {
                         return 0;
@@ -7030,8 +6994,8 @@
                 try {
                     var getRow = GetRowByDeviceName(data.value);
                     var row = rowElems[getRow["rowId"]];
-                    row.querySelector("[data-info='errorStatus']").style.setProperty("display", "");
-                    setState(row, 3);
+                    row.querySelector("[data-info='deviceErrorStatus']").style.setProperty("display", "");
+                    setState(row, CardState.UrgentRed);
                 }
                 catch (e) {
                     throw new TypeError("Device not found :" + typeof eventData.value);
@@ -7079,7 +7043,7 @@
                     if (deviceType === "1") {
                         //   SetCardLineColor(row, currentWeight, baitThreshold, baitThresholdUpper, "UnderlineBait");
                     }
-                    row.querySelector("[data-info='errorStatus']").style.setProperty("display", "none");
+                    row.querySelector("[data-info='deviceErrorStatus']").style.setProperty("display", "none");
 
                     var dBm = parseInt(sensorData.data.signal);
                     //This is the lora signal strenght so it has a negative "DBM"
@@ -7164,7 +7128,6 @@
 
                     SetCardLineColorFloat(row, battery, 45, 65, "UnderlineBattery");
                     var id = getRow.Id;
-                    var prevStatus = rowState[getRow["rowId"]]["sstatus"];
 
                     if (rowState[id]["exiperyRisen"] === true) {
                         return;
@@ -7179,11 +7142,11 @@
                             });
                         }
                     });
-                    var sidebarStatusVal = CheckRowStatus(currentWeight, sensorHours, rowState[getRow["rowId"]]["DeviceError"], getRow["rowId"]);
+                    var sidebarStateVal = CheckRowState(currentWeight, sensorHours, rowState[getRow["rowId"]]["DeviceError"], getRow["rowId"]);
 
-                    if (sidebarStatusVal !== null && rowState[id]["DeviceType"] === "1") {
+                    if (sidebarStateVal !== null && rowState[id]["DeviceType"] === "1") {
 
-                        if (sidebarStatusVal === 2 || sidebarStatusVal === 3) {
+                        if (sidebarStateVal === CardState.NormalGreen || sidebarStateVal === CardState.ImportantYellow) {
 
 
                             var date = new Date();
@@ -7200,18 +7163,19 @@
                                 rowState[id].Card.querySelector("[data-value='Duration']").innerHTML = diffDays + "d";
                                 SetCardLineColor(rowState[id].Card, diffDays, parseInt(foodItem.LowerThreshold), parseInt(foodItem.UpperThreshold), "UnderlineDuration");
 
-                                var updatedVal = CheckRowStatusManul(diffDays, parseInt(foodItem.LowerThreshold), parseInt(foodItem.UpperThreshold), id);
-                                if (sidebarStatusVal < updatedVal) {
-                                    rowState[id]["sstatus"] = updatedVal;
+                                var updatedVal = CheckRowStateManul(diffDays, parseInt(foodItem.LowerThreshold), parseInt(foodItem.UpperThreshold), id);
+                                // if the updated val has a higher priority, then update the state value
+                                if (isHigherUrgency(sidebarStateVal, updatedVal)) {
+                                    setState(id, updatedVal);
                                 }
                                 else {
-                                    switch (sidebarStatusVal) {
-                                        case 4:
-                                            setState(id, 4);
+                                    switch (sidebarStateVal) {
+                                        case CardState.ImportantYellow:
+                                            setState(id, CardState.ImportantYellow);
 
                                             break;
-                                        case 3:
-                                            setState(id, 4);
+                                        case CardState.UrgentRed:
+                                            setState(id, CardState.UrgentRed);
 
                                             break;
                                     }
