@@ -4823,6 +4823,7 @@
 
 
                 var id = cardSelected.parentNode.getAttribute("data-id");
+                const stationId = cardSelected.querySelector('.StationId .StationLabel').innerHTML;
 
                 InnerRowId = id;
                 cardSelected.querySelector('[data-info="chart"]').style.setProperty("display", "none");
@@ -4897,7 +4898,7 @@
                     cardSelected.querySelector("[data-info='btnInfo']").setAttribute("class", "tabBtn");
                     fw.fireEvent("ChangeBait", { ID: id, form: form });
                 }
-
+                fw.func("PUBLISHCLIENT", "highlightFloorMapItems", { stationId });
             } else {
                 //document.getElementById("devAction").style.setProperty("display", "none"); //btnActio
 
@@ -4911,6 +4912,7 @@
 
                     cardSelected.querySelector("[data-section='clearScreen']").querySelector("[data-section='Actions']").querySelector("[data-section='ordinaryFormBtn']").style.setProperty("display", "");
 
+                    fw.func("PUBLISHCLIENT", "highlightFloorMapItems", { });
                 }
             }
             
@@ -7416,7 +7418,6 @@
                         }
                         dayseries[time.getDate()].value += value;
                     }
-                    debugger;
                     averagesCycle = [];
                     for (var day in dayseries) {
                         averagesCycle.push({

@@ -161,8 +161,9 @@
             margin: 0;
         }
         .ResizableIcon{
-            width: 25px;
-            height: 25px;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
         }
         .textContainer {
             text-overflow: ellipsis;
@@ -238,11 +239,12 @@
                     "set icons": setIconSource,
                     "set mode": setMode,
                     "set data source": setDataSource,
-                    "resize": resize
+                    "highlight map item": highlightMapItem
                 },
                 outputEvents: [
                     "map source updated",
-                    "sensor updated"
+                    "sensor updated",
+                    "map item click"
                 ]
             },
             serverEvents: {
@@ -400,7 +402,7 @@
                 draggableGrid.appendChild(getInputIcon("numberInput", "number", "40px", () => iconCounters = +document.getElementById("numberInput").value, iconCounters));
                 // create an delete icon to remove items from map
                 let bin = document.createElement('div');
-                bin.innerHTML = `<svg id="deleteMapItemsBin" version="1.0" xmlns="http://www.w3.org/2000/svg" onclick="deleteMapItems(this)" width="24" height="24" viewBox="0 0 24.000000 24.000000" preserveAspectRatio="xMidYMid meet" style="visibility: inherit; margin-left: 1rem;">
+                bin.innerHTML = `<svg id="deleteMapItemsBin" version="1.0" xmlns="http://www.w3.org/2000/svg" onclick="deleteMapItems(this)" width="32" height="32" viewBox="0 0 24.000000 24.000000" preserveAspectRatio="xMidYMid meet" style="visibility: inherit; margin-left: 1rem; cursor: pointer;">
 					<g transform="translate(0.000000,24.000000) scale(0.100000,-0.100000)" fill="red" stroke="none">
                         <path d="M74 225 c-4 -8 -17 -15 -31 -15 -15 0 -23 -5 -21 -12 6 -18 190 -18
                         196 0 2 7 -6 12 -21 12 -14 0 -27 7 -31 15 -3 10 -19 15 -46 15 -27 0 -43 -5
@@ -425,7 +427,7 @@
             var labelIcon = `<div data-label="${DEFAULT_TEXT_LABEL}" style="width:100%; height:100%; ">
                                 <div style="position: relative; text-align:center;">
                                     <div class="colorContainer" style="display:block; background-color: #343a40; width: 50px; height: 50px;">
-                                        <div class="textContainer" position: absolute; style="top: 2px; width: 100%; text-align:center; color: white; font-weight:600;"></div>
+                                        <div class="textContainer" position: absolute; style="top: 2px; width: 100%; height: 100%; text-align:center; color: white; font-weight:600;"></div>
                                     </div>
                                 </div>
                             </div>`;
@@ -532,14 +534,17 @@
             if(_DeleteEnabled){
                 _DeleteEnabled = false;
                 interact('.draggble').draggable(true);
-                document.getElementById('deleteMapItemsBin').style.setProperty("border", "");
+                document.getElementById('deleteMapItemsBin').style.setProperty("outline", "");
             } else {
                 _DeleteEnabled = true;
                 interact('.draggble').draggable(false);
-                document.getElementById('deleteMapItemsBin').style.setProperty("border", "solid black 2px");
+                document.getElementById('deleteMapItemsBin').style.setProperty("outline", "solid black 2px");
             }
         }
 
+        function ElementClicked(event) {
+            fw.fireEvent('map item click', event.querySelector('.textContainer').innerHTML)
+        }
 
         //#region Functions
         function EnableDrag(event) {
@@ -600,12 +605,14 @@
             var x = cArguments[0].pageX - rect.left; //x position within the element.
             var y = cArguments[0].pageY - rect.top;  //y position within the element.
             var addingElement = ActiveAddElement.cloneNode(true);
+            addingElement.setAttribute("onclick", "ElementClicked(this)");
                         
             var addingElementObj;
             if (addingElement.childNodes[0].dataset.label === DEFAULT_TEXT_LABEL) {
                 addingElementObj = addingElement.getElementsByClassName("colorContainer")[0];
                 addingElement.getElementsByClassName("textContainer")[0].innerHTML = document.getElementById("labelInput").value;
                 addingElementObj.style.setProperty("width", "");
+                addingElementObj.style.setProperty("min-width", "30px");
                 addingElementObj.style.setProperty("position", "absolute");
             } else {
                 addingElement.getElementsByClassName("textContainer")[0].innerHTML = iconCounters++;
@@ -802,14 +809,17 @@
 
                 let template;
 
-                if(current.url){
+                if(current.url && !current.state){
                     if(current.url.toLowerCase().includes('nonsmart')){
                         template = document.getElementById('componentGrid').querySelector(`[data-label='regular']`)?.parentElement.cloneNode(true);
+                        template.setAttribute("onclick", "ElementClicked(this)");
                     } else {
                         template = document.getElementById('componentGrid').querySelector(`[data-label='smart']`)?.parentElement.cloneNode(true);
+                        template.setAttribute("onclick", "ElementClicked(this)");
                     }
                 } else {
                     template = document.getElementById('componentGrid').querySelector(`[data-label='DEFAULT_TEXT_LABEL']`)?.parentElement.cloneNode(true);
+                    template.setAttribute("onclick", "ElementClicked(this)");
                 }
 
                 if(template){
@@ -817,14 +827,35 @@
 
                     var addingElementObj;
                     if (template.childNodes[0].dataset.label === DEFAULT_TEXT_LABEL) {
+                        template.getElementsByClassName("colorContainer")[0].style.border = "";
                         addingElementObj = template.getElementsByClassName("colorContainer")[0];
                         template.getElementsByClassName("textContainer")[0].innerHTML = current.label;
                         addingElementObj.style.setProperty("width", "");
+                        addingElementObj.style.setProperty("min-width", "30px");
                         addingElementObj.style.setProperty("position", "absolute");
+                        if(current.state) {
+                            if(iconCounters <= parseInt(current.label)) {
+                                iconCounters = parseInt(current.label) + 1
+                            }
+                            document.getElementById("numberInput").value = iconCounters;
+                            if (current.state === '3') {
+                                template.getElementsByClassName("colorContainer")[0].style.backgroundColor = "red";
+                            }
+                            else if (current.state === '2') {
+                                template.getElementsByClassName("colorContainer")[0].style.backgroundColor = "green";
+                            }
+                            else if (current.state === '4') {
+                                template.getElementsByClassName("colorContainer")[0].style.backgroundColor = "yellow";
+                            }
+                            else {
+                                template.getElementsByClassName("colorContainer")[0].style.backgroundColor = "green";
+                            }
+                        }
                     } else {
                         if(iconCounters <= parseInt(current.label)) {
                             iconCounters = parseInt(current.label) + 1
                         }
+                        template.querySelector("img").setAttribute("style", "");
                         template.getElementsByClassName("textContainer")[0].innerHTML = current.label;
                         const inpt = document.getElementById("numberInput");
                         document.getElementById("numberInput").value = iconCounters;
@@ -838,7 +869,7 @@
                     template.setAttribute("class", "draggble");
                     template.setAttribute("class","draggble ResizableIcon");
                     template.addEventListener("click", function(e){ e.stopPropagation() });
-
+                    
                     map.append(template);
                     template.setAttribute("id", current.uid);
                     items[current.uid] = {
@@ -913,12 +944,17 @@
             }
         }
 
-        function resize(data) {
-            const { height, width } = data;
-            if(height)
-                fw.func("ADJUSTSIZE", "HEIGHT", height);
-            if(width)
-                fw.func("ADJUSTSIZE", "WIDTH", width);
+        function highlightMapItem(data) {
+            const mapItemElements = document.querySelectorAll('.dropzone .textContainer');
+            mapItemElements.forEach(element => {
+                const rootElement = element.parentElement.parentElement.parentElement.parentElement;
+                const colorContainer = element.parentElement;
+                if(element.innerHTML === data.value){
+                    rootElement.style.outline =  `5px solid ${window.getComputedStyle(colorContainer).backgroundColor.replace(')', ', 0.5)').replace('rgb', 'rgba')}`;
+                } else {
+                    rootElement.style.outline =  '';
+                }
+            });
         }
 
         function ToggleSensorOff(sensor)
