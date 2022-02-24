@@ -171,6 +171,9 @@
             white-space: nowrap;
             overflow: hidden;
         }
+        #iconTemplate{
+            cursor: pointer;
+        }
     </style>
 </head>
 
@@ -326,6 +329,8 @@
         function setMode(eventData) {
             if (eventData.value === "true") {
                 _DragEnabled = false;
+                _DeleteEnabled = false;
+                document.getElementById("outer-dropzone").removeAttribute("onclick");
                 interact('.draggble').draggable(false);
                 // document.getElementById("mapArea").setAttribute("class", "row col-12");
                 document.getElementById("outer-dropzone").style.setProperty("height", "100%");
@@ -335,6 +340,7 @@
             else {
                 _DragEnabled = true;
                 interact('.draggble').draggable(true);
+                document.getElementById("outer-dropzone").setAttribute("onclick","ElementDropped(this)");
                 // document.getElementById("mapArea").setAttribute("class", "row");
                 document.getElementById("outer-dropzone").style.setProperty("height", "85%");
                 document.getElementById("ImageHolder").style.setProperty("height", "85%");
@@ -403,7 +409,7 @@
                 // create an delete icon to remove items from map
                 let bin = document.createElement('div');
                 bin.innerHTML = `<svg id="deleteMapItemsBin" version="1.0" xmlns="http://www.w3.org/2000/svg" onclick="deleteMapItems(this)" width="32" height="32" viewBox="0 0 24.000000 24.000000" preserveAspectRatio="xMidYMid meet" style="visibility: inherit; margin-left: 1rem; cursor: pointer;">
-					<g transform="translate(0.000000,24.000000) scale(0.100000,-0.100000)" fill="red" stroke="none">
+					<g transform="translate(0.000000,24.000000) scale(0.100000,-0.100000)" fill="#41505aff" stroke="none">
                         <path d="M74 225 c-4 -8 -17 -15 -31 -15 -15 0 -23 -5 -21 -12 6 -18 190 -18
                         196 0 2 7 -6 12 -21 12 -14 0 -27 7 -31 15 -3 10 -19 15 -46 15 -27 0 -43 -5
                         -46 -15z m76 -5 c0 -5 -13 -10 -30 -10 -16 0 -30 5 -30 10 0 6 14 10 30 10 17
@@ -433,7 +439,7 @@
                             </div>`;
             var template = iconTemplate.cloneNode(true);
             template.innerHTML = labelIcon;
-            template.setAttribute("style", "");
+            template.setAttribute("style", "");            
             draggableGrid.appendChild(template);
 
             draggableGrid.appendChild(getInputIcon("labelInput", "", "", "", ""));
@@ -543,12 +549,6 @@
         }
 
         function ElementClicked(event) {
-            fw.fireEvent('map item click', event.querySelector('.textContainer').innerHTML)
-        }
-
-        //#region Functions
-        function EnableDrag(event) {
-
             if(_DeleteEnabled){
                 event.remove();
                 const mapItems = [];
@@ -561,6 +561,11 @@
                 fw.fireEvent("map source updated", mapItems);
                 return;
             }
+            fw.fireEvent('map item click', event.querySelector('.textContainer').innerHTML)
+        }
+
+        //#region Functions
+        function EnableDrag(event) {
 
             if (!_DragEnabled) {
                 return;
@@ -812,19 +817,16 @@
                 if(current.url && !current.state){
                     if(current.url.toLowerCase().includes('nonsmart')){
                         template = document.getElementById('componentGrid').querySelector(`[data-label='regular']`)?.parentElement.cloneNode(true);
-                        template.setAttribute("onclick", "ElementClicked(this)");
                     } else {
                         template = document.getElementById('componentGrid').querySelector(`[data-label='smart']`)?.parentElement.cloneNode(true);
-                        template.setAttribute("onclick", "ElementClicked(this)");
                     }
                 } else {
                     template = document.getElementById('componentGrid').querySelector(`[data-label='DEFAULT_TEXT_LABEL']`)?.parentElement.cloneNode(true);
-                    template.setAttribute("onclick", "ElementClicked(this)");
                 }
 
                 if(template){
                     template.setAttribute("style", "");
-
+                    template.setAttribute("onclick", "ElementClicked(this)");
                     var addingElementObj;
                     if (template.childNodes[0].dataset.label === DEFAULT_TEXT_LABEL) {
                         template.getElementsByClassName("colorContainer")[0].style.border = "";
@@ -837,18 +839,19 @@
                             if(iconCounters <= parseInt(current.label)) {
                                 iconCounters = parseInt(current.label) + 1
                             }
-                            document.getElementById("numberInput").value = iconCounters;
+                            const numberInput = document.getElementById("numberInput")
+                            if(numberInput)
+                                numberInput.value = iconCounters;
                             if (current.state === '3') {
-                                template.getElementsByClassName("colorContainer")[0].style.backgroundColor = "red";
+                                template.getElementsByClassName("colorContainer")[0].style.backgroundColor = "orange";
                             }
                             else if (current.state === '2') {
                                 template.getElementsByClassName("colorContainer")[0].style.backgroundColor = "green";
                             }
                             else if (current.state === '4') {
-                                template.getElementsByClassName("colorContainer")[0].style.backgroundColor = "yellow";
-                            }
-                            else {
-                                template.getElementsByClassName("colorContainer")[0].style.backgroundColor = "green";
+                                template.getElementsByClassName("colorContainer")[0].style.backgroundColor = "red";
+                            } else {
+                                template.getElementsByClassName("colorContainer")[0].style.backgroundColor = "gray";
                             }
                         }
                     } else {
@@ -950,7 +953,7 @@
                 const rootElement = element.parentElement.parentElement.parentElement.parentElement;
                 const colorContainer = element.parentElement;
                 if(element.innerHTML === data.value){
-                    rootElement.style.outline =  `5px solid ${window.getComputedStyle(colorContainer).backgroundColor.replace(')', ', 0.5)').replace('rgb', 'rgba')}`;
+                    rootElement.style.outline =  `15px solid ${window.getComputedStyle(colorContainer).backgroundColor.replace(')', ', 0.5)').replace('rgb', 'rgba')}`;
                 } else {
                     rootElement.style.outline =  '';
                 }
