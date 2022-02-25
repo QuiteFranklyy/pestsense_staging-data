@@ -347,7 +347,7 @@ function load() {
 	var deleteAccountIcon = Script.getWidget("deleteAccountIcon");
 	deleteAccountIcon.subscribe("pressed", async function () {
 		var form = Script.getFormByKey("details");
-		let res = await Client.confirm(`Are you sure you want to delete thie user ${form.username}?`, "Delete User", { confirmText: "Delete" });
+		let res = await Client.confirm(`Are you sure you want to delete this user ${form.username}?`, "Delete User", { confirmText: "Delete" });
 		if (res) {
 			Directory.deleteUser(form.username, async function (eventData) {
 				if (eventData.value !== 1) {
@@ -410,7 +410,7 @@ function load() {
 	var accountNames = Script.getState("accountInfo").getColumn("accountname");
 	var accDrop = Script.getWidget("accDrop");
 	accDrop.receiveList(accountNames);
-	
+
 	//Get dashboard, todo  make directory api.
 	Database.readRecords("directory", "dash", function (eventData) {
 		var dashDrop = Script.getWidget("dashDrop");
@@ -428,7 +428,7 @@ function load() {
 
 		// Setup Permissions table.
 		var permCollection = new SensaCollection(["permission"], "permission");
-		var permissions = Object.keys(Directory.permissions);
+		// var permissions = Object.keys(Directory.permissions);
 		var userPermsTable = Script.getWidget("userPermsTable");
 		var setPerms = [];
 
@@ -436,12 +436,12 @@ function load() {
 			var perms = SensaCollection.load(data.value);
 			var userPerms = perms.data[user];
 
-			for (var i = 0; i < permissions.length; i++) {
+			for (var i = 1; i < perms.columns.length; i++) {
 				permCollection.add({
-					permission: permissions[i],
+					permission: perms.columns[i].toUpperCase(),
 				});
-				if (userPerms[i + 1] == '1') {
-					setPerms.push(permissions[i]);
+				if (userPerms[i] == '1') {
+					setPerms.push(perms.columns[i].toUpperCase());
 				}
 			}
 			userPermsTable.receiveValue(permCollection);
@@ -481,12 +481,14 @@ async function save() {
 	let res = await Client.confirm("Are you sure you would like to save these changes?", "Save User Information", {confirmText: "Save"})
     if (res) {
         var formData = Script.getFormByKey("details");
-        console.log(JSON.stringify(formData,null,4));
         if (formData.accessrole === "no role"){
             formData.accessrole = 0;
         }
 
-        if (formData === null) return;
+        if (formData === null) {
+            alert("Please fill out all required fields");
+            return;
+        }
         formData.status = formData.status === true ? 1 : 0;
         formData.username = Script.getState("user");
 
@@ -510,20 +512,8 @@ async function save() {
 
         // set last modified, format date in similar way to server 
         let today = new Date();
-        let month = today.getMonth() + 1;
-        month = month < 10 ? '0' + month : month;
-        let date = today.getDate() + '/' + month + '/'+today.getFullYear();
-        let hours = today.getHours();
-        let minutes = today.getMinutes();
-        let seconds = today.getSeconds();
-        var ampm = today.getHours() >= 12 ? "PM" : "AM";
-        hours = hours ? hours : 12; // make hour 0 become 12
-        minutes = minutes < 10 ? '0' + minutes : minutes;
-        seconds = seconds < 10 ? '0' + seconds : seconds;
-        let time = hours + ":" + minutes + ":" + seconds;
-        let dateTime = date + ' ' + time + ' ' + ampm;
-        // TODO find a way to use formatDate() from utils
-        formData.lastmodified = dateTime;
+        today = Utils.formatDate(today, "dd/MM/yyyy HH:mm", false);
+        formData.lastmodified = today;
 
         delete formData.accountname;
 
@@ -577,6 +567,16 @@ function updateForm(username) {
 	collection = SensaCollection.load(collection);
 	var record = collection.get(username);
 	record.status = record.status == "Yes" ? 1 : 0;
+
+    if (record.alias == null || record.alias === "") {
+        // If a previous user did not have an alias, create one now
+        record.alias = `${record.first} ${record.last}`;
+        var req = {};
+        req[record] = record;
+        Database.updateEntity("Directory", "users", req, () => {Script.setForm("details", record)});
+        Log.info("Setting user alias information.");
+        return;
+    }
 
     // rename the accessrole to be the text value instead of the ID
     var accessRoleId = record.accessrole;
@@ -640,7 +640,6 @@ function populateAllUserAccessRoles() {
             columns: "RoleName,ID",
             filter: "CompanyId = " + CompanyId
         };
-        //console.log("User access roles filter: " + JSON.stringify(UserAccessRolesFilter, null, 4));
         Database.readRecords("rodent", "UserAccessRole", function(eventData) {
             try{
                 // need to make a sensacollection containing the RoleName and ID, with the headers "text" and "value"
