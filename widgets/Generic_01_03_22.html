@@ -103,9 +103,7 @@
                     "set html": addHtml,
                     "handle generic": handleGeneric,
                     "set action": setAction,
-                    "manage map": manageMap,
-                    "toggle element visibility": toggleElementVisibility,
-                    "click floor map toggle": clickFloorMapToggle
+                    "toggle element visibility": toggleElementVisibility
                 },
                 outputEvents: [
                     "EditCard",
@@ -137,7 +135,6 @@
 
 
         var cardSelected;
-        var editMapValue = 0;
 
 
         /**
@@ -374,15 +371,6 @@
             }
         }
 
-        /**
-        * Manage how the map is being controlled.
-        */
-        function manageMap(event){
-
-            editMapValue = parseInt(event.value);
-            console.log("Map edit in the generic is " + editMapValue);
-        }
-
         function ToggleFloorPlan(eventData) {
             var toggle = eventData.querySelector('[data-value="floorPlanSelect"]');
             var currentClass = toggle.classList[0];
@@ -391,11 +379,7 @@
                 eventData.querySelector('[data-value="floorPlanCheckbox"]').checked = true;
                 toggle.innerHTML = "ON";
                 toggle.setAttribute("class", "activeToggle");
-                if(editMapValue === 1) {
-                    console.log("Map edit in the generic is on click " + editMapValue);
-                    floorMapUploadBtn.style.visibility = 'visible';
-                }
-                //floorMapUploadBtn.style.visibility = 'visible';
+                floorMapUploadBtn.style.visibility = 'visible';
                 fw.func("HIDEWIDGET", "PickSlider#0");
                 fw.func("HIDEWIDGET", "Label#40");
                 fw.func("HIDEWIDGET", "Graph#0");
@@ -528,13 +512,6 @@
                 if(element)
                     element.style.visibility = data.visibility;
             }
-        }
-
-        /**
-        * Toggles floor map
-        */
-        function clickFloorMapToggle(packet) {
-            document.querySelector('[data-value="floorPlanCheckbox"]').parentElement.parentElement.click();
         }
 
         // API actions for dashboard mode
