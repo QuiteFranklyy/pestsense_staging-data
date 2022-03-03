@@ -2602,7 +2602,7 @@
 
         // enum type object to remove magic numbers for card state - State is the red, yellow, green, grey colour of the card
         const CardState = {UrgentRed: 4, ImportantYellow: 3, NormalGreen: 2, DeactivatedGrey: 1, Unassigned: 0};
-        // status is whether the device is enabled or disabled. 
+        // status is whether the device is enabled or disabled.
         const CardStatus = {Disabled: 0, Enabled: 1};
 
         var weekday = new Array(7);
@@ -2697,7 +2697,7 @@
 
 
         //#region --- Declarations ---
-
+        // It doesn't appear that this is used, I can't find an event on the widget that uses it.
         function setAlertEvent(eventData) {
             if (typeof eventData.value !== "string") {
 
@@ -2717,6 +2717,9 @@
 
         }
 
+        // internal function interacts with HTML
+        // this event is called directly from pressing the actions button. When a device card is open and this function is run, it displays
+        // the actions tab for a device card. It highlights the action button, de-highlights the device info button, and hides the device info.
         function OpenActions(event) {
 
             var id = event.currentTarget.parentElement.parentElement.parentElement.parentElement.parentElement.getAttribute("data-id");
@@ -2756,6 +2759,9 @@
                 .setAttribute("class", "tabBtn"); 
         }
 
+        // internal function
+        // this event is called directly from pressing the device info button. When a device card is open and this function is run, it displays
+        // the device info tab for a device card. It highlights the device info button, de-highlights the action info button, and hides the action.
         function OpenDeviceInfo(event) {
              
             var id = cardSelected.parentNode.getAttribute("data-id");
@@ -2788,6 +2794,7 @@
             //   selectedChart.update();
         }
 
+        // I don't think this function is ever used.
         function newPhotoEvent(eventData) {
             if (typeof eventData.value !== "string") {
 
@@ -2809,7 +2816,8 @@
         }
 
 
-         /**
+        /**
+         * Internal function
          * checks if priority2 is higher than priority1. Returns true or false
          *
          * @param priority1
@@ -2820,6 +2828,7 @@
         }
 
         /**
+         * Client input event function
          * takes an array of ids and hides all other cards.
          *
          * @param eventData
@@ -2894,6 +2903,8 @@
 
         /**
          * When the address is clicked in a card the card will broadcast an event with the given ID.
+         * It doesn't ever seem to be called.
+         * DEPRECATED??
          * @param event
          */
         function addressEvent(event) {
@@ -2905,8 +2916,9 @@
 
 
         /**
+         * Client input event function
          * Sets all the trap options available for the card.
-         *
+         * DEPRECATED??
          * @param packet
          */
         function setTrapTypes(packet) {
@@ -2923,7 +2935,9 @@
 
         }
 
-
+        // client input event function
+        // doesn't seem to be used in the application
+        // DEPRECATED??
         function setQuantities(packet) {
 
 
@@ -2953,6 +2967,9 @@
             SetSelectValues(bindingData, "Quantity");
         }
 
+        // client input event function
+        // function that recieves the available quantities that can be used for each bait type. This information is set in the App Settings,
+        // and the data is retrieved from a database from the BaitBox controller.
         function setBaitTypes(packet) {
             
             var values = packet;
@@ -2995,7 +3012,8 @@
 
         }
   
-
+        // internal function
+        // takes the incoming data, then for each object in the value key, grabs the name, it pushes it to an array, then sends the full array.
         function PackageData(incoming) {
 
             var sending = [];
@@ -3006,7 +3024,7 @@
         }
         /**
          * Sets all the technicians available for the card dropdown.
-         *
+         * DEPRECATED??
          * @param packet
          */
         function settechnicians(packet) {
@@ -3029,6 +3047,12 @@
             SetSelectValues(vals, "technician");
         }
 
+
+        /**
+         * Internal function, interacts directly with HTML
+         * Used to set the values of certain elements, such as: "technician", "DeviceTypes", "trapType", "Quantity"
+         * DEPRECATED??
+         */
         function SetSelectValues(values, elementName) {
 
             SelectVlueObj = {};
@@ -3077,6 +3101,10 @@
             }
         }
 
+        /** Client input event
+         * toggles the selected card. Usually on startup this opens up the location card, displaying all the devices
+         */
+        
         function toggleCardEvent(packet) {
             //deviceControlToggle = packet.value[0];
             console.log("The packet received " + JSON.stringify(packet, null, 4));
@@ -3093,8 +3121,11 @@
             TrapSelected(rowHeaderElems[id]);
         }
 
+        /**
+         * Client input event - may be unnecessary
+         * Toggles the child of the selected card. I have stopped the function from running and it doesn't seem to have affected the app
+         */ 
         function ToggleChild(packet) {
-
             var id = packet.value;
             if (typeof id !== "string") {
                 return;
@@ -3114,8 +3145,9 @@
 
 
         /**
+         * Used in the animal traps solutions, not used for pestsense
          * Sets all the animals available for the card.
-         *
+         * DEPRECATED??
          * @param packet
          */
         function setAnimals(packet) {
@@ -3150,13 +3182,14 @@
         }
 
         /**
-         * Shows the dropdown menu screen.
+         * Internal Function
+         * Shows the dropdown menu screen. Is called when some device actions are pressed such as add bait, set device, remove device, any button that makes a form appear.
          *
          * @param event
          */
         function showFormScreen(event) {
 
-            cardSelected.querySelector("[data-section='formScreen']").style.setProperty("display", "");;
+            cardSelected.querySelector("[data-section='formScreen']").style.setProperty("display", "");
             event.parentNode.parentNode.parentNode.style.setProperty("display", "none");
 
             var container = document.getElementById("container");
@@ -3173,7 +3206,8 @@
 
 
         /**
-         * Closes the downdown menu screen.
+         * Internal Function
+         * Closes the downdown menu screen. However it doesn't appear to be called from anywhere.
          * @param event
          */
         function cancelFormScreen(event) {
@@ -3186,7 +3220,8 @@
 
 
         /**
-         * Deactivates a trap
+         * Deactivates a trap. However it doesn't seem to be called from anywhere.
+         * DEPRECATED??
          * @param event
          */
         function deactivateTrap(event) {
@@ -3198,6 +3233,11 @@
 
         }
 
+        /**
+         * Client Input Event
+         * Removes all of the html inside the rodent widget, basically sets a clean slate for new html to be pushed
+         * 
+         */ 
         function clearContent(packet) {
             rowHeaderElems = [];
             var getParent = document.getElementById("tbody");
@@ -3205,6 +3245,7 @@
         }
 
         /**
+         * Client Input Event
         * Takes in a packet that sets the rodent grid threshold values that are reponsible to handle card statuses
         * @param packet
         */
@@ -3233,6 +3274,12 @@
 
         }
 
+        /**
+         * Client Input Event
+         * Doesn't appear to be used.
+         * Looks like it goes through each device and removes an hour from the hours column.
+         * DEPRECATED??
+         */ 
         function endOfDayCheck(eventData) {
             rowState[rowKeys[i]][headerValue]
 
@@ -3252,6 +3299,10 @@
 
         }
 
+        /**
+         * Internal Function
+         * Gets the row of the device using it's serial ID.
+         */ 
         function GetRowBySid(sid) {
             for (var row in rowState) {
                 if (rowState[row]["Sid"] === sid) {
@@ -3261,6 +3312,11 @@
 
             return null;
         }
+
+        /**
+         * Internal Function
+         * Gets the row of the device using it's device name
+         */ 
         function GetRowByDeviceName(name) {
             for (var row in rowState) {
                 if (rowState[row]["DeviceNumber"].toUpperCase() === name.toUpperCase()) {
@@ -3271,6 +3327,11 @@
             return null;
         }
 
+        /**
+         * Internal Function
+         * Adds data to the global variable "areaReport". This is an array that holds all of this logging data. It is then used to
+         * set the area reports value of a row.
+         */ 
         function incomingLogMessage(packet) {
 
             var data = packet.value;
@@ -3286,6 +3347,11 @@
 
 
         //Form Add Bait Functions
+        /** 
+         * Internal function interacts directly with HTML
+         * Activates when the bait dropdown is changed inside the add bait menu. Also populates the card with information about the bait type.
+         * 
+         */ 
         function BaitDetailChanged(event) {
             var types;
              
@@ -3324,8 +3390,12 @@
             BaitDetailId = event.value;
         }
 
+        /**
+         * Internal Function
+         * Function that is run from OpenDeviceBait that is run from a client input event. Populates the bait dropdown with the bait types
+         * available to the user.
+         */ 
         function baitChanged(event) {
-
            // BaitTypeId = event.value;
             var id = cardSelected.parentNode.getAttribute("data-id");
             var card = rowElems[id];
@@ -4280,7 +4350,7 @@
                 "P6Result":null,
                 "L1":null,
                 "L2":null,
-                "BaitEnalbed": "1",
+                "BaitEnalbed": "0",
                 "CompanyProductId":null,
                 "Status": CardStatus.Disabled
             };
@@ -4437,6 +4507,10 @@
 
         }
 
+        /**
+         * Function that handles the bait enabled flag coming through flows into the rodent widget.
+         * Based on the data that comes through, controls if the operator is able to add bait.
+         */ 
         function BaitEnalbed(device, data){
             
             var getRow = GetRowByDeviceName(device);
@@ -4445,16 +4519,24 @@
                 return;
             }
 
-            if(parseInt(data) !== 1 && parseInt(data) !== 0)
+            setDefaultBaitText();
+
+            // if the flag is not one of the possible flags, return (reject message)
+            if(parseInt(data) !== 1 && parseInt(data) !== 0 && parseInt(data) !== -1)
                 return;
  
-            if(parseInt(data) === 2) 
+            // if the bait flag is disabled, hide the bait icon and text
+            if(parseInt(data) === 0) 
             {
-                getRow.Card.querySelector("[data-info='baitIcon']").style.setProperty("display","none");
-                getRow.Card.querySelector("[data-info='baitText']").style.setProperty("display","none");
+                hideBaitTextAndIcon();
+            }
+            else if (parseInt(data) == -1) {
+                // if the flag represents an error, change text and hide icon
+                setBaitTextErrorAndHideIcon();
             }
             else
             {
+                // if it is a 1, it is enabled, allows the addition of bait and sets all the losenges to grey
                 setState(getRow["rowId"],CardState.NormalGreen);
                 getRow.Card.querySelector("[data-info='UnderlineBait']").setAttribute("class","UnderlineGray");
                 getRow.Card.querySelector("[data-info='UnderlineBaitTaken']").setAttribute("class","UnderlineGray");
@@ -4465,16 +4547,45 @@
             }
         }
 
+        // default text and color for baitText
+        function setDefaultBaitText() {
+            cardSelected.querySelector("[data-info='baitText']").style.setProperty("color","#4d98c2ff");
+            cardSelected.querySelector("[data-info='baitText']").innerHTML = "ADD BAIT";
+        }
+
+        // disable the add bait button and also display some text to reflect the error
+        function setBaitTextErrorAndHideIcon() {
+            cardSelected.querySelector("[data-info='baitIcon']").style.setProperty("display","none");
+            cardSelected.querySelector("[data-info='baitText']").style.setProperty("color","#ff5e5e");
+            cardSelected.querySelector("[data-info='baitText']").innerHTML = "Baiting Error, please retry";
+        }
+
+        // hide the icon and the text, don't let people add bait.
+        function hideBaitTextAndIcon() {
+            cardSelected.querySelector("[data-info='baitText']").style.setProperty("display","none");
+            cardSelected.querySelector("[data-info='baitIcon']").style.setProperty("display","none");
+        }
+
+        /**
+         * Client Input Event - addBait
+         * when addBait is run, this function handles whether the add bait icon is visible or not
+         * Also hides and shows certain device info
+         */ 
         function OpenDeviceBait(eventData) {
               
             if (cardSelected === null || cardSelected === undefined) {
                 return;
             }
 
-            if (parseInt(eventData.value.BaitEnalbed) === 2) {
-                cardSelected.querySelector("[data-info='baitIcon']").style.setProperty("display","none");
-                cardSelected.querySelector("[data-info='baitText']").style.setProperty("display","none");
+            setDefaultBaitText();
+
+            if (parseInt(eventData.value.BaitEnalbed) === 0) {
+                // 0 means disable the add bait button
+                hideBaitTextAndIcon();
                 
+            } else if (parseInt(eventData.value.BaitEnalbed) === -1) {
+                // -1 means a baiting error
+                setBaitTextErrorAndHideIcon();
             }
 
             var screenForm = eventData.value.Form;
