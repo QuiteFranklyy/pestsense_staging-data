@@ -371,6 +371,10 @@
                 fw.func("PUBLISHCLIENT", "SortBy", {
                     value: ["StationId", "true"]
                 });
+            } else if (eventData.value === "Sort By Status") {
+                fw.func("PUBLISHCLIENT", "SortBy", {
+                    value: ["State", "false"]
+                });
             }
         }
 

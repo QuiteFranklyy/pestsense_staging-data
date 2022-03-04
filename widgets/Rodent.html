@@ -3433,7 +3433,9 @@
 
 
   
-
+        /** 
+         * Possible deprecated traps code, potentially used for a dumb trap
+         */ 
         function ActivateManual(event) {
             var id = cardSelected.parentNode.getAttribute("data-id");
             var val = rowState[id].Id;
@@ -6960,11 +6962,10 @@
          * @param sortType Field inside the object to sort by.
          */
         function sortCards(data, sortType, asc) {
-
+            console.log("Data: " + JSON.stringify(data,null,4) + "\nSortType: " + sortType + "\nAscending: " + asc);
             var dataKeys = Object.keys(data);
-            // asc = false;
 
-            if (asc === false) {
+            if (asc === false || asc === "false") {
                 return dataKeys.sort(function (firstKey, secondKey) {
 
                     var first = data[firstKey];
