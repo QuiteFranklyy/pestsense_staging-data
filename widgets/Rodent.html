@@ -6515,12 +6515,10 @@
             var source = [];
             var emptyIr = GetEmptyHours();
             var prevLow = 0;
-            for (var item in _DaysSeriesCycle[day].Source) {
-                var currentIr = _DaysSeriesCycle[day].Source[item];
-                if (currentIr.value !== 0) {
-                    emptyIr[currentIr.day.getHours()] = currentIr.value2;
-
-                }
+            const dayData = _TimeSeriesData.Cycle.filter(item=> item[1] != 0).filter(item=> new Date(item[0]).getDate() === day);
+            for (var item in dayData) {
+                var currentIr = dayData[item];
+                emptyIr[new Date(currentIr[0]).getHours()] += parseInt(currentIr[1]);
             }
 
             for (var item in emptyIr) {

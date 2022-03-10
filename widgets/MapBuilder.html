@@ -769,6 +769,7 @@
                     }
                 },
                 move(event) {
+                    event.preventDefault();
 
                     position.x += defX;
                     position.y += defY;
@@ -783,12 +784,14 @@
         })
         window.addEventListener('mousemove', e => {
 
+            e.preventDefault();
             defX = e.x - 26;
             defY = e.y - 15;
 
         });
         window.addEventListener('touchmove', e => {
 
+            e.preventDefault();
             defX = e.touches[0].pageX - 26;
             defY = e.touches[0].pageY - 15;
 
