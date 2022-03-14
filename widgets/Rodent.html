@@ -1457,6 +1457,11 @@
     cursor: pointer;
     }
 
+    input[type='checkbox'].small-checkbox {
+        width: 28px;
+        height: 28px;
+    }
+
     input[type='checkbox']:after {
         content: "";
         vertical-align: middle;
@@ -1475,6 +1480,13 @@
         background: #646c83;
     }
 
+    input[type='checkbox'].small-checkbox:after {
+        width: 28px;
+        height: 28px;
+        font-size: 28px;
+        line-height: 30px;
+    }
+
         /* input[type='checkbox']:hover:after, input[type='checkbox']:checked:hover:after {
             background: #646c83;
             height: 35px;
@@ -1491,6 +1503,12 @@
         width: 35px;
         color: #fff;
         font-size: 35px;
+    }
+
+    input[type='checkbox'].small-checkbox:checked:after {
+        width: 28px;
+        height: 28px;
+        font-size: 28px;
     }
 
     input[type="number"] {
@@ -2324,13 +2342,17 @@
                                 <div style="display:flex">
                                     <div class="BoxLabel" style="margin-right:0;">
                                         <label for="StationId">Station Id</label>
-
-                                        <div class="number-input" style="height: 44px; width: 96%; display: flex;">
-                                            <input class="quantity " id="StationId" style="width:100%;  max-width:70%;" min="0" data-info="stationInput" name="quantity" value="1" type="number" onchange="StationBoxChanged(this)">
-                                            <button onclick="DecrementCounterSet(this)" style="border-right:1px solid white;color:white;"></button>
-                                            <button onclick="IncrementCounterSet(this)" style="color:white;" class="plus"></button>
+                                        <div style="display: flex;">
+                                            <div class="number-input" style="height: 44px; width: 84%; display: flex;">
+                                                <input class="quantity " id="StationId" style="width:100%;  max-width:70%;" min="0" data-info="stationInput" name="quantity" value="1" type="number" onchange="StationBoxChanged(this)">
+                                                <button onclick="DecrementCounterSet(this)" style="border-right:1px solid white;color:white;"></button>
+                                                <button onclick="IncrementCounterSet(this)" style="color:white;" class="plus"></button>
+                                            </div>
+                                            <label style="display: flex; flex-direction: column; justify-content: center;">
+                                                <input class="small-checkbox" type="checkbox" id="stationIdHoldCheckbox" />
+                                                hold
+                                            </label>
                                         </div>
-
                                     </div>
                                  
                                 </div>
@@ -3697,7 +3719,7 @@
 
             
             var user = fw.func("GETUSER");
-            if(user !== "admin")
+            if(user !== "admin" && user !== "devadmin@pestsense.com")
             {
                 row.Card.querySelector("[data-info='r1']").style.setProperty("display","none");
                 row.Card.querySelector("[data-info='r2']").style.setProperty("display","none");
@@ -4281,6 +4303,25 @@
             Database.updateRecord("Rodent", "Sites", siteDbVal, function (data) {
 
             });
+            if(cardSelected.querySelector('#stationIdHoldCheckbox').checked) {
+                document.querySelectorAll('#stationIdHoldCheckbox').forEach(item => {
+                    item.checked = true;
+                })
+                const inputNumber = parseInt(cardSelected.querySelector("[data-info='stationInput']").value) + 1;
+                while(stationIds.indexOf(inputNumber) > -1) {
+                    inputNumber++;
+                }
+                SetCurrentStationId({
+                    value: inputNumber
+                })
+            } else {
+                document.querySelectorAll('#stationIdHoldCheckbox').forEach(item => {
+                    item.checked = false;
+                })
+                SetCurrentStationId({
+                    value: nextAvailStationId
+                })
+            }
             // }, {filter: `Id='${locationId}'`});
 
             fw.fireEvent("EventTransaction", { ID: id, EventType: 3, CreatedOn: new Date().getTime(), CreatedBy:fw.func("GETUSER"), Owner:fw.func("GETUSER"), CompanyProductId: "", Value: "" });
@@ -4464,14 +4505,14 @@
             });
 
             if (rowState[id].StationId === "" || rowState[id].StationId === undefined) {
-                for (var item in rowState) {
-                    var x = rowState[item];
-                    if (x.StationId !== undefined && x.StationId !== "") {
-                        if (currentStationId < parseInt(x.StationId)) {
-                            currentStationId = parseInt(x.StationId);
-                        }
-                    }
-                }
+                // for (var item in rowState) {
+                //     var x = rowState[item];
+                //     if (x.StationId !== undefined && x.StationId !== "") {
+                //         if (currentStationId < parseInt(x.StationId)) {
+                //             currentStationId = parseInt(x.StationId);
+                //         }
+                //     }
+                // }
                
                 minDown = currentStationId+1;
                 cardSelected.querySelector("[data-info='stationInput']").value = currentStationId;
@@ -5877,7 +5918,7 @@
             return result;
         }
 
-        // checks the state of the row, also sets the state of the row. Should not change the state of the row, just check.
+        // checks the state of the row, returns the correct value it should be using thresholds
         function CheckRowState(baitLeft, triggers, deviceError, row) {
             var result = CardState.Unassigned;
             var importantRisen = 0;
