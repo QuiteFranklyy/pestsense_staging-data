@@ -616,18 +616,19 @@
             if (addingElement.childNodes[0].dataset.label === DEFAULT_TEXT_LABEL) {
                 addingElementObj = addingElement.getElementsByClassName("colorContainer")[0];
                 addingElement.getElementsByClassName("textContainer")[0].innerHTML = document.getElementById("labelInput").value;
-                addingElementObj.style.setProperty("width", "");
-                addingElementObj.style.setProperty("min-width", "30px");
+                addingElementObj.style.setProperty("width", "10vw");
                 addingElementObj.style.setProperty("position", "absolute");
             } else {
                 addingElement.getElementsByClassName("textContainer")[0].innerHTML = iconCounters++;
                 document.getElementById("numberInput").value = iconCounters;
                 addingElement.style.setProperty("display","none");
                 addingElementObj = addingElement.getElementsByTagName("img")[0];
-                addingElementObj.style.setProperty("width", "30px");
+                addingElementObj.style.setProperty("width", "10vw");
+                addingElementObj.style.setProperty("max-width", "30px");
             }
 
-            addingElementObj.style.setProperty("height", "30px");
+            addingElementObj.style.setProperty("height", "10vh");
+            addingElementObj.style.setProperty("max-height", "30px");
             addingElement.setAttribute("id",addedElements)
             addingElement.setAttribute("class", "draggble");
             addingElement.setAttribute("class","draggble ResizableIcon");
@@ -835,10 +836,10 @@
                         template.getElementsByClassName("colorContainer")[0].style.border = "";
                         addingElementObj = template.getElementsByClassName("colorContainer")[0];
                         template.getElementsByClassName("textContainer")[0].innerHTML = current.label;
-                        addingElementObj.style.setProperty("width", "");
-                        addingElementObj.style.setProperty("min-width", "30px");
+                        addingElementObj.style.setProperty("width", "10vw");
                         addingElementObj.style.setProperty("position", "absolute");
                         if(current.state) {
+                            addingElementObj.style.setProperty("max-width", "30px");
                             if(iconCounters <= parseInt(current.label)) {
                                 iconCounters = parseInt(current.label) + 1
                             }
@@ -853,6 +854,9 @@
                             }
                             else if (current.state === '4') {
                                 template.getElementsByClassName("colorContainer")[0].style.backgroundColor = "red";
+                            }
+                            else if (current.state === '0') {
+                                template.getElementsByClassName("colorContainer")[0].style.backgroundColor = "#784421";
                             } else {
                                 template.getElementsByClassName("colorContainer")[0].style.backgroundColor = "gray";
                             }
@@ -867,10 +871,12 @@
                         document.getElementById("numberInput").value = iconCounters;
                         template.style.setProperty("display","none");
                         addingElementObj = template.getElementsByTagName("img")[0];
-                        addingElementObj.style.setProperty("width", "30px");
+                        addingElementObj.style.setProperty("width", "10vw");
+                        addingElementObj.style.setProperty("max-width", "30px");
                     }
 
-                    addingElementObj.style.setProperty("height", "30px");
+                    addingElementObj.style.setProperty("height", "10vh");
+                    addingElementObj.style.setProperty("max-height", "30px");
                     template.setAttribute("id",addedElements)
                     template.setAttribute("class", "draggble");
                     template.setAttribute("class","draggble ResizableIcon");
