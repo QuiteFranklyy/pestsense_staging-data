@@ -4,7 +4,7 @@
  * Modified Author/Date Date:
  * Version:
  */
-// pac
+
 /**
  * Initialise script state (run once at startup)
  */
@@ -340,35 +340,21 @@ var countryList = [
     { name: 'Zambia', code: 'ZM' },
     { name: 'Zimbabwe', code: 'ZW' }
 ];
-
+//var compamyCollection;
+var accessNameComp = "no role";
 Script.on("load", load);
-var userName = null;
-var compamyCollection;
-var accessData = {};
 var globalAmins;
-var globalAccessRoles;
-var companyAccessRolesId;
-var currentUserCompany = 0;
 function load() {
-    accessData['no role'] = 0;
-
+	console.log("PLS HALP");
     Database.readRecords("Directory", "users", (data) => {
         globalAmins = SensaCollection.load(data.value).getColumn("isglobaladmin");
         // console.log("Users global from the database are: " + JSON.stringify(globalAmins, null, 4));
     });
-
-    Database.readRecords("rodent", "UserAccessRole", function (eventData) {
-        var access = SensaCollection.load(eventData.value);
-
-        globalAccessRoles = access.getColumn("IsAdmin");
-        companyAccessRolesId = access.getColumn("CompanyId");
-        console.log("Admin daa is " + JSON.stringify(globalAccessRoles, null, 4));
-    });
-    compamyCollection = Script.getState("compamyCollection");
     var deleteAccountIcon = Script.getWidget("deleteAccountIcon");
+    
     deleteAccountIcon.subscribe("pressed", async function () {
         var form = Script.getFormByKey("details");
-        let res = await Client.confirm(`Are you sure you want to delete this user ${form.username}?`, "Delete User", { confirmText: "Delete" });
+        let res = await Client.confirm(`Are you sure you want to delete thie user ${form.username}?`, "Delete User", { confirmText: "Delete" });
         if (res) {
             Directory.deleteUser(form.username, async function (eventData) {
                 if (eventData.value !== 1) {
@@ -415,7 +401,7 @@ function load() {
     var coll = new SensaCollection(["text", "value"], "text", {});
     var data = countryList.map(country => ({ text: country.name, value: country.code }));
 
-    // populateAllUserAccessRoles();
+    populateAllUserAccessRoles();
 
     for (var i = 0; i < data.length; i++) {
         coll.add(data[i]);
@@ -438,7 +424,6 @@ function load() {
         var dashboards = eventData.value.getColumn("name");
         dashDrop.receiveList(dashboards);
         var user = Script.getState("user");
-        console.log("User is " + user);
         var userDetails = Script.getState("userRecord").getFirst();
         var accountName = Script.getState("accountinfo").get(userDetails.accountid).accountname;
         accDrop.receiveValue(accountName);
@@ -446,7 +431,6 @@ function load() {
         if (user != null) {
             console.log("updating the form");
             updateForm(user);
-            //populateAllUserAccessRoles(user);
         }
 
         // Setup Permissions table.
@@ -455,7 +439,7 @@ function load() {
         var userPermsTable = Script.getWidget("userPermsTable");
         var setPerms = [];
 
-        Directory.getClientPermissions(function (data) {
+        Directory.getClientPermissions(function(data) {
             var perms = SensaCollection.load(data.value);
             var userPerms = perms.data[user];
 
@@ -501,48 +485,16 @@ async function save() {
         return;
     }
 
-    var accessDrop = Script.getWidget("accessRole");
     let res = await Client.confirm("Are you sure you would like to save these changes?", "Save User Information", { confirmText: "Save" })
     if (res) {
-
         var formData = Script.getFormByKey("details");
-        if (formData === null) {
-            alert("Please fill out all required fields");
-            return;
-        } else {
-            console.log("Form not null " + JSON.stringify(formData, null, 4));
-            
-        } 
-        //console.log("Form not access " + JSON.stringify(accessData, null, 4));
 
-        console.log("Acces beore + " + formData.accessrole + " data " + JSON.stringify(accessData, null, 4));
-        var d = formData.accessrole;
-        if (d in accessData) {
-            console.log("Acces beore found " + accessData[d]);
-        }
-        if (formData.accessrole === "no role") {
-            formData.accessrole = 0;
-        } else {
-            for (const key in accessData) {
-                console.log("Data are " + formData.accessrole + " and " + key);
-                if (key.trim().split(" ")[0] == formData.accessrole.trim().split(" ")[0]) {
-                    console.log("Data are found " + formData.accessrole);
-                    formData.accessrole = accessData[key];
-                    console.log("Data are found 2 " + formData.accessrole);
-                }
-            }
-          
-        }
-        console.log("Form data is " + JSON.stringify(formData, null, 4));
-
-        
-        
+        if (formData === null) return;
         formData.status = formData.status === true ? 1 : 0;
         formData.username = Script.getState("user");
+        console.log("Is glogal data is  " + formData.isglobaladmin);
         formData.isglobaladmin = formData.isglobaladmin === true ? 1 : 0;
-
-        console.log("Acces after + " + formData.accessrole);
-
+        console.log("Is glogal data is  " + formData.isglobaladmin);
 
         var find = 0;
         for (var i = 0; i < globalAmins.length; i++) {
@@ -551,91 +503,70 @@ async function save() {
                 break;
             }
         }
+        if (find == 1 || formData.isglobaladmin == 1) {
 
-        if ((find == 0 && formData.isglobaladmin == 0) 
-            || formData.isglobaladmin == undefined) {
-            return;
-        }
-        find = 0;
-        for (var i = 0; i <  companyAccessRolesId.length; i++) {
-            var compId = companyAccessRolesId[i];
-            if (parseInt(compId) == currentUserCompany) {
-                var index = companyAccessRolesId.indexOf(compId);
-                console.log("campany is index " + index);
-                if (globalAccessRoles[i] == 1) {
-                    
-                    find = 1;
-                    console.log("campany is find " + find);
-                    break;
-                }
-                
+
+            // confirm valid email address
+            if (!validateEmail(formData.email)) {
+                setTimeout(() => Script.getWidget("emailInp").setValidityMessage("Valid email address is required."), 0);
+                return;
             }
-        }
 
-        if (find == 0) {
+            // Swap account name for accoutnid;
+            formData.accountid = Script.getState("accountInfo")
+                .query(function (record, pk) {
+                    if (formData.accountname == record.accountname) return true;
+                })
+                .getFirst().accountid;
 
-            await Client.alert("You must assign another user administrator role before change is allowed");
-            //You must assign another user administrator role before change is allowed
-            return;
-        }
-        // confirm valid email address
-        if (!validateEmail(formData.email)) {
-            setTimeout(() => Script.getWidget("emailInp").setValidityMessage("Valid email address is required."), 0);
-            return;
-        }
-
-        // Swap account name for accoutnid;
-        formData.accountid = Script.getState("accountInfo")
-            .query(function (record, pk) {
-                if (formData.accountname == record.accountname) return true;
-            })
-            .getFirst().accountid;
-
-        // Get actual country name instead of code
-        if (formData.country !== "") {
-            formData.country = countryList.find(x => x.code === formData.country).name;
-        }
-
-        let today = new Date();
-        let month = today.getMonth() + 1;
-        month = month < 10 ? '0' + month : month;
-        let date = today.getDate() + '/' + month + '/' + today.getFullYear();
-        let hours = today.getHours();
-        let minutes = today.getMinutes();
-        let seconds = today.getSeconds();
-        var ampm = today.getHours() >= 12 ? "PM" : "AM";
-        hours = hours ? hours : 12; // make hour 0 become 12
-        minutes = minutes < 10 ? '0' + minutes : minutes;
-        seconds = seconds < 10 ? '0' + seconds : seconds;
-        let time = hours + ":" + minutes + ":" + seconds;
-        let dateTime = date + ' ' + time + ' ' + ampm;
-        // TODO find a way to use formatDate() from utils
-        formData.lastmodified = dateTime;
-
-        delete formData.accountname;
-
-        if (formData.undefined) delete formData.undefined;
-
-        var req = {};
-        var dbFormData = JSON.parse(JSON.stringify(formData));
-        delete dbFormData.userPermsTable;
-        req[dbFormData] = dbFormData;
-        Database.updateEntity("Directory", "users", req, async function (status) {
-            if (status.value == 0) {
-                Log.warn(`An error occured updating ${formData.username} details.`);
-                await Client.alert(`An error occured updating ${formData.username} details.`, "Error");
-            } else {
-                // TODO update permissions table only if permissions have changed
-                var perms = formData.userPermsTable.getColumn("permission");
-                try {
-                    Directory.changePermissions(formData.username, perms);
-                    Client.jumpToScreen("Manage Users");
-                } catch (ex) {
-                    Client.alert("User must have at least one permission", "Error");
-                }
+            // Get actual country name instead of code
+            if (formData.country !== "") {
+                formData.country = countryList.find(x => x.code === formData.country).name;
             }
-        });
-        Log.info("Updating user information.");
+
+            // set last modified, format date in similar way to server 
+            let today = new Date();
+            let month = today.getMonth() + 1;
+            month = month < 10 ? '0' + month : month;
+            let date = today.getDate() + '/' + month + '/' + today.getFullYear();
+            let hours = today.getHours();
+            let minutes = today.getMinutes();
+            let seconds = today.getSeconds();
+            var ampm = today.getHours() >= 12 ? "PM" : "AM";
+            hours = hours ? hours : 12; // make hour 0 become 12
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            seconds = seconds < 10 ? '0' + seconds : seconds;
+            let time = hours + ":" + minutes + ":" + seconds;
+            let dateTime = date + ' ' + time + ' ' + ampm;
+            // TODO find a way to use formatDate() from utils
+            formData.lastmodified = dateTime;
+
+            delete formData.accountname;
+
+            if (formData.undefined) delete formData.undefined;
+
+            var req = {};
+            var dbFormData = JSON.parse(JSON.stringify(formData));
+            delete dbFormData.userPermsTable;
+            req[dbFormData] = dbFormData;
+            Database.updateEntity("Directory", "users", req, async function (status) {
+                if (status.value == 0) {
+                    Log.warn(`An error occured updating ${formData.username} details.`);
+                    await Client.alert(`An error occured updating ${formData.username} details.`, "Error");
+                } else {
+                    // TODO update permissions table only if permissions have changed
+                    var perms = formData.userPermsTable.getColumn("permission");
+                    try {
+                        Directory.changePermissions(formData.username, perms);
+                        Client.jumpToScreen("Manage Users");
+                    } catch (ex) {
+                        Client.alert("User must have at least one permission", "Error");
+                    }
+                }
+            });
+            Log.info("Updating user information.");
+        }
+
     }
 }
 
@@ -646,11 +577,9 @@ Script.on("SCREENCHANGE", function () {
 });
 
 function updateForm(username) {
-
-    var accessDrop = Script.getWidget("accessRole");
     var collection = Script.getState("userRecord");
     if (collection == null) return;
-    accessData['no role'] = 0;
+
     var createdOn = Script.getWidget("createdOn");
     createdOn.receiveValue(collection.getColumn("createdon"));
 
@@ -667,16 +596,6 @@ function updateForm(username) {
     var record = collection.get(username);
     record.status = record.status == "Yes" ? 1 : 0;
 
-    if (record.alias == null || record.alias === "") {
-        // If a previous user did not have an alias, create one now
-        record.alias = `${record.first} ${record.last}`;
-        var req = {};
-        req[record] = record;
-        Database.updateEntity("Directory", "users", req, () => { Script.setForm("details", record) });
-        Log.info("Setting user alias information.");
-        return;
-    }
-
     // rename the accessrole to be the text value instead of the ID
     var accessRoleId = record.accessrole;
     console.log("Access role id: " + accessRoleId + " TYPE: " + typeof accessRoleId);
@@ -688,54 +607,10 @@ function updateForm(username) {
         Script.setForm("details", record);
 
         // if it was set to -1, then it was set to no role previously
-    } else if (accessRoleId == 0) {
-        
-
-        var UserRolesFilter = {
-            columns: "CompanyId",
-            //filter: 'User="' + Client.getUser() + '" and IsPrimary=1'
-            filter: 'User="' + username
-            //filter: `User=${username} and IsPrimary=1`
-        };
-        console.log("access role was set to 0 user " + username);
+    } else if (accessRoleId === -1) {
+        console.log("access role was set to -1");
         record.accessrole = "no role";
         Script.setForm("details", record);
-        try {
-            Database.readRecords("rodent", "UserRoles", function (eventData) {
-
-                var compID = 0;
-                var userRoleCollection = SensaCollection.load(eventData.value);
-
-                for (const key in userRoleCollection.data) {
-                    var na = userRoleCollection.data[key][1];
-                    var id = userRoleCollection.data[key][10];
-                    //console.log(`Details are : ${na} ${username} ${id}`);
-                    if ( na == username && id == 1) {
-                        compID = userRoleCollection.data[key][2];
-                        // console.log("Company is 4 " + compID + " username is " + username)
-                        // console.log("Company is 4 data " + JSON.stringify(userRoleCollection.data[key], null, 4));
-                        break;
-                        }
-                }
-                //console.log("Company is 4 2 " + compID)
-                if (compID != 0) {
-                    currentUserCompany = compID;
-                    populateAllUserAccessRoles(compID);
-                } else {
-                    record.accessrole = "no role";
-                    Script.setForm("details", record);
-                }
-                //return;
-            }); //UserRolesFilter
-
-
-
-        } catch (error) {
-            console.log("access role was set to 0 err");
-            record.accessrole = "no role";
-            Script.setForm("details", record);
-        }
-        
 
     } else {
         console.log("attempting to get the access role name");
@@ -745,28 +620,23 @@ function updateForm(username) {
         };
         Database.readRecords("rodent", "UserAccessRole", function (eventData) {
             try {
-                console.log("found the name for the access role");
+                // console.log("found the name for the access role");
                 var accessRoleCollection = SensaCollection.load(eventData.value);
                 var accessRoleName = accessRoleCollection.getFirst().RoleName;
                 var compID = accessRoleCollection.getFirst().CompanyId;
                 record.accessrole = accessRoleName;
-                console.log("Current " + record.accessrole);
-                currentUserCompany = compID;
-                for (const id in compamyCollection.data) {
+                var compamyCollection = Script.getState("compamyCollection");
+
+                for (const id in compamyCollection.data){
                     if (id == compID) {
                         record.accessrole = record.accessrole + "  " + compamyCollection.data[id][1];
                         break;
                     }
                 }
-                //receiveValue
-                console.log("Current after " + record.accessrole);
                 Script.setForm("details", record);
-                accessData[record.accessrole] = accessRoleId;
-                accessDrop.receiveValue(record.accessrole);
-                console.log("User is in getting " + JSON.stringify(record, null, 4));
-                populateAllUserAccessRoles(compID);
+
             } catch (error) {
-                console.log("No access role found for the chosen access role id, please contact system admin");
+                console.log("No access role found for the chosen access role id, please contact system admin 1");
                 record.accessrole = "no role";
                 Script.setForm("details", record);
             }
@@ -776,44 +646,64 @@ function updateForm(username) {
 }
 
 
-function populateAllUserAccessRoles(CompanyId) { // user
+function populateAllUserAccessRoles() {
+    // Populate the Access Roles dropdown
+    var defaultRoleData = {
+        "text": "no role  \"\"",
+        "value": -1
+    };
+
+    // set the filter to read the user roles table
+    var UserRolesFilter = {
+        columns: "Id,User, CompanyId",
+        filter: 'User="' + Client.getUser() + '" and IsPrimary=1'
+    };
 
     var accessDrop = Script.getWidget("accessRole");
-    var UserAccessRolesFilter = {
-        columns: "RoleName,ID",
-        filter: "CompanyId = " + CompanyId
-    };
-    Database.readRecords("rodent", "UserAccessRole", function (eventData) {
-        try {
-            // need to make a sensacollection containing the RoleName and ID, with the headers "text" and "value"
-            var accessRolesCollection = SensaCollection.load(eventData.value);
 
-            //var accessId = accessRolesCollection.getColumn("Id");
-            console.log("Company is " + CompanyId);
-            for (const id in compamyCollection.data) {
-                if (CompanyId == id) {
-                    var compName = compamyCollection.data[id][1];
-                    for (const acc in accessRolesCollection.data) {
-                        var accName = accessRolesCollection.data[acc][0] + "  "+ compName;
-                        accessData[accName] = accessRolesCollection.data[acc][1];
-                        
+    Database.readRecords("rodent", "UserRoles", function (eventData) {
+        var CompanyId = eventData.value.getColumn("CompanyId");
+        // set the filter to read the user access roles table
+        var UserAccessRolesFilter = {
+            columns: "RoleName,ID",
+            filter: "CompanyId = " + CompanyId
+        };
+        //console.log("User access roles filter: " + JSON.stringify(UserAccessRolesFilter, null, 4));
+        Database.readRecords("rodent", "UserAccessRole", function (eventData) {
+
+            //console.log("Data read from acces role 2" + JSON.stringify(eventData, null, 4));
+            try {
+                // need to make a sensacollection containing the RoleName and ID, with the headers "text" and "value"
+                var accessRolesCollection = SensaCollection.load(eventData.value);
+                //var compID = accessRoleCollection.getFirst().CompanyId;
+                accessRolesCollection.setColumns(["text", "value"]);
+                var compamyCollection = Script.getState("compamyCollection");
+                // console.log("DATA comp is " + " com " +  + JSON.stringify(compamyCollection, 
+                console.log("Users global from the database are: " + JSON.stringify(globalAmins, null, 4));
+                //console.log("DATA access is " + JSON.stringify(accessRolesCollection, null, 4));
+                // var isglobaladmin = Script.getState("isglobaladmin");
+                // console.log("isglobaladmin " + JSON.stringify(isglobaladmin, null, 4));
+                for (const id in compamyCollection.data) {
+                    if (CompanyId == id){
+                        var compName = compamyCollection.data[id][1];
+                        for (const acc in accessRolesCollection.data){
+                            var accName = accessRolesCollection.data[acc][0] +  "  " + compName;
+                            accessRolesCollection.data[acc][0] = accName;
+                            console.log("Name is " + accName);
+                            console.log("Name changed is " + JSON.stringify(accessRolesCollection, null, 4));
+                        }
                     }
                 }
+                accessRolesCollection.add(defaultRoleData);
+                accessDrop.receiveTextValues(accessRolesCollection);
+            } catch (error) {
+                // if there was an error, then it was unable to find  a name for the chosen id. So just populate it with the default user role
+                console.log("error with trying to set default access role");
+                var accessRolesCollection = new SensaCollection(["text", "value"], "text");
+                accessRolesCollection.add(defaultRoleData);
+                accessDrop.receiveTextValues(accessRolesCollection);
             }
-            
-        
-            console.log("User is real " + JSON.stringify(accessRolesCollection, null, 4));
-            accessDrop.appendList(Object.keys(accessData));
-            
-        } catch (error) {
-            // if there was an error, then it was unable to find  a name for the chosen id. So just populate it with the default user role
-            console.log("error with trying to set default access role");
-            
-            //accessRolesCollection.add(defaultRoleData);
-            //var accessRolesCollection = new SensaCollection(["text", "value"], "text");
-            accessDrop.receiveValue("no role");
-            console.log("User is data is " + JSON.stringify(accessRolesCollection, null, 4));
-            //accessDrop.receiveTextValues(accessRolesCollection);
-        }
-    }, UserAccessRolesFilter);
+        }, UserAccessRolesFilter);
+
+    }, UserRolesFilter);
 }

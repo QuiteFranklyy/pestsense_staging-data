@@ -4,24 +4,18 @@
  * Modified Author/Date Date: 
  * Version: 
  */
-//pac
+
 var accountInfo;
 var userInfo;
 var compamyCollection;
+var globalAdmins;
 
 /**
  * Initialise script state (run once at startup)
  */
 Script.on('load', function () {
-
-    
     var newAccountIcon = Script.getWidget("newAccountIcon");
     newAccountIcon.subscribe("pressed", newAccount);
-
-    Database.readRecords("rodent", "Companies", function (eventData) {
-        compamyCollection = SensaCollection.load(eventData.value);
-        Script.setState("compamyCollection", compamyCollection);
-    });
 
     var newUserIcon = Script.getWidget("newUserIcon");
     newUserIcon.subscribe("pressed", newUser);
@@ -36,9 +30,7 @@ Script.on('load', function () {
     accountInfoIcon.subscribe("pressed", viewAccountInfo);
 
     Database.readRecords("Directory", "users", users);
-
-    Database.readRecords("Directory", "account", accounts);
-
+    console.log("Users read from the database are: " + JSON.stringify(users, null, 4));
 });
 
 function viewAccountInfo() {
@@ -60,8 +52,20 @@ function accounts(eventData) {
     var accountsArray = accountInfo.getColumn("accountname");
     var accDrop = Script.getWidget("accountDrop");
     accDrop.receiveList(accountsArray);
+    var acc = Script.getState("newUserAccount");
+
+    var firstAccount;
     // Get first accounts users.
-    var firstAccount = accountInfo.getFirst();
+    if (acc !== null) {
+        // The "first" account will be the last selected one
+        accDrop.receiveValue(acc);
+        firstAccount = accountInfo.query((record, pk) => {
+            if (record.accountname.trim() == acc) return true;
+        }).getFirst();
+    } else {
+        firstAccount = accountInfo.getFirst();
+    }
+
     var accountid = firstAccount.accountid;
 
     // Update enabled to yes or no
@@ -92,6 +96,22 @@ function accounts(eventData) {
         }
     });
 
+    Database.readRecords("rodent", "Companies", function (eventData) {
+        compamyCollection = SensaCollection.load(eventData.value);
+        Script.setState("compamyCollection", compamyCollection);
+    });
+
+    // var isGlobalFilger = {
+    //     columns: "username, isglobaladmin",
+    //     //filter: "CompanyId = " + CompanyId
+    // };
+
+    // Database.readRecords("Directory", "users", function (eventData) {
+    //     globalAdmins = SensaCollection.load(eventData.value);
+    //     Script.setState("globalAdmins", globalAdmins); //.getColumn("isglobaladmin")
+    // }, isGlobalFilger);
+
+
 
     accountUsers.pk = "email username";
     table.receiveValue(accountUsers);
@@ -99,12 +119,14 @@ function accounts(eventData) {
 
 function users(eventData) {
     userInfo = eventData.value;
+    // Only set accounts if the user info has been set
+    Database.readRecords("Directory", "account", accounts, { filter: `status=1` });
 }
 
 function updateTable(eventData) {
     var accountName = eventData.value;
     var accountDetails = accountInfo.query(function (record, pk) {
-        if (accountName == record.accountname) return true;
+        if (accountName == record.accountname.trim()) return true;
     }).getFirst();
     var accountid = accountDetails.accountid;
 
@@ -144,6 +166,7 @@ function rowSelected(eventData) {
     eventData.value.pk = "username";
 
     var record = eventData.value.getFirst();
+    console.log("Use details are " + JSON.stringify(record, null, 4));
     Script.setState("userRecord", eventData.value);
     Script.setState("user", record.username);
     Client.jumpToScreen("User Details");

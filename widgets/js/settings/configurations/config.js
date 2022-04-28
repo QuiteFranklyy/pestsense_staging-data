@@ -11,6 +11,24 @@ Script.on("init", function() {
 * @param {payload} Event data received (payload.channel, payload.data.value, payload.data.usrmeta).
 */
 Script.on("load", function(payload) {
+	console.log("PLS HALP");
+	
+
+	ClientEvents.subscribe("restart", function(eventData) {
+		if (parseInt(eventData.value) !== 1) {
+			return;
+		}
+		if (confirm("WARNING - Please confirm you want to restart the server. This will logout all users and reset the server.")) {
+			console.log("Resetting server, refresh the browser in 20 seconds to reconnect...");
+		reqdata = {"usrmeta":"restart","sysmeta":{"source":"widgets/settings"},"value":"restart"};
+			var value = "restart";
+		var usrmeta = "restart";
+		var channel = {"category":"$sys", "className": "inimgmt", "instance": "request", "scope": "data", "value": "restart", "usrmeta": "restart", "label": "string"};
+		Script.publishToChannel(channel);
+	} else {
+			console.log("Server reset cancelled.");
+	}
+	});
     try {
     	//var reqdata = {"usrmeta":"getFileList","sysmeta":{"source":"widgets/settings"},"value":"SYSTEM"};
         //request via ini management channel
@@ -105,4 +123,23 @@ Script.on("client", function(payload) {
     } catch (ex) {
        	console.log('Script client channel error: ' + ex);
     }
+});
+
+
+
+
+ClientEvents.subscribe("restart", function(eventData) {
+	if (parseInt(eventData.value) !== 1) {
+		return;
+	}
+	if (confirm("WARNING - Please confirm you want to restart the server. This will logout all users and reset the server.")) {
+		console.log("Resetting server, refresh the browser in 20 seconds to reconnect...");
+	  reqdata = {"usrmeta":"restart","sysmeta":{"source":"widgets/settings"},"value":"restart"};
+		var value = "restart";
+	  var usrmeta = "restart";
+	  var channel = {"category":"$sys", "className": "inimgmt", "instance": "request", "scope": "data", "value": "restart", "usrmeta": "restart", "label": "string"};
+	  Script.publishToChannel(channel);
+  } else {
+		console.log("Server reset cancelled.");
+  }
 });
